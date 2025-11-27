@@ -28,25 +28,28 @@ private val TAG = "org.reas.tracker"
 class AuthManager(private val context: Context) {
     var user by mutableStateOf<FirebaseUser?>(null)
         private set
+    var signedIn by mutableStateOf(false)
+        private set
 
     private lateinit var credentialManager: CredentialManager
-    private val googleIdOption: GetGoogleIdOption
-    private val signInWithGoogleOption: GetSignInWithGoogleOption
+    private val googleIdOption = GetGoogleIdOption.Builder()
+        .setServerClientId(context.getString(R.string.web_client_id))
+        .setFilterByAuthorizedAccounts(true)
+        .setAutoSelectEnabled(true)
+        .build()
+    private val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(
+        serverClientId = context.getString(R.string.web_client_id)
+    ).build()
     private var activity: Activity? = null
-
-    init {
-        googleIdOption = GetGoogleIdOption.Builder()
-            .setServerClientId(context.getString(R.string.web_client_id))
-            .setFilterByAuthorizedAccounts(true)
-            .build()
-        signInWithGoogleOption = GetSignInWithGoogleOption.Builder(
-            serverClientId = context.getString(R.string.web_client_id)
-        ).build()
-    }
 
     fun init(activity: Activity) {
         this.activity = activity
         credentialManager = CredentialManager.create(activity.baseContext)
+    }
+
+    fun restore(user: FirebaseUser?, signedIn: Boolean) {
+        this.user = user
+        this.signedIn = signedIn
     }
 
     private fun firebaseAuthWithGoogle(idToken: String) {
@@ -56,16 +59,18 @@ class AuthManager(private val context: Context) {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "signInWithCredential:success")
+                    signedIn = true
                     user = Firebase.auth.currentUser
                 } else {
                     // If sign in fails, display a message to the user
                     Log.w(TAG, "signInWithCredential:failure", task.exception)
-                    user = null
+                    signedIn = false
                 }
             }
     }
 
     suspend fun signInOnLaunch() {
+        if (signedIn) return
         val request = GetCredentialRequest.Builder()
             .addCredentialOption(googleIdOption)
             .build()
@@ -144,7 +149,7 @@ class AuthManager(private val context: Context) {
         try {
             val clearRequest = ClearCredentialStateRequest()
             credentialManager.clearCredentialState(clearRequest)
-            user = null
+            signedIn = false
         } catch (e: ClearCredentialException) {
             Log.e(TAG, "Couldn't clear user credentials: ${e.localizedMessage}")
         }

@@ -1,7 +1,10 @@
 package org.reas.tracker
 
+import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
+import android.os.PersistableBundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
@@ -23,15 +26,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         authManager.init(this)
+        savedInstanceState?.run {
+            authManager.restore(
+                getParcelable("user"),
+                getBoolean("signedIn")
+            )
+        }
 
         setContent {
-            TrackerTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(modifier = Modifier.padding(innerPadding)) {
-                        TrackerApp(authManager)
-                    }
-                }
-            }
+            TrackerApp(
+                authManager,
+                modifier = Modifier.fillMaxSize()
+            )
         }
     }
 
@@ -40,5 +46,11 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             authManager.signInOnLaunch()
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelable("user", authManager.user)
+        outState.putBoolean("signedIn", authManager.signedIn)
     }
 }
