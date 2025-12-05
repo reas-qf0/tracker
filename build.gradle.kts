@@ -7,3 +7,9 @@ plugins {
     alias(libs.plugins.firebase.crashlytics) apply false
     alias(libs.plugins.kotlinx.serialization) apply false
 }
+
+buildscript {
+    dependencies {
+        classpath(libs.google.services)
+    }
+}
