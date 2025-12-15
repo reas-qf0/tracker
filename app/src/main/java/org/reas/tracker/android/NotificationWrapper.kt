@@ -1,4 +1,4 @@
-package org.reas.tracker
+package org.reas.tracker.android
 
 import android.Manifest
 import android.app.Notification

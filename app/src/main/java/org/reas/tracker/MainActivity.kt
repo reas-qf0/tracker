@@ -1,25 +1,19 @@
 package org.reas.tracker
 
 import android.app.NotificationManager
-import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.google.firebase.installations.FirebaseInstallations
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
+import org.reas.tracker.android.NotificationWrapper
 import org.reas.tracker.ui.TrackerApp
-import org.reas.tracker.ui.theme.TrackerTheme
 
 class MainActivity : ComponentActivity() {
     private val container = TrackerApplication.instance!!.container

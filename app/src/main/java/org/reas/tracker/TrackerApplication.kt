@@ -2,11 +2,17 @@ package org.reas.tracker
 
 import android.app.Application
 import android.content.Context
-import androidx.lifecycle.ViewModelProvider.NewInstanceFactory.Companion.instance
+import org.reas.tracker.database.Repository
+import org.reas.tracker.database.AppDatabase
+import org.reas.tracker.database.RoomRepository
 import org.reas.tracker.firebase.AuthManager
 
 class AppDataContainer(private val context: Context) {
     val authManager = AuthManager(context)
+
+    val repository: Repository by lazy {
+        RoomRepository(AppDatabase.getDatabase(context))
+    }
 }
 
 class TrackerApplication : Application() {

@@ -1,17 +1,9 @@
 package org.reas.tracker.firebase
 
-import android.Manifest
-import android.R.string.no
-import android.app.Notification
-import android.app.NotificationManager
-import android.content.pm.PackageManager
 import android.media.RingtoneManager
-import android.util.Log
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import org.reas.tracker.NotificationWrapper
+import org.reas.tracker.android.NotificationWrapper
 import org.reas.tracker.R
 
 
