@@ -1,9 +1,8 @@
 package org.reas.tracker.ui.screens
 
-import android.R.attr.maxLines
-import android.R.attr.track
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,13 +22,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Album
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -42,96 +40,161 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
+import org.reas.tracker.ui.ViewModelProvider
 import org.reas.tracker.ui.theme.TrackerTheme
 import org.reas.tracker.ui.theme.Typography
 import java.text.SimpleDateFormat
 import java.util.Date
 
-data class Scrobble(
+private data class BottomSheetInfo(
     val track: String,
     val artist: String,
     val album: String?,
-    val timestamp: Long
+    val albumArtist: String?
 )
 
-val scrobbles = List(100) { i ->
-    Scrobble(
-        "Placeholder Track $i",
-        "Placeholder Artist $i",
-        if (i % 2 == 1) null else "Placeholder Album $i",
-        System.currentTimeMillis() / 1000 - 60 * i * i
-    )
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     navigateToArtist: (String) -> Unit,
     navigateToAlbum: (String, String) -> Unit,
     navigateToTrack: (String, String, String?) -> Unit,
     navigateToTrackHistory: (String, String, String?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: HistoryScreenViewModel = viewModel(factory = ViewModelProvider.Factory)
 ) {
-    LazyColumn {
-        items(scrobbles) { scrobble ->
-            var showBottomSheet by remember { mutableStateOf(false) }
-            HistoryEntry(
-                scrobble.track,
-                scrobble.artist,
-                scrobble.album,
-                scrobble.timestamp,
+    val state by viewModel.history.collectAsState()
+    var bottomSheet: BottomSheetInfo? by remember { mutableStateOf(null) }
 
-                onClick = { showBottomSheet = true },
-                modifier = Modifier.padding(5.dp)
-            )
-            if (showBottomSheet) {
-                HistoryBottomSheet(
+    LazyColumn(modifier = modifier) {
+        items(
+            state.history.filter { scrobble ->
+                scrobble.isNowPlaying || scrobble.isFull
+            }
+        ) { scrobble ->
+            HistoryEntry(
+                title = scrobble.track,
+                artist = scrobble.artist,
+                album = scrobble.album,
+                timestamp = scrobble.timestamp,
+                isNowPlaying = scrobble.isNowPlaying,
+
+                onClick = { bottomSheet = BottomSheetInfo(
                     scrobble.track,
                     scrobble.artist,
                     scrobble.album,
-                    onDismiss = { showBottomSheet = false },
-                    onClickArtist = {
-                        showBottomSheet = false
-                        navigateToArtist(scrobble.artist)
+                    scrobble.albumArtist
+                ) },
+                onMore = {},
+                modifier = Modifier.padding(5.dp).height(84.dp)
+            )
+        }
+    }
+
+    if (bottomSheet != null) {
+        val track = bottomSheet!!.track
+        val artist = bottomSheet!!.artist
+        val album = bottomSheet!!.album
+        val albumArtist = bottomSheet!!.albumArtist
+
+        val artistPlays by viewModel.artistPlays(artist).collectAsState()
+        val artistTimePlayed by viewModel.artistTimePlayed(artist).collectAsState()
+        val trackPlays by viewModel.trackPlays(artist, track).collectAsState()
+        val trackTimePlayed by viewModel.trackTimePlayed(artist, track).collectAsState()
+
+        var albumPlays: State<String>? = null
+        var albumTimePlayed: State<String>? = null
+        album?.let {
+            albumPlays = viewModel.albumPlays(albumArtist!!, album).collectAsState()
+            albumTimePlayed = viewModel.albumTimePlayed(albumArtist!!, album).collectAsState()
+        }
+
+        ModalBottomSheet(
+            onDismissRequest = { bottomSheet = null },
+            modifier = modifier
+        ) {
+            Column {
+                HistoryBottomSheetComponent(
+                    icon = Icons.Filled.MusicNote,
+                    iconDescription = "Track",
+                    header = track,
+                    buttonContents = listOf(
+                        "Track plays" to trackPlays,
+                        "Time listened" to trackTimePlayed
+                    ),
+                    onMainButton = {
+                        bottomSheet = null
+                        navigateToTrackHistory(artist, track, album)
                     },
-                    onClickAlbum = {
-                        showBottomSheet = false
-                        navigateToAlbum(scrobble.artist, scrobble.album!!)
-                    },
-                    onClickTrack = {
-                        showBottomSheet = false
-                        navigateToTrack(scrobble.artist, scrobble.track, scrobble.album)
-                    },
-                    onClickTrackHistory = {
-                        showBottomSheet = false
-                        navigateToTrackHistory(scrobble.artist, scrobble.track, scrobble.album)
+                    onMore = {
+                        bottomSheet = null
+                        navigateToTrack(artist, track, album)
                     }
                 )
+                BottomSheetSpacer()
+                HistoryBottomSheetComponent(
+                    icon = Icons.Filled.Person,
+                    iconDescription = "Artist",
+                    header = artist,
+                    buttonContents = listOf(
+                        "Artist plays" to artistPlays,
+                        "Time listened" to artistTimePlayed
+                    ),
+                    onMore = {
+                        bottomSheet = null
+                        navigateToArtist(artist)
+                    }
+                )
+                album?.let {
+                    BottomSheetSpacer()
+                    HistoryBottomSheetComponent(
+                        icon = Icons.Filled.Album,
+                        iconDescription = "Album",
+                        header = album,
+                        buttonContents = listOf(
+                            "Album plays" to albumPlays!!.value,
+                            "Time listened" to albumTimePlayed!!.value
+                        ),
+                        onMore = {
+                            bottomSheet = null
+                            navigateToAlbum(albumArtist!!, album)
+                        }
+                    )
+                }
             }
         }
     }
 }
 
+private val dateFormatter = SimpleDateFormat.getDateInstance()
+private val dateTimeFormatter = SimpleDateFormat.getDateTimeInstance()
 private fun formatDate(timestamp: Long): String {
-    val secondsPassed = System.currentTimeMillis() / 1000 - timestamp
+    val secondsPassed = (System.currentTimeMillis() - timestamp) / 1000
     if (secondsPassed < 60L)
         return "$secondsPassed secs ago"
     if (secondsPassed < 60L * 60L)
         return "${secondsPassed / 60} mins ago"
     if (secondsPassed < 60L * 60L * 24L)
         return "${secondsPassed / 60 / 60} hrs ago"
-    return SimpleDateFormat.getDateInstance().format(Date(timestamp * 1000))
+    return dateFormatter.format(Date(timestamp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,205 +204,138 @@ private fun HistoryEntry(
     artist: String,
     album: String?,
     timestamp: Long,
+    isNowPlaying: Boolean,
     onClick: () -> Unit,
+    onMore: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(5.dp),
-        colors = ButtonDefaults.buttonColors(
-            MaterialTheme.colorScheme.surfaceContainerHigh,
-            MaterialTheme.colorScheme.primary
-        ),
-        contentPadding = PaddingValues(5.dp),
-        modifier = modifier.height(84.dp)
+    val bgColor = if (isNowPlaying)
+        MaterialTheme.colorScheme.surfaceContainerHighest
+    else
+        MaterialTheme.colorScheme.surfaceContainer
+    val tooltipState = rememberTooltipState()
+    val scope = rememberCoroutineScope()
+
+    Row(
+        modifier = modifier
+            .background(bgColor, RoundedCornerShape(5.dp))
+            .clickable(onClick = onClick)
+            .padding(5.dp)
     ) {
-        Row {
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .aspectRatio(1.0F)
-                    .clip(shape = RoundedCornerShape(5.dp))
-                    .background(color = Color.Gray)
-            )
-            Spacer(Modifier.width(10.dp))
-            Column(
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxHeight().weight(1.0F)
-            ) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .aspectRatio(1.0F)
+                .clip(shape = RoundedCornerShape(5.dp))
+                .background(color = Color.Gray)
+        )
+        Spacer(Modifier.width(10.dp))
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     title,
+                    color = MaterialTheme.colorScheme.primary,
                     style = Typography.titleLarge,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1.0F).padding(top = 2.dp)
                 )
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    artist,
-                    style = Typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.secondary,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis
+                Spacer(Modifier.width(5.dp))
+                Icon(
+                    Icons.Filled.MoreVert,
+                    "More",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable(onClick = onMore)
                 )
-                album?.let {
+            }
+            Spacer(Modifier.height(2.dp))
+            Row {
+                Column(modifier = Modifier.weight(1.0F)) {
                     Text(
-                        it,
-                        style = Typography.bodyMedium,
+                        artist,
+                        style = Typography.bodyLarge,
                         color = MaterialTheme.colorScheme.secondary,
                         maxLines = 1, overflow = TextOverflow.Ellipsis
                     )
+                    album?.let {
+                        Spacer(Modifier.height(1.dp))
+                        Text(
+                            it,
+                            style = Typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.secondary,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
-            }
-            Column(
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.End,
-                modifier = Modifier.fillMaxHeight()
-                    .padding(top = 5.dp, bottom = 4.dp, end = 5.dp)
-            ) {
-                Icon(Icons.Filled.MoreVert, "More")
-                TooltipBox(
-                    positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                    tooltip = {
-                        PlainTooltip(
-                            containerColor = MaterialTheme.colorScheme.background,
-                            contentColor = MaterialTheme.colorScheme.primary
+                Spacer(Modifier.width(5.dp))
+                Column(
+                    modifier = Modifier.fillMaxHeight().padding(bottom = 4.dp),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    if (isNowPlaying)
+                        Icon(
+                            Icons.Filled.PlayArrow,
+                            "Now Playing",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    else {
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                            tooltip = {
+                                PlainTooltip(
+                                    containerColor = MaterialTheme.colorScheme.background,
+                                    contentColor = MaterialTheme.colorScheme.primary
+                                ) {
+                                    Text(dateTimeFormatter.format(Date(timestamp)))
+                                }
+                            },
+                            state = tooltipState
                         ) {
                             Text(
-                                SimpleDateFormat.getDateTimeInstance()
-                                    .format(Date(timestamp * 1000))
+                                formatDate(timestamp),
+                                style = Typography.bodySmall,
+                                color = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.clickable(onClick = {
+                                    scope.launch { tooltipState.show() }
+                                })
                             )
                         }
-                    },
-                    state = rememberTooltipState()
-                ) {
-                    Text(
-                        formatDate(timestamp),
-                        style = Typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun BottomSheetSpacer() {
+    Spacer(Modifier.height(5.dp))
+    HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+    Spacer(Modifier.height(15.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryBottomSheet(
-    track: String,
-    artist: String,
-    album: String?,
-    onClickArtist: () -> Unit,
-    onClickAlbum: () -> Unit,
-    onClickTrack: () -> Unit,
-    onClickTrackHistory: () -> Unit,
-    onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        modifier = modifier
-    ) {
-        Column {
-            HistoryBottomSheetComponent(
-                modifier = Modifier.padding(10.dp),
-                icon = { Icon(Icons.Filled.MusicNote, "Track", tint = MaterialTheme.colorScheme.secondary) },
-                header = track,
-                buttonContents = {
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Track plays", style = MaterialTheme.typography.bodySmall)
-                        Text("6", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                    }
-                    Spacer(Modifier.width(10.dp))
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Time listened", style = MaterialTheme.typography.bodySmall)
-                        Text("100d 00:12", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                    }
-                },
-                onMainButton = onClickTrackHistory,
-                onMore = onClickTrack
-            )
-            Spacer(Modifier.height(5.dp))
-            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
-            Spacer(Modifier.height(15.dp))
-            HistoryBottomSheetComponent(
-                modifier = Modifier.padding(10.dp),
-                icon = { Icon(Icons.Filled.Person, "Artist", tint = MaterialTheme.colorScheme.secondary) },
-                header = artist,
-                buttonContents = {
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Artist plays", style = MaterialTheme.typography.bodySmall)
-                        Text("600", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                    }
-                    Spacer(Modifier.width(10.dp))
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Time listened", style = MaterialTheme.typography.bodySmall)
-                        Text("100d 00:12", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                    }
-                },
-                onMainButton = onClickArtist,
-                onMore = onClickArtist
-            )
-            album?.let {
-                Spacer(Modifier.height(5.dp))
-                HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
-                Spacer(Modifier.height(15.dp))
-                HistoryBottomSheetComponent(
-                    modifier = Modifier.padding(10.dp),
-                    icon = { Icon(Icons.Filled.Album, "Album", tint = MaterialTheme.colorScheme.secondary) },
-                    header = album,
-                    buttonContents = {
-                        Column(
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text("Artist plays", style = MaterialTheme.typography.bodySmall)
-                            Text("60", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                        }
-                        Spacer(Modifier.width(10.dp))
-                        Column(
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text("Time listened", style = MaterialTheme.typography.bodySmall)
-                            Text("100d 00:12", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                        }
-                    },
-                    onMainButton = onClickAlbum,
-                    onMore = onClickAlbum
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun HistoryBottomSheetComponent(
-    icon: @Composable () -> Unit,
+    icon: ImageVector,
+    iconDescription: String,
     header: String,
-    buttonContents: @Composable () -> Unit,
-    onMainButton: () -> Unit,
+    buttonContents: List<Pair<String, String>>,
     onMore: () -> Unit,
-    modifier: Modifier = Modifier
+    onMainButton: () -> Unit = onMore
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    var expanded by remember { mutableStateOf(false) }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.clickable(onClick = { expanded = !expanded })
+    ) {
         Spacer(Modifier.width(5.dp))
-        icon()
+        Icon(icon, iconDescription, tint = MaterialTheme.colorScheme.secondary)
         Spacer(Modifier.width(5.dp))
         Text(header,
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.primary,
-            maxLines = 1, overflow = TextOverflow.Ellipsis
+            maxLines = if (expanded) Int.MAX_VALUE else 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
     Spacer(Modifier.height(5.dp))
@@ -357,10 +353,18 @@ private fun HistoryBottomSheetComponent(
         ) {
             Row(
                 modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                buttonContents()
+                buttonContents.forEach { (line1, line2) ->
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(line1, style = MaterialTheme.typography.bodySmall)
+                        Text(line2, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
             }
         }
         Button(
@@ -390,12 +394,14 @@ private fun HistoryEntryPreview() {
     TrackerTheme {
         Scaffold { innerPadding ->
             HistoryEntry(
-                "Placeholder Track",
-                "Placeholder Artist",
-                "Placeholder Album",
-                System.currentTimeMillis() / 1000,
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = "Really Long album Name 00000000000000000000000",
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = false,
 
                 onClick = {},
+                onMore = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -408,52 +414,94 @@ private fun HistoryEntryPreviewDark() {
     TrackerTheme(darkTheme = true) {
         Scaffold { innerPadding ->
             HistoryEntry(
-                "Placeholder Track",
-                "Placeholder Artist",
-                "Placeholder Album",
-                System.currentTimeMillis() / 1000,
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = "Really Long album Name 00000000000000000000000",
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = false,
 
                 onClick = {},
+                onMore = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }
     }
 }
 
-@Preview
+@Preview(widthDp = 500, heightDp = 84)
 @Composable
-private fun HistoryBottomSheetPreview() {
+private fun HistoryEntryNoAlbumPreview() {
     TrackerTheme {
         Scaffold { innerPadding ->
-            HistoryBottomSheet(
-                "Placeholder Track",
-                "Placeholder Artist",
-                "Placeholder Album",
-                onDismiss = {},
-                onClickArtist = {},
-                onClickAlbum = {},
-                onClickTrack = {},
-                onClickTrackHistory = {},
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = null,
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = false,
+
+                onClick = {},
+                onMore = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }
     }
 }
 
-@Preview
+@Preview(widthDp = 500, heightDp = 84)
 @Composable
-private fun HistoryBottomSheetPreviewDark() {
+private fun HistoryEntryNoAlbumPreviewDark() {
     TrackerTheme(darkTheme = true) {
         Scaffold { innerPadding ->
-            HistoryBottomSheet(
-                "Placeholder Track",
-                "Placeholder Artist",
-                "Placeholder Album",
-                onDismiss = {},
-                onClickArtist = {},
-                onClickAlbum = {},
-                onClickTrack = {},
-                onClickTrackHistory = {},
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = null,
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = false,
+
+                onClick = {},
+                onMore = {},
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 500, heightDp = 84)
+@Composable
+private fun HistoryEntryNpPreview() {
+    TrackerTheme {
+        Scaffold { innerPadding ->
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = "Really Long album Name 00000000000000000000000",
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = true,
+
+                onClick = {},
+                onMore = {},
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 500, heightDp = 84)
+@Composable
+private fun HistoryEntryNpPreviewDark() {
+    TrackerTheme(darkTheme = true) {
+        Scaffold { innerPadding ->
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = "Really Long album Name 00000000000000000000000",
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = true,
+
+                onClick = {},
+                onMore = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }

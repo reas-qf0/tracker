@@ -20,4 +20,22 @@ interface PlayDao {
 
     @Query("SELECT * FROM plays ORDER BY timestamp DESC LIMIT :amount")
     fun getRecentPlays(amount: Int): Flow<List<Play>>
+
+    @Query("SELECT COUNT(*) FROM plays WHERE artist = :artist AND state = ${Play.FULL}")
+    fun getArtistPlays(artist: String): Flow<Int>
+
+    @Query("SELECT SUM(timePlayed) FROM plays WHERE artist = :artist AND state != ${Play.TINY}")
+    fun getArtistTimePlayed(artist: String): Flow<Long>
+
+    @Query("SELECT COUNT(*) FROM plays WHERE artist = :artist AND track = :track AND state = ${Play.FULL}")
+    fun getTrackPlays(artist: String, track: String): Flow<Int>
+
+    @Query("SELECT SUM(timePlayed) FROM plays WHERE artist = :artist AND track = :track AND state != ${Play.TINY}")
+    fun getTrackTimePlayed(artist: String, track: String): Flow<Long>
+
+    @Query("SELECT COUNT(*) FROM plays WHERE album = :album AND albumArtist = :artist AND state = ${Play.FULL}")
+    fun getAlbumPlays(artist: String, album: String): Flow<Int>
+
+    @Query("SELECT SUM(timePlayed) FROM plays WHERE album = :album AND albumArtist = :artist AND state != ${Play.TINY}")
+    fun getAlbumTimePlayed(artist: String, album: String): Flow<Long>
 }

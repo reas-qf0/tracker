@@ -5,6 +5,7 @@ import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
+import android.os.SystemClock
 import android.service.notification.NotificationListenerService
 import android.util.Log
 import androidx.core.content.getSystemService
@@ -50,15 +51,15 @@ private class MediaCallback(private val scope: CoroutineScope, private val appId
             val metadata = currentMetadata!!
 
             val event = Event(
-                metadata.title,
-                metadata.artist,
-                metadata.album,
-                metadata.albumArtist,
-                appId,
-                state.lastPositionUpdateTime,
-                state.position,
-                metadata.duration,
-                state.state == PlaybackState.STATE_PLAYING
+                track = metadata.title,
+                artist = metadata.artist,
+                album = metadata.album,
+                albumArtist = metadata.albumArtist,
+                app = appId,
+                timestamp = state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis(),
+                position = state.position,
+                duration = metadata.duration,
+                isPlaying = state.state == PlaybackState.STATE_PLAYING
             )
             EventProcessor.feed(repository, event)
         }
@@ -98,14 +99,16 @@ private class SessionListener(val scope: CoroutineScope): MediaSessionManager.On
 
 class NotifListenerService: NotificationListenerService() {
     private var initialized = false
+    private val repository = TrackerApplication.instance!!.container.repository
     private lateinit var job: Job
+    private lateinit var scope: CoroutineScope
     private lateinit var listener: SessionListener
 
     private fun init() {
         val sessManager = getSystemService<MediaSessionManager>()!!
         val component = ComponentName(this, this::class.java)
         job = SupervisorJob()
-        val scope = CoroutineScope(Dispatchers.Main + job)
+        scope = CoroutineScope(Dispatchers.Main + job)
         listener = SessionListener(scope)
 
         sessManager.addOnActiveSessionsChangedListener(listener, component)
@@ -115,7 +118,11 @@ class NotifListenerService: NotificationListenerService() {
     private fun destroy() {
         val sessManager = getSystemService<MediaSessionManager>()!!
         sessManager.removeOnActiveSessionsChangedListener(listener)
-        job.cancel()
+        scope.launch {
+            EventProcessor.cleanup(repository)
+        }.invokeOnCompletion {
+            job.cancel()
+        }
     }
 
     override fun onListenerConnected() {

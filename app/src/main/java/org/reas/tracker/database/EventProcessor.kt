@@ -6,14 +6,15 @@ object EventProcessor {
     private val cachedEvents = mutableMapOf<Long, Event>()
 
     private fun playFromEvent(event: Event): Play = Play(
-        event.track,
-        event.artist,
-        event.album,
-        event.albumArtist,
-        event.timestamp,
-        event.duration,
-        0L,
-        mutableListOf(event.id)
+        track = event.track,
+        artist = event.artist,
+        album = event.album,
+        albumArtist = event.albumArtist,
+        timestamp = event.timestamp,
+        duration = event.duration,
+        timePlayed = 0L,
+        state = Play.PLAYING,
+        associatedEvents = mutableListOf(event.id)
     )
 
     suspend fun feed(repository: Repository, event: Event) {
@@ -50,10 +51,27 @@ object EventProcessor {
             play.id = repository.insertPlay(play)
         } else {
             // no need to do anything, just tally up the time
+            if (!event.isPlaying && !lastEvent.isPlaying)
+                // duplicate stop event, return
+                return
             if (lastEvent.isPlaying)
                 current.timePlayed += event.timestamp - lastEvent.timestamp
             current.associatedEvents.add(event.id)
+            current.updateState(event.isPlaying)
             repository.updatePlay(current)
         }
+    }
+
+    suspend fun cleanup(repository: Repository) {
+        // send stop events for all currently active plays
+        for ((app, play) in unfinishedPlays) {
+            val lastEvent = cachedEvents[play.associatedEvents.last()]!!
+            if (lastEvent.isPlaying) {
+                val newEvent = lastEvent.copy(timestamp = System.currentTimeMillis(), isPlaying = false)
+                feed(repository, newEvent)
+            }
+        }
+        unfinishedPlays.clear()
+        cachedEvents.clear()
     }
 }

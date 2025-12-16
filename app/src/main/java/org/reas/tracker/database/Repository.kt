@@ -12,6 +12,12 @@ interface Repository {
     suspend fun updatePlay(play: Play)
     suspend fun deletePlay(play: Play)
     fun getRecentPlays(amount: Int): Flow<List<Play>>
+    fun getArtistPlays(artist: String): Flow<Int>
+    fun getArtistTimePlayed(artist: String): Flow<Long>
+    fun getTrackPlays(artist: String, track: String): Flow<Int>
+    fun getTrackTimePlayed(artist: String, track: String): Flow<Long>
+    fun getAlbumPlays(artist: String, album: String): Flow<Int>
+    fun getAlbumTimePlayed(artist: String, album: String): Flow<Long>
 }
 
 
@@ -25,4 +31,10 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override suspend fun deletePlay(play: Play) = db.playDao().delete(play)
     override suspend fun updatePlay(play: Play) = db.playDao().update(play)
     override fun getRecentPlays(amount: Int) = db.playDao().getRecentPlays(amount)
+    override fun getArtistPlays(artist: String) = db.playDao().getArtistPlays(artist)
+    override fun getArtistTimePlayed(artist: String) = db.playDao().getArtistTimePlayed(artist)
+    override fun getAlbumPlays(artist: String, album: String) = db.playDao().getAlbumPlays(artist, album)
+    override fun getAlbumTimePlayed(artist: String, album: String) = db.playDao().getAlbumTimePlayed(artist, album)
+    override fun getTrackPlays(artist: String, track: String) = db.playDao().getTrackPlays(artist, track)
+    override fun getTrackTimePlayed(artist: String, track: String) = db.playDao().getTrackTimePlayed(artist, track)
 }
