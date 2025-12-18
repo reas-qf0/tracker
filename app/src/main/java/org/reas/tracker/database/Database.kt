@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [Event::class, Play::class], version = 1, exportSchema = false)
+@Database(entities = [Event::class, Play::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -19,7 +19,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return Instance ?: synchronized(this) {
-                Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
+                Room.databaseBuilder(context, AppDatabase::class.java, "database")
                     .fallbackToDestructiveMigration(false)
                     .build()
                     .also { Instance = it }

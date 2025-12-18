@@ -2,15 +2,12 @@ package org.reas.tracker
 
 import android.app.NotificationManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
-import com.google.firebase.installations.FirebaseInstallations
-import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 import org.reas.tracker.android.NotificationWrapper
 import org.reas.tracker.ui.TrackerApp
@@ -18,12 +15,21 @@ import org.reas.tracker.ui.TrackerApp
 class MainActivity : ComponentActivity() {
     private val container = TrackerApplication.instance!!.container
     private val authManager = container.authManager
+    private val cloudSave = container.cloudSave
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         authManager.init(this)
+        authManager.onSignIn { user ->
+            cloudSave.setId(user.uid)
+            cloudSave.trackRemoteEvents()
+            cloudSave.submitBatchEvents()
+        }
+        authManager.onSignOut {
+            cloudSave.onSignOut()
+        }
         savedInstanceState?.run {
             authManager.restore(
                 getParcelable("user"),
@@ -31,30 +37,9 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { regTokenTask ->
-            if (regTokenTask.isSuccessful) {
-                Log.d("FirebaseMessaging", "FCM registration token: ${regTokenTask.result}")
-            } else {
-                Log.e("FirebaseMessaging", "Unable to retrieve registration token",
-                    regTokenTask.exception)
-            }
-        }
-        FirebaseInstallations.getInstance().id.addOnCompleteListener { installationIdTask ->
-            if (installationIdTask.isSuccessful) {
-                Log.d("FirebaseInstallations", "Firebase Installations ID: ${installationIdTask.result}")
-            } else {
-                Log.e("FirebaseInstallations", "Unable to retrieve installations ID",
-                    installationIdTask.exception)
-            }
-        }
-
         NotificationWrapper.init(getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
-        NotificationWrapper.createChannel("Channel 1", 0) {
-            description = "Channel description 1"
-        }
-        NotificationWrapper.createChannel("Channel 2", 0) {
-            description = "Channel description 2"
-        }
+        NotificationWrapper.deletePreviousChannels()
+        NotificationWrapper.createChannel("Now Playing", 0)
 
         setContent {
             TrackerApp(

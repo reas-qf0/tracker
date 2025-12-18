@@ -19,12 +19,20 @@ object NotificationWrapper {
         this.notificationManager = notificationManager
     }
 
-    fun createChannel(name: String, importance: Int, params: NotificationChannel.() -> Unit) {
+    fun createChannel(name: String, importance: Int, params: NotificationChannel.() -> Unit = {}) {
         val channelIdString = channels.size.toString()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(channelIdString, name, importance).apply(params)
             notificationManager.createNotificationChannel(channel)
             channels[name] = channelIdString
+        }
+    }
+
+    fun deletePreviousChannels() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager.notificationChannels.forEach { channel ->
+                notificationManager.deleteNotificationChannel(channel.id)
+            }
         }
     }
 

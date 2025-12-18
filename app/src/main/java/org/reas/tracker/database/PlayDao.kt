@@ -18,6 +18,12 @@ interface PlayDao {
     @Delete
     suspend fun delete(play: Play)
 
+    @Query("SELECT * FROM plays WHERE playerId = :playerid ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLastPlayFromPlayer(playerid: String): Play?
+
+    @Query("DELETE FROM plays WHERE playerId = :playerId")
+    suspend fun clearPlaysFromPlayer(playerId: String)
+
     @Query("SELECT * FROM plays ORDER BY timestamp DESC LIMIT :amount")
     fun getRecentPlays(amount: Int): Flow<List<Play>>
 

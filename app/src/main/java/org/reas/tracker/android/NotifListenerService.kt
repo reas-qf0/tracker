@@ -1,6 +1,7 @@
 package org.reas.tracker.android
 
 import android.content.ComponentName
+import android.content.Intent
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
@@ -16,7 +17,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.reas.tracker.TrackerApplication
 import org.reas.tracker.database.Event
-import org.reas.tracker.database.EventProcessor
 
 private val MediaMetadata.title
     get() = this.getString(MediaMetadata.METADATA_KEY_TITLE)
@@ -30,8 +30,9 @@ private val MediaMetadata.duration
     get() = this.getLong(MediaMetadata.METADATA_KEY_DURATION)
 
 private class MediaCallback(private val scope: CoroutineScope, private val appId: String): MediaController.Callback() {
-    private val repository = TrackerApplication.instance!!.container.repository
+    private val container = TrackerApplication.instance!!.container
     private var currentMetadata: MediaMetadata? = null
+
     override fun onMetadataChanged(metadata: MediaMetadata?) {
         Log.d(TAG, "onMetadataChanged($appId) $metadata")
 
@@ -55,13 +56,13 @@ private class MediaCallback(private val scope: CoroutineScope, private val appId
                 artist = metadata.artist,
                 album = metadata.album,
                 albumArtist = metadata.albumArtist,
-                app = appId,
+                playerId = "${container.fid}/$appId",
                 timestamp = state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis(),
                 position = state.position,
                 duration = metadata.duration,
                 isPlaying = state.state == PlaybackState.STATE_PLAYING
             )
-            EventProcessor.feed(repository, event)
+            container.eventProcessor.feed(event)
         }
     }
 
@@ -99,30 +100,30 @@ private class SessionListener(val scope: CoroutineScope): MediaSessionManager.On
 
 class NotifListenerService: NotificationListenerService() {
     private var initialized = false
-    private val repository = TrackerApplication.instance!!.container.repository
     private lateinit var job: Job
     private lateinit var scope: CoroutineScope
-    private lateinit var listener: SessionListener
+    private var listener: SessionListener? = null
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        return START_STICKY
+    }
 
     private fun init() {
         val sessManager = getSystemService<MediaSessionManager>()!!
         val component = ComponentName(this, this::class.java)
         job = SupervisorJob()
-        scope = CoroutineScope(Dispatchers.Main + job)
+        scope = CoroutineScope(Dispatchers.IO + job)
         listener = SessionListener(scope)
 
-        sessManager.addOnActiveSessionsChangedListener(listener, component)
-        listener.onActiveSessionsChanged(sessManager.getActiveSessions(component))
+        sessManager.addOnActiveSessionsChangedListener(listener!!, component)
+        listener!!.onActiveSessionsChanged(sessManager.getActiveSessions(component))
     }
 
     private fun destroy() {
         val sessManager = getSystemService<MediaSessionManager>()!!
-        sessManager.removeOnActiveSessionsChangedListener(listener)
-        scope.launch {
-            EventProcessor.cleanup(repository)
-        }.invokeOnCompletion {
-            job.cancel()
-        }
+        sessManager.removeOnActiveSessionsChangedListener(listener!!)
+        listener = null
+        job.cancel()
     }
 
     override fun onListenerConnected() {

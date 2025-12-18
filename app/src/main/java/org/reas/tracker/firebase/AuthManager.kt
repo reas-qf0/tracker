@@ -42,6 +42,9 @@ class AuthManager(private val context: Context) {
     ).build()
     private var activity: Activity? = null
 
+    private var onSignInCallback: (FirebaseUser) -> Unit = {}
+    private var onSignOutCallback: () -> Unit = {}
+
     fun init(activity: Activity) {
         this.activity = activity
         credentialManager = CredentialManager.create(activity.baseContext)
@@ -50,6 +53,8 @@ class AuthManager(private val context: Context) {
     fun restore(user: FirebaseUser?, signedIn: Boolean) {
         this.user = user
         this.signedIn = signedIn
+        if (user != null)
+            onSignInCallback(user)
     }
 
     private fun firebaseAuthWithGoogle(idToken: String) {
@@ -60,7 +65,10 @@ class AuthManager(private val context: Context) {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "signInWithCredential:success")
                     signedIn = true
-                    user = Firebase.auth.currentUser
+                    val currentUser = Firebase.auth.currentUser
+                    user = currentUser
+                    if (currentUser != null)
+                        onSignInCallback(currentUser)
                 } else {
                     // If sign in fails, display a message to the user
                     Log.w(TAG, "signInWithCredential:failure", task.exception)
@@ -150,8 +158,17 @@ class AuthManager(private val context: Context) {
             val clearRequest = ClearCredentialStateRequest()
             credentialManager.clearCredentialState(clearRequest)
             signedIn = false
+            onSignOutCallback()
         } catch (e: ClearCredentialException) {
             Log.e(TAG, "Couldn't clear user credentials: ${e.localizedMessage}")
         }
+    }
+
+    fun onSignIn(callback: (FirebaseUser) -> Unit) {
+        onSignInCallback = callback
+    }
+
+    fun onSignOut(callback: () -> Unit) {
+        onSignOutCallback = callback
     }
 }

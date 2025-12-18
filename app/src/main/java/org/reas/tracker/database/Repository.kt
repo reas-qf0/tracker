@@ -6,11 +6,15 @@ interface Repository {
     suspend fun insertEvent(event: Event): Long
     suspend fun updateEvent(event: Event)
     suspend fun deleteEvent(event: Event)
-    fun getEventsLaterThan(timestamp: Long): Flow<List<Event>>
+    suspend fun getLastEventFromPlayer(playerId: String): Event?
+    suspend fun getEventsFromPlayer(playerId: String): List<Event>
+    suspend fun getEvents(eventIds: List<String>): List<Event>
 
     suspend fun insertPlay(play: Play): Long
     suspend fun updatePlay(play: Play)
     suspend fun deletePlay(play: Play)
+    suspend fun getLastPlayFromPlayer(playerId: String): Play?
+    suspend fun clearPlaysFromPlayer(playerId: String)
     fun getRecentPlays(amount: Int): Flow<List<Play>>
     fun getArtistPlays(artist: String): Flow<Int>
     fun getArtistTimePlayed(artist: String): Flow<Long>
@@ -25,11 +29,15 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override suspend fun insertEvent(event: Event) = db.eventsDao().insert(event)
     override suspend fun deleteEvent(event: Event) = db.eventsDao().delete(event)
     override suspend fun updateEvent(event: Event) = db.eventsDao().update(event)
-    override fun getEventsLaterThan(timestamp: Long) = db.eventsDao().getEventsLaterThan(timestamp)
+    override suspend fun getLastEventFromPlayer(playerId: String) = db.eventsDao().getLastEventFromPlayer(playerId)
+    override suspend fun getEventsFromPlayer(playerId: String) = db.eventsDao().getEventsFromPlayer(playerId)
+    override suspend fun getEvents(eventIds: List<String>) = db.eventsDao().getEvents(eventIds)
 
     override suspend fun insertPlay(play: Play) = db.playDao().insert(play)
     override suspend fun deletePlay(play: Play) = db.playDao().delete(play)
     override suspend fun updatePlay(play: Play) = db.playDao().update(play)
+    override suspend fun getLastPlayFromPlayer(playerId: String) = db.playDao().getLastPlayFromPlayer(playerId)
+    override suspend fun clearPlaysFromPlayer(playerId: String) = db.playDao().clearPlaysFromPlayer(playerId)
     override fun getRecentPlays(amount: Int) = db.playDao().getRecentPlays(amount)
     override fun getArtistPlays(artist: String) = db.playDao().getArtistPlays(artist)
     override fun getArtistTimePlayed(artist: String) = db.playDao().getArtistTimePlayed(artist)

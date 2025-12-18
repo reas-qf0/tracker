@@ -68,7 +68,7 @@ private data class BottomSheetInfo(
     val track: String,
     val artist: String,
     val album: String?,
-    val albumArtist: String?
+    val albumArtist: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,9 +86,7 @@ fun HistoryScreen(
 
     LazyColumn(modifier = modifier) {
         items(
-            state.history.filter { scrobble ->
-                scrobble.isNowPlaying || scrobble.isFull
-            }
+            state.history.filter { it.isNowPlaying }.plus(state.history.filter { it.isFull })
         ) { scrobble ->
             HistoryEntry(
                 title = scrobble.track,
@@ -123,8 +121,8 @@ fun HistoryScreen(
         var albumPlays: State<String>? = null
         var albumTimePlayed: State<String>? = null
         album?.let {
-            albumPlays = viewModel.albumPlays(albumArtist!!, album).collectAsState()
-            albumTimePlayed = viewModel.albumTimePlayed(albumArtist!!, album).collectAsState()
+            albumPlays = viewModel.albumPlays(albumArtist, album).collectAsState()
+            albumTimePlayed = viewModel.albumTimePlayed(albumArtist, album).collectAsState()
         }
 
         ModalBottomSheet(
@@ -175,7 +173,7 @@ fun HistoryScreen(
                         ),
                         onMore = {
                             bottomSheet = null
-                            navigateToAlbum(albumArtist!!, album)
+                            navigateToAlbum(albumArtist, album)
                         }
                     )
                 }

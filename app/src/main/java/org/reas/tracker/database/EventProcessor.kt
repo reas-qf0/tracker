@@ -1,77 +1,70 @@
 package org.reas.tracker.database
 
-object EventProcessor {
-    const val SKIP_MIN_DURATION = 2000L
-    private val unfinishedPlays = mutableMapOf<String, Play>()
-    private val cachedEvents = mutableMapOf<Long, Event>()
+import org.reas.tracker.AppDataContainer
 
-    private fun playFromEvent(event: Event): Play = Play(
-        track = event.track,
-        artist = event.artist,
-        album = event.album,
-        albumArtist = event.albumArtist,
-        timestamp = event.timestamp,
-        duration = event.duration,
-        timePlayed = 0L,
-        state = Play.PLAYING,
-        associatedEvents = mutableListOf(event.id)
-    )
+class EventProcessor(private val container: AppDataContainer) {
+    companion object {
+        const val SKIP_MIN_DURATION = 2000L
+    }
 
-    suspend fun feed(repository: Repository, event: Event) {
-        event.id = repository.insertEvent(event)
-
-        cachedEvents[event.id] = event
-        val app = event.app
-        val current = unfinishedPlays[app]
-
-        if (current == null) {
-            // first event from this app
-            if (event.isPlaying) {
-                val play = playFromEvent(event)
-                unfinishedPlays[app] = play
-                play.id = repository.insertPlay(play)
-            }
+    suspend fun feed(event: Event, sync: Boolean = false) {
+        val lastEvent = container.repository.getLastEventFromPlayer(event.playerId)
+        if (lastEvent == null) {
+            // first ever message from this player
+            container.repository.insertEvent(event)
+            container.repository.insertPlay(Play.fromEvent(event))
             return
         }
+        if (lastEvent.isEqual(event)) {
+            // duplicate message from MediaListener
+            return
+        }
+        if (lastEvent.timestamp > event.timestamp) {
+            // EventProcessor only works well with monotonous timestamps
+            // grab all events from this player and rescans them
+            // a hack but works for now
+            val events = container.repository.getEventsFromPlayer(event.playerId)
+            feedBatch(events, true)
+        }
 
-        val lastEvent = cachedEvents[current.associatedEvents.last()]!!
+        // event is valid - save & show
+        container.repository.insertEvent(event)
+        if (!sync)
+            container.cloudSave.submitEvent(event)
 
-        if (event.isPlaying && (!event.metadataEqual(current) || event.position < SKIP_MIN_DURATION)) {
+        val lastPlay = container.repository.getLastPlayFromPlayer(event.playerId)
+        if (lastPlay == null) {
+            throw RuntimeException("lastEvent without an associated Play?")
+        }
+        if (lastEvent.isPlaying)
+            lastPlay.timePlayed += event.timestamp - lastEvent.timestamp
+
+        if (event.isPlaying && (!event.metadataEqual(lastPlay) || event.position < SKIP_MIN_DURATION)) {
             // start event for a new track / restart of the same track
             // first we need to send a stop event for the last track if there isn't one
             if (lastEvent.isPlaying) {
                 val newEvent = lastEvent.copy(timestamp = event.timestamp, isPlaying = false)
-                feed(repository, newEvent)
+                feed(newEvent)
             }
             // & replace the cached play for this app
-            for (eventId in current.associatedEvents)
-                cachedEvents.remove(eventId)
-            val play = playFromEvent(event)
-            unfinishedPlays[app] = play
-            play.id = repository.insertPlay(play)
+            val play = Play.fromEvent(event)
+            container.repository.insertPlay(play)
         } else {
-            // no need to do anything, just tally up the time
             if (!event.isPlaying && !lastEvent.isPlaying)
-                // duplicate stop event, return
-                return
-            if (lastEvent.isPlaying)
-                current.timePlayed += event.timestamp - lastEvent.timestamp
-            current.associatedEvents.add(event.id)
-            current.updateState(event.isPlaying)
-            repository.updatePlay(current)
+                return // duplicate stop event
+            lastPlay.associatedEvents.add(event.id)
+            lastPlay.updateState(container.repository.getEvents(lastPlay.associatedEvents))
+            container.repository.updatePlay(lastPlay)
         }
     }
 
-    suspend fun cleanup(repository: Repository) {
-        // send stop events for all currently active plays
-        for ((app, play) in unfinishedPlays) {
-            val lastEvent = cachedEvents[play.associatedEvents.last()]!!
-            if (lastEvent.isPlaying) {
-                val newEvent = lastEvent.copy(timestamp = System.currentTimeMillis(), isPlaying = false)
-                feed(repository, newEvent)
-            }
+    suspend fun feedBatch(events: List<Event>, sync: Boolean = false) {
+        events.sortedWith { event1, event2 ->            // sort each group by (timestamp, isPlaying)
+            if (event1.timestamp != event2.timestamp)
+                event1.timestamp.compareTo(event2.timestamp)
+            else event1.isPlaying.compareTo(event2.isPlaying)
+        }.forEach { event ->
+            feed(event, sync)
         }
-        unfinishedPlays.clear()
-        cachedEvents.clear()
     }
 }
