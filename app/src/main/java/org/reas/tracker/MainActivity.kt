@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import org.reas.tracker.android.DailyReportWorker
+import org.reas.tracker.android.FirestoreSyncWorker
 import org.reas.tracker.android.NotificationWrapper
 import org.reas.tracker.ui.TrackerApp
 
@@ -21,11 +23,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        NotificationWrapper.init(getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+        NotificationWrapper.deletePreviousChannels()
+        NotificationWrapper.createChannel("Now Playing", 2)
+        NotificationWrapper.createChannel("Sync Indicator", 0)
+        NotificationWrapper.createChannel("Daily Report", 1)
+
         authManager.init(this)
         authManager.onSignIn { user ->
             cloudSave.setId(user.uid)
-            cloudSave.trackRemoteEvents()
             cloudSave.submitBatchEvents()
+            cloudSave.trackRemoteEvents()
         }
         authManager.onSignOut {
             cloudSave.onSignOut()
@@ -37,9 +45,8 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        NotificationWrapper.init(getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
-        NotificationWrapper.deletePreviousChannels()
-        NotificationWrapper.createChannel("Now Playing", 0)
+        FirestoreSyncWorker.start(container)
+        DailyReportWorker.start(container)
 
         setContent {
             TrackerApp(

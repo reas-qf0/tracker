@@ -1,7 +1,6 @@
 package org.reas.tracker.database
 
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import kotlin.math.min
 import kotlin.uuid.ExperimentalUuidApi
@@ -17,31 +16,16 @@ data class Play(
     val timestamp: Long,
     val duration: Long,
     var timePlayed: Long,
+    var lastPosition: Long,
+    var lastTimestamp: Long,
     var state: Int,
     val associatedEvents: MutableList<String>
 ) {
     @OptIn(ExperimentalUuidApi::class)
     @PrimaryKey var id = Uuid.random().toHexDashString()
 
-    @Ignore
-    private var lastPosition = 0L
-    @Ignore
-    private var lastTimestamp = 0L
-
-    fun updateState(response: List<Event>) {
-        val events = response.sortedBy { it.timestamp }
-        lastPosition = events.last().position
-        lastTimestamp = events.last().timestamp
-
-        timePlayed = 0
-        var i = 0
-        while (i < events.size - 1) {
-            if (events[i].isPlaying)
-                timePlayed += events[i + 1].timestamp - events[i].timestamp
-            i++
-        }
-
-        if (events.last().isPlaying) {
+    fun updateState(lastEventPlaying: Boolean) {
+        if (lastEventPlaying) {
             state = PLAYING
             return
         }
@@ -55,6 +39,11 @@ data class Play(
         }
         state = FULL
     }
+
+    val currentPosition
+        get() = lastPosition + timestamp - lastTimestamp
+    val endTimestamp
+        get() = lastTimestamp + duration - lastPosition
 
     val isNowPlaying
         get() = state == PLAYING
@@ -79,6 +68,8 @@ data class Play(
             timestamp = event.timestamp,
             duration = event.duration,
             timePlayed = 0L,
+            lastTimestamp = event.timestamp,
+            lastPosition = event.position,
             state = PLAYING,
             associatedEvents = mutableListOf(event.id),
             playerId = event.playerId

@@ -55,7 +55,7 @@ private class MediaCallback(private val scope: CoroutineScope, private val appId
                 track = metadata.title,
                 artist = metadata.artist,
                 album = metadata.album,
-                albumArtist = metadata.albumArtist,
+                albumArtist = metadata.albumArtist ?: metadata.artist,
                 playerId = "${container.fid}/$appId",
                 timestamp = state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis(),
                 position = state.position,
@@ -99,6 +99,7 @@ private class SessionListener(val scope: CoroutineScope): MediaSessionManager.On
 }
 
 class NotifListenerService: NotificationListenerService() {
+    private val container = TrackerApplication.instance!!.container
     private var initialized = false
     private lateinit var job: Job
     private lateinit var scope: CoroutineScope
@@ -109,6 +110,7 @@ class NotifListenerService: NotificationListenerService() {
     }
 
     private fun init() {
+        if (listener != null) return
         val sessManager = getSystemService<MediaSessionManager>()!!
         val component = ComponentName(this, this::class.java)
         job = SupervisorJob()
@@ -117,6 +119,9 @@ class NotifListenerService: NotificationListenerService() {
 
         sessManager.addOnActiveSessionsChangedListener(listener!!, component)
         listener!!.onActiveSessionsChanged(sessManager.getActiveSessions(component))
+        scope.launch(Dispatchers.Default) {
+            container.eventProcessor.displayNotificationLoop()
+        }
     }
 
     private fun destroy() {

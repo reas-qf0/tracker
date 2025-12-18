@@ -3,6 +3,7 @@ package org.reas.tracker.firebase
 import android.app.Activity
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -22,8 +23,6 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import org.reas.tracker.R
-
-private val TAG = "org.reas.tracker"
 
 class AuthManager(private val context: Context) {
     var user by mutableStateOf<FirebaseUser?>(null)
@@ -72,6 +71,7 @@ class AuthManager(private val context: Context) {
                 } else {
                     // If sign in fails, display a message to the user
                     Log.w(TAG, "signInWithCredential:failure", task.exception)
+                    Toast.makeText(context, "Sign in failed", Toast.LENGTH_LONG).show()
                     signedIn = false
                 }
             }
@@ -103,6 +103,7 @@ class AuthManager(private val context: Context) {
             }
         } catch (e: GetCredentialException) {
             Log.e(TAG, "Couldn't retrieve user's credentials: ${e.localizedMessage}")
+            Toast.makeText(context, "Sign in failed", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -132,6 +133,7 @@ class AuthManager(private val context: Context) {
                             firebaseAuthWithGoogle(googleIdTokenCredential.idToken)
                         } catch (e: GoogleIdTokenParsingException) {
                             Log.e(TAG, "Received an invalid google id token response", e)
+                            Toast.makeText(context, "Sign in failed", Toast.LENGTH_LONG).show()
                         }
                     } else {
                         // Catch any unrecognized credential type here.
@@ -161,6 +163,7 @@ class AuthManager(private val context: Context) {
             onSignOutCallback()
         } catch (e: ClearCredentialException) {
             Log.e(TAG, "Couldn't clear user credentials: ${e.localizedMessage}")
+            Toast.makeText(context, "Sign out failed", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -170,5 +173,9 @@ class AuthManager(private val context: Context) {
 
     fun onSignOut(callback: () -> Unit) {
         onSignOutCallback = callback
+    }
+
+    companion object {
+        private const val TAG = "AuthManager"
     }
 }

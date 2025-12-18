@@ -11,7 +11,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 
 object NotificationWrapper {
-    private lateinit var notificationManager: NotificationManager
+    private var notificationManager: NotificationManager? = null
     private val channels = hashMapOf<String, String>()
     private var nextId = 0
 
@@ -23,34 +23,42 @@ object NotificationWrapper {
         val channelIdString = channels.size.toString()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(channelIdString, name, importance).apply(params)
-            notificationManager.createNotificationChannel(channel)
+            notificationManager!!.createNotificationChannel(channel)
             channels[name] = channelIdString
         }
     }
 
     fun deletePreviousChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.notificationChannels.forEach { channel ->
-                notificationManager.deleteNotificationChannel(channel.id)
+            notificationManager!!.notificationChannels.forEach { channel ->
+                notificationManager!!.deleteNotificationChannel(channel.id)
             }
         }
     }
 
-    fun sendNotification(context: Context, channel: String, params: Notification.Builder.() -> Unit): Int {
+    fun reserveId() = nextId++
+
+    fun show(context: Context, channel: String, id: Int? = null, params: Notification.Builder.() -> Unit): Int {
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             Log.e("MessagingService", "Notifications permission not granted")
-            throw RuntimeException("Notifications permission not granted")
         }
-        val notificationId = nextId++
+        val notificationId = id ?: nextId++
         val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
             Notification.Builder(context, channels[channel]).apply(params).build()
         else
             Notification.Builder(context).apply(params).build()
-        notificationManager.notify(notificationId, notification)
+        if (notificationManager != null) {
+            notificationManager!!.notify(notificationId, notification)
+        }
         return notificationId
+    }
+
+    fun hide(id: Int) {
+        if (notificationManager != null)
+            notificationManager!!.cancel(id)
     }
 }

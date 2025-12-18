@@ -24,6 +24,9 @@ interface EventsDao {
     @Query("SELECT * FROM events WHERE playerId = :playerId ORDER BY timestamp DESC LIMIT 1")
     suspend fun getLastEventFromPlayer(playerId: String): Event?
 
-    @Query("SELECT * FROM events WHERE playerId = :playerId")
+    @Query("SELECT * FROM events WHERE playerId = :playerId ORDER BY timestamp")
     suspend fun getEventsFromPlayer(playerId: String): List<Event>
+
+    @Query("DELETE FROM events WHERE playerId = :playerId")
+    suspend fun deleteEventsFromPlayer(playerId: String)
 }

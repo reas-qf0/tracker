@@ -14,7 +14,7 @@ class MessagingService : FirebaseMessagingService() {
         message.notification?.let { notification ->
 
             val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            NotificationWrapper.sendNotification(this, notification.title!!) {
+            NotificationWrapper.show(this, notification.title!!) {
                 setContentTitle(notification.title)
                 setContentText(notification.body)
                 setAutoCancel(true)

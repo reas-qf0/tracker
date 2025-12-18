@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.work.runtime.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
     testImplementation(libs.junit)

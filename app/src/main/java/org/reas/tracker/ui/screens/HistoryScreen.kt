@@ -81,13 +81,12 @@ fun HistoryScreen(
     modifier: Modifier = Modifier,
     viewModel: HistoryScreenViewModel = viewModel(factory = ViewModelProvider.Factory)
 ) {
-    val state by viewModel.history.collectAsState()
+    val nowPlaying by viewModel.nowPlaying.collectAsState()
+    val history by viewModel.history.collectAsState()
     var bottomSheet: BottomSheetInfo? by remember { mutableStateOf(null) }
 
     LazyColumn(modifier = modifier) {
-        items(
-            state.history.filter { it.isNowPlaying }.plus(state.history.filter { it.isFull })
-        ) { scrobble ->
+        items(nowPlaying.plus(history)) { scrobble ->
             HistoryEntry(
                 title = scrobble.track,
                 artist = scrobble.artist,

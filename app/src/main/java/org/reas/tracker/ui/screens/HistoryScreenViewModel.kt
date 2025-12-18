@@ -5,10 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import org.reas.tracker.database.Play
 import org.reas.tracker.database.Repository
-
-data class HistoryUiState(val history: List<Play> = listOf())
 
 class HistoryScreenViewModel(private val repository: Repository): ViewModel() {
     private fun timePlayedToString(time: Long): String {
@@ -21,12 +18,18 @@ class HistoryScreenViewModel(private val repository: Repository): ViewModel() {
         val days = (minutesTotal / 60 / 24)
         return "${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}"
     }
-    val history = repository.getRecentPlays(50)
-        .map { HistoryUiState(it) }
+
+    val nowPlaying = repository.getNowPlayingTracks()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = HistoryUiState()
+            initialValue = listOf()
+        )
+    val history = repository.getRecentPlays(50)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+            initialValue = listOf()
         )
 
     fun artistPlays(artist: String) = repository.getArtistPlays(artist)

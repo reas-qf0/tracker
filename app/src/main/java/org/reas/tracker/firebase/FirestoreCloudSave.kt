@@ -5,10 +5,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.reas.tracker.AppDataContainer
 import org.reas.tracker.database.Event
 
@@ -63,7 +60,6 @@ class FirestoreCloudSave(private val container: AppDataContainer) {
 
     fun trackRemoteEvents() {
         val id = userId ?: return
-        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         listener = eventsCollection(id).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 Log.w(TAG, "Listen failed.", error)
@@ -74,23 +70,17 @@ class FirestoreCloudSave(private val container: AppDataContainer) {
                 return@addSnapshotListener
             }
 
-            snapshot
+            val batch = snapshot
                 .documentChanges
                 .filter { change ->
-                    !change.document.metadata.hasPendingWrites() &&  // filter out local changes
-                    change.type == DocumentChange.Type.ADDED         // filter edits/deletes (for now)
+                    !change.document.metadata.hasPendingWrites() &&
+                    change.type == DocumentChange.Type.ADDED
                 }
                 .also { Log.i(TAG, "syncing a batch of ${it.size} events")}
-                .map { Event.fromMap(it.document.data) }      // convert to Events
-                .groupBy { it.playerId }                            // group by playerId
-                .forEach { _, group ->
-                    group.forEach { event ->                        // and send them off to EventProcessor
-                        scope.launch {
-                            container.eventProcessor.feedBatch(group, sync = true)
-                        }
-                    }
-                }
-
+                .map { Event.fromMap(it.document.data) }
+            runBlocking {
+                container.eventProcessor.feedBatch(batch, sync = true)
+            }
         }
     }
 
