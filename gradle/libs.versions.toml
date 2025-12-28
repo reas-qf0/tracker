@@ -1,5 +1,6 @@
 [versions]
 agp = "8.13.1"
+rustore-bom = "2025.08.01"
 credentials = "1.5.0"
 firebaseBom = "34.6.0"
 googleid = "1.1.1"
@@ -28,6 +29,8 @@ androidx-credentials = { module = "androidx.credentials:credentials", version.re
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+rustore-appupdate = { module = "ru.rustore.sdk:appupdate" }
+rustore-bom = { module = "ru.rustore.sdk:bom", version.ref = "rustore-bom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
