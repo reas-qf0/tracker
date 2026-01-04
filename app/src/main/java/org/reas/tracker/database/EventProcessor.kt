@@ -6,6 +6,7 @@ import android.app.TaskStackBuilder
 import android.content.Intent
 import android.util.Log
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import org.reas.tracker.AppDataContainer
 import org.reas.tracker.MainActivity
 import org.reas.tracker.R
@@ -27,19 +28,22 @@ class EventProcessor(private val container: AppDataContainer) {
 
     private fun updateNotification(event: Event) {
         Log.d(TAG, "updateNotification")
-        notificationBuilder = {
-            setContentTitle(event.track)
-            setContentText(event.artist)
-            setSmallIcon(R.drawable.ic_launcher_foreground)
+        if (event.isPlaying)
+            notificationBuilder = {
+                setContentTitle(event.track)
+                setContentText(event.artist)
+                setSmallIcon(R.drawable.ic_launcher_foreground)
 
-            val resultIntent = Intent(container.context, MainActivity::class.java)
-            val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(container.context).run {
-                addNextIntentWithParentStack(resultIntent)
-                getPendingIntent(0,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                val resultIntent = Intent(container.context, MainActivity::class.java)
+                val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(container.context).run {
+                    addNextIntentWithParentStack(resultIntent)
+                    getPendingIntent(0,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                }
+                setContentIntent(resultPendingIntent)
             }
-            setContentIntent(resultPendingIntent)
-        }
+        else
+            notificationBuilder = null
     }
 
     suspend fun displayNotificationLoop() {
@@ -53,6 +57,40 @@ class EventProcessor(private val container: AppDataContainer) {
         }
     }
 
+    private suspend fun plugHole(play: Play): Boolean {
+        if (play.lastPlaying && play.endTimestamp + SKIP_MIN_DURATION < System.currentTimeMillis()) {
+            Log.d(TAG, "plugHole $play")
+            val event = Event(
+                track = play.track,
+                artist = play.artist,
+                album = play.album,
+                albumArtist = play.artist,
+                playerId = play.playerId,
+                timestamp = play.endTimestamp,
+                position = play.duration,
+                duration = play.duration,
+                isPlaying = false
+            )
+            play.lastPlaying = false
+            play.timePlayed += play.endTimestamp - play.lastTimestamp
+            play.associatedEvents.add(event.id)
+
+            repository.insertEvent(event)
+            repository.updatePlay(play)
+            return true
+        }
+        return false
+    }
+
+    suspend fun plugHolesLoop() {
+        while (true) {
+            repository.getNowPlayingTracks().first().forEach { play ->
+                plugHole(play)
+            }
+            delay(1000)
+        }
+    }
+
     @OptIn(ExperimentalUuidApi::class)
     suspend fun feed(event: Event, sync: Boolean = false) {
         if (container.repository.getEvents(listOf(event.id)).isNotEmpty()) {
@@ -61,7 +99,7 @@ class EventProcessor(private val container: AppDataContainer) {
         }
 
         Log.d(TAG, "feed $event")
-        var lastEvent = container.repository.getLastEventFromPlayer(event.playerId)
+        val lastEvent = container.repository.getLastEventFromPlayer(event.playerId)
         if (lastEvent == null) {
             container.repository.insertPlay(Play.fromEvent(event))
         } else {
@@ -85,25 +123,6 @@ class EventProcessor(private val container: AppDataContainer) {
             val lastPlay = repository.getLastPlayFromPlayer(event.playerId)
             if (lastPlay == null) {
                 throw RuntimeException("lastEvent without an associated Play?")
-            }
-
-            // plug the hole caused by e.g. notif service getting killed
-            if (lastPlay.state == Play.PLAYING &&
-                lastPlay.endTimestamp + SKIP_MIN_DURATION < lastEvent.timestamp &&
-                lastPlay.endTimestamp + SKIP_MIN_DURATION < System.currentTimeMillis()) {
-                val event = Event(
-                    track = lastPlay.track,
-                    artist = lastPlay.artist,
-                    album = lastPlay.album,
-                    albumArtist = lastPlay.artist,
-                    playerId = lastPlay.playerId,
-                    timestamp = lastPlay.endTimestamp,
-                    position = lastPlay.duration,
-                    duration = lastPlay.duration,
-                    isPlaying = false
-                )
-                feed(event)
-                lastEvent = event
             }
 
             if (lastEvent.isPlaying)
@@ -130,7 +149,7 @@ class EventProcessor(private val container: AppDataContainer) {
                 lastPlay.associatedEvents.add(event.id)
                 lastPlay.lastPosition = event.position
                 lastPlay.lastTimestamp = event.timestamp
-                lastPlay.updateState(event.isPlaying)
+                lastPlay.lastPlaying = event.isPlaying
                 repository.updatePlay(lastPlay)
             }
         }

@@ -36,36 +36,41 @@ interface PlayDao {
     @Query("DELETE FROM plays WHERE playerId = :playerId")
     suspend fun clearPlaysFromPlayer(playerId: String)
 
-    @Query("SELECT * FROM plays WHERE state = ${Play.PLAYING}")
+    @Query("SELECT * FROM plays WHERE lastPlaying = 1")
     fun getNowPlayingTracks(): Flow<List<Play>>
 
-    @Query("SELECT * FROM plays WHERE state = ${Play.FULL} ORDER BY timestamp DESC LIMIT :amount")
+    @Query("SELECT * FROM plays WHERE timePlayed >= MIN(duration / 2, 240 * 1000) ORDER BY timestamp DESC LIMIT :amount")
     fun getRecentPlays(amount: Int): Flow<List<Play>>
 
-    @Query("SELECT COUNT(*) FROM plays WHERE artist = :artist AND state = ${Play.FULL}")
+    @Query("SELECT COUNT(*) FROM plays WHERE artist = :artist AND timePlayed >= MIN(duration / 2, 240 * 1000)")
     fun getArtistPlays(artist: String): Flow<Int>
 
-    @Query("SELECT SUM(timePlayed) FROM plays WHERE artist = :artist AND state != ${Play.TINY}")
+    @Query("SELECT SUM(timePlayed) FROM plays WHERE artist = :artist " +
+            "AND timePlayed >= ${EventProcessor.SKIP_MIN_DURATION}")
     fun getArtistTimePlayed(artist: String): Flow<Long>
 
     @Query("SELECT artist FROM plays WHERE timestamp >= :start AND timestamp < :end " +
             "GROUP BY artist ORDER BY SUM(timePlayed) DESC LIMIT :amount")
     fun getMostPlayedArtists(start: Long, end: Long, amount: Int): Flow<List<String>>
 
-    @Query("SELECT COUNT(*) FROM plays WHERE artist = :artist AND track = :track AND state = ${Play.FULL}")
+    @Query("SELECT COUNT(*) FROM plays WHERE artist = :artist AND track = :track " +
+            "AND timePlayed >= MIN(duration / 2, 240 * 1000)")
     fun getTrackPlays(artist: String, track: String): Flow<Int>
 
-    @Query("SELECT SUM(timePlayed) FROM plays WHERE artist = :artist AND track = :track AND state != ${Play.TINY}")
+    @Query("SELECT SUM(timePlayed) FROM plays WHERE artist = :artist AND track = :track " +
+            "AND timePlayed >= ${EventProcessor.SKIP_MIN_DURATION}")
     fun getTrackTimePlayed(artist: String, track: String): Flow<Long>
 
     @Query("SELECT artist, track FROM plays WHERE timestamp >= :start AND timestamp < :end " +
             "GROUP BY artist, track ORDER BY SUM(timePlayed) DESC LIMIT :amount")
     fun getMostPlayedTracks(start: Long, end: Long, amount: Int): Flow<List<TrackInfo>>
 
-    @Query("SELECT COUNT(*) FROM plays WHERE album = :album AND albumArtist = :artist AND state = ${Play.FULL}")
+    @Query("SELECT COUNT(*) FROM plays WHERE album = :album AND albumArtist = :artist " +
+            "AND timePlayed >= MIN(duration / 2, 240 * 1000)")
     fun getAlbumPlays(artist: String, album: String): Flow<Int>
 
-    @Query("SELECT SUM(timePlayed) FROM plays WHERE album = :album AND albumArtist = :artist AND state != ${Play.TINY}")
+    @Query("SELECT SUM(timePlayed) FROM plays WHERE album = :album AND albumArtist = :artist " +
+            "AND timePlayed >= ${EventProcessor.SKIP_MIN_DURATION}")
     fun getAlbumTimePlayed(artist: String, album: String): Flow<Long>
 
     @Query("SELECT albumArtist, album FROM plays WHERE timestamp >= :start AND timestamp < :end " +

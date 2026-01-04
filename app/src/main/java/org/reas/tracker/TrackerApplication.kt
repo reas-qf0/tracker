@@ -13,7 +13,6 @@ import org.reas.tracker.database.RoomRepository
 import org.reas.tracker.firebase.AuthManager
 import org.reas.tracker.firebase.FirestoreCloudSave
 import org.reas.tracker.rustore.UpdateManager
-import ru.rustore.sdk.appupdate.manager.factory.RuStoreAppUpdateManagerFactory
 
 class AppDataContainer(val context: Context) {
     val fid = runBlocking { Firebase.installations.id.await() }

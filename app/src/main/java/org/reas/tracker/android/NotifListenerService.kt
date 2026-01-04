@@ -122,6 +122,9 @@ class NotifListenerService: NotificationListenerService() {
         scope.launch(Dispatchers.Default) {
             container.eventProcessor.displayNotificationLoop()
         }
+        scope.launch(Dispatchers.IO) {
+            container.eventProcessor.plugHolesLoop()
+        }
     }
 
     private fun destroy() {

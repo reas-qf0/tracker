@@ -18,27 +18,11 @@ data class Play(
     var timePlayed: Long,
     var lastPosition: Long,
     var lastTimestamp: Long,
-    var state: Int,
+    var lastPlaying: Boolean,
     val associatedEvents: MutableList<String>
 ) {
     @OptIn(ExperimentalUuidApi::class)
     @PrimaryKey var id = Uuid.random().toHexDashString()
-
-    fun updateState(lastEventPlaying: Boolean) {
-        if (lastEventPlaying) {
-            state = PLAYING
-            return
-        }
-        if (timePlayed < EventProcessor.SKIP_MIN_DURATION) {
-            state = TINY
-            return
-        }
-        if (timePlayed < min(duration / 2, 240L * 1000)) {
-            state = SKIP
-            return
-        }
-        state = FULL
-    }
 
     val currentPosition
         get() = lastPosition + timestamp - lastTimestamp
@@ -46,20 +30,15 @@ data class Play(
         get() = lastTimestamp + duration - lastPosition
 
     val isNowPlaying
-        get() = state == PLAYING
+        get() = lastPlaying && currentPosition <= duration
     val isTiny
-        get() = state == TINY
+        get() = timePlayed < EventProcessor.SKIP_MIN_DURATION
     val isSkip
-        get() = state == SKIP
+        get() = timePlayed < min(duration / 2, 240L * 1000)
     val isFull
-        get() = state == FULL
+        get() = !isNowPlaying && !isTiny && !isSkip
 
     companion object {
-        const val PLAYING = 0
-        const val TINY = 1
-        const val SKIP = 2
-        const val FULL = 3
-
         fun fromEvent(event: Event): Play = Play(
             track = event.track,
             artist = event.artist,
@@ -70,7 +49,7 @@ data class Play(
             timePlayed = 0L,
             lastTimestamp = event.timestamp,
             lastPosition = event.position,
-            state = PLAYING,
+            lastPlaying = event.isPlaying,
             associatedEvents = mutableListOf(event.id),
             playerId = event.playerId
         )
