@@ -132,6 +132,7 @@ class NotifListenerService: NotificationListenerService() {
         sessManager.removeOnActiveSessionsChangedListener(listener!!)
         listener = null
         job.cancel()
+        initialized = false
     }
 
     override fun onListenerConnected() {

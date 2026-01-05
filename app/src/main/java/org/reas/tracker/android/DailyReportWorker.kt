@@ -39,7 +39,7 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
                     Notification.BigTextStyle().bigText(
                         Html.fromHtml("""
                             <b>Most played artists:</b><br>${
-                                artists.joinToString("<br>")
+                                artists.joinToString("<br>") { it.artist }
                             }<br>
                             <b>Most played albums:</b><br>${
                                 albums.joinToString("<br>") { "${it.artist} - ${it.album}" }
