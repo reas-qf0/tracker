@@ -1,5 +1,6 @@
 package org.reas.tracker.database
 
+import androidx.paging.PagingSource
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
@@ -46,8 +47,8 @@ interface PlayDao {
     @Query("SELECT * FROM plays WHERE lastPlaying = 1")
     fun getNowPlayingTracks(): Flow<List<Play>>
 
-    @Query("SELECT * FROM plays WHERE timePlayed >= MIN(duration / 2, 240 * 1000) ORDER BY timestamp DESC LIMIT :amount")
-    fun getRecentPlays(amount: Int): Flow<List<Play>>
+    @Query("SELECT * FROM plays WHERE timePlayed >= MIN(duration / 2, 240 * 1000) ORDER BY timestamp DESC")
+    fun getRecentPlays(): PagingSource<Int, Play>
 
     @Query("SELECT COUNT(*) FROM plays WHERE artist = :artist AND timePlayed >= MIN(duration / 2, 240 * 1000)")
     fun getArtistPlays(artist: String): Flow<Int>
@@ -58,13 +59,13 @@ interface PlayDao {
 
     @Query("SELECT artist, SUM(timePlayed) as metric FROM plays " +
             "WHERE timestamp >= :start AND timestamp < :end " +
-            "GROUP BY artist ORDER BY metric DESC LIMIT :amount")
-    fun getMostPlayedArtists(start: Long, end: Long, amount: Int): Flow<List<ArtistInfo>>
+            "GROUP BY artist ORDER BY metric DESC")
+    fun getMostPlayedArtists(start: Long, end: Long): PagingSource<Int, ArtistInfo>
 
     @Query("SELECT artist, COUNT(*) as metric FROM plays " +
             "WHERE timestamp >= :start AND timestamp < :end AND timePlayed >= MIN(duration / 2, 240 * 1000)" +
-            "GROUP BY artist ORDER BY metric DESC LIMIT :amount")
-    fun getMostPlayedArtistsByPlayCount(start: Long, end: Long, amount: Int): Flow<List<ArtistInfo>>
+            "GROUP BY artist ORDER BY metric DESC")
+    fun getMostPlayedArtistsByPlayCount(start: Long, end: Long): PagingSource<Int, ArtistInfo>
 
     @Query("SELECT COUNT(*) FROM plays WHERE artist = :artist AND track = :track " +
             "AND timePlayed >= MIN(duration / 2, 240 * 1000)")
@@ -76,13 +77,13 @@ interface PlayDao {
 
     @Query("SELECT artist, track, SUM(timePlayed) as metric FROM plays " +
             "WHERE timestamp >= :start AND timestamp < :end " +
-            "GROUP BY artist, track ORDER BY metric DESC LIMIT :amount")
-    fun getMostPlayedTracks(start: Long, end: Long, amount: Int): Flow<List<TrackInfo>>
+            "GROUP BY artist, track ORDER BY metric DESC")
+    fun getMostPlayedTracks(start: Long, end: Long): PagingSource<Int, TrackInfo>
 
     @Query("SELECT artist, track, COUNT(*) as metric FROM plays " +
             "WHERE timestamp >= :start AND timestamp < :end AND timePlayed >= MIN(duration / 2, 240 * 1000)" +
-            "GROUP BY artist, track ORDER BY metric DESC LIMIT :amount")
-    fun getMostPlayedTracksByPlayCount(start: Long, end: Long, amount: Int): Flow<List<TrackInfo>>
+            "GROUP BY artist, track ORDER BY metric DESC")
+    fun getMostPlayedTracksByPlayCount(start: Long, end: Long): PagingSource<Int, TrackInfo>
 
     @Query("SELECT COUNT(*) FROM plays WHERE album = :album AND albumArtist = :artist " +
             "AND timePlayed >= MIN(duration / 2, 240 * 1000)")
@@ -93,12 +94,12 @@ interface PlayDao {
     fun getAlbumTimePlayed(artist: String, album: String): Flow<Long>
 
     @Query("SELECT albumArtist, album, SUM(timePlayed) as metric FROM plays " +
-            "WHERE timestamp >= :start AND timestamp < :end " +
-            "GROUP BY albumArtist, album ORDER BY metric DESC LIMIT :amount")
-    fun getMostPlayedAlbums(start: Long, end: Long, amount: Int): Flow<List<AlbumInfo>>
+            "WHERE timestamp >= :start AND timestamp < :end AND NOT (album IS NULL)" +
+            "GROUP BY albumArtist, album ORDER BY metric DESC")
+    fun getMostPlayedAlbums(start: Long, end: Long): PagingSource<Int, AlbumInfo>
 
     @Query("SELECT albumArtist, album, COUNT(*) as metric FROM plays " +
-            "WHERE timestamp >= :start AND timestamp < :end AND timePlayed >= MIN(duration / 2, 240 * 1000)" +
-            "GROUP BY albumArtist, album ORDER BY metric DESC LIMIT :amount")
-    fun getMostPlayedAlbumsByPlayCount(start: Long, end: Long, amount: Int): Flow<List<AlbumInfo>>
+            "WHERE timestamp >= :start AND timestamp < :end AND timePlayed >= MIN(duration / 2, 240 * 1000) AND NOT (album IS NULL)" +
+            "GROUP BY albumArtist, album ORDER BY metric DESC")
+    fun getMostPlayedAlbumsByPlayCount(start: Long, end: Long): PagingSource<Int, AlbumInfo>
 }

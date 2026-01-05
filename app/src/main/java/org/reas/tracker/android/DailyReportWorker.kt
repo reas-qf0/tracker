@@ -4,12 +4,12 @@ import android.app.Notification
 import android.content.Context
 import android.text.Html
 import android.util.Log
+import androidx.paging.PagingSource
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import kotlinx.coroutines.flow.first
 import org.reas.tracker.AppDataContainer
 import org.reas.tracker.R
 import org.reas.tracker.TrackerApplication
@@ -27,9 +27,15 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
         val repository = container.repository
         val startTime = clock.now().minus(1.days).toEpochMilliseconds()
         val endTime = clock.now().toEpochMilliseconds()
-        val artists = repository.getMostPlayedArtists(startTime, endTime, COUNT).first()
-        val albums = repository.getMostPlayedAlbums(startTime, endTime, COUNT).first()
-        val tracks = repository.getMostPlayedTracks(startTime, endTime, COUNT).first()
+        val artists = (repository.getMostPlayedArtists(startTime, endTime).load(
+            PagingSource.LoadParams.Refresh(0, COUNT, false)
+        ) as PagingSource.LoadResult.Page).data
+        val albums = (repository.getMostPlayedAlbums(startTime, endTime).load(
+            PagingSource.LoadParams.Refresh(0, COUNT, false)
+        ) as PagingSource.LoadResult.Page).data
+        val tracks = (repository.getMostPlayedTracks(startTime, endTime).load(
+            PagingSource.LoadParams.Refresh(0, COUNT, false)
+        ) as PagingSource.LoadResult.Page).data
 
         if (artists.isNotEmpty()) {
             NotificationWrapper.show(container.context, "Daily Report") {

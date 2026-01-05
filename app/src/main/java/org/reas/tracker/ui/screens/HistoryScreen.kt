@@ -3,6 +3,7 @@ package org.reas.tracker.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,6 +39,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import kotlinx.coroutines.launch
 import org.reas.tracker.ui.components.BottomSheetInfo
 import org.reas.tracker.util.DateTimeFormatter.dateTimeToString
@@ -61,7 +65,7 @@ fun HistoryScreen(
     viewModel: HistoryScreenViewModel = viewModel(factory = ViewModelProvider.Factory)
 ) {
     val nowPlaying by viewModel.nowPlaying.collectAsState()
-    val history by viewModel.history.collectAsState()
+    val history = viewModel.history.collectAsLazyPagingItems()
     val bottomSheetState = remember { mutableStateOf<BottomSheetInfo?>(null) }
 
     LazyColumn(modifier = modifier) {
@@ -86,25 +90,31 @@ fun HistoryScreen(
             )
         }
 
-        items(history) { scrobble ->
-            HistoryEntry(
-                title = scrobble.track,
-                artist = scrobble.artist,
-                album = scrobble.album,
-                timestamp = scrobble.timestamp,
-                isNowPlaying = false,
+        items(
+            history.itemCount,
+            key = history.itemKey { it.id }
+        ) { index ->
+            val scrobble = history[index]
+            scrobble?.let {
+                HistoryEntry(
+                    title = scrobble.track,
+                    artist = scrobble.artist,
+                    album = scrobble.album,
+                    timestamp = scrobble.timestamp,
+                    isNowPlaying = false,
 
-                onClick = {
-                    if (scrobble.album != null)
-                        bottomSheetState.showAlbumAndTrack(
-                            scrobble.artist, scrobble.track, scrobble.albumArtist, scrobble.album
-                        )
-                    else
-                        bottomSheetState.showTrack(scrobble.artist, scrobble.track)
-                },
-                onMore = {},
-                modifier = Modifier.padding(5.dp).height(84.dp)
-            )
+                    onClick = {
+                        if (scrobble.album != null)
+                            bottomSheetState.showAlbumAndTrack(
+                                scrobble.artist, scrobble.track, scrobble.albumArtist, scrobble.album
+                            )
+                        else
+                            bottomSheetState.showTrack(scrobble.artist, scrobble.track)
+                    },
+                    onMore = {},
+                    modifier = Modifier.padding(5.dp).height(84.dp)
+                )
+            }
         }
     }
 
@@ -144,13 +154,19 @@ private fun HistoryEntry(
     ) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    title,
-                    color = MaterialTheme.colorScheme.primary,
-                    style = Typography.titleLarge,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                Box(
                     modifier = Modifier.weight(1.0F).padding(top = 2.dp)
-                )
+                        .height(28.dp)
+                        .wrapContentHeight(align = Alignment.CenterVertically, unbounded = true),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    Text(
+                        title,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = Typography.titleLarge,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis
+                    )
+                }
                 Spacer(Modifier.width(5.dp))
                 Icon(
                     Icons.Filled.MoreVert,
@@ -162,25 +178,37 @@ private fun HistoryEntry(
             Spacer(Modifier.height(2.dp))
             Row {
                 Column(modifier = Modifier.weight(1.0F)) {
-                    Text(
-                        artist,
-                        style = Typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.secondary,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis
-                    )
-                    album?.let {
-                        Spacer(Modifier.height(1.dp))
+                    Box(
+                        modifier = Modifier.height(20.dp)
+                            .wrapContentHeight(align = Alignment.CenterVertically, unbounded = true),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
                         Text(
-                            it,
-                            style = Typography.bodyMedium,
+                            artist,
+                            style = Typography.bodyLarge,
                             color = MaterialTheme.colorScheme.secondary,
                             maxLines = 1, overflow = TextOverflow.Ellipsis
                         )
                     }
+                    album?.let {
+                        Spacer(Modifier.height(1.dp))
+                        Box(
+                            modifier = Modifier.height(18.dp)
+                                .wrapContentHeight(align = Alignment.CenterVertically, unbounded = true),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            Text(
+                                it,
+                                style = Typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.secondary,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
                 }
                 Spacer(Modifier.width(5.dp))
                 Column(
-                    modifier = Modifier.fillMaxHeight().padding(bottom = 4.dp),
+                    modifier = Modifier.fillMaxHeight().padding(bottom = 3.dp),
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     if (isNowPlaying)

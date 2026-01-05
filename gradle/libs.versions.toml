@@ -16,11 +16,13 @@ composeBom = "2025.11.01"
 googleServices = "4.4.4"
 crashlytics = "3.0.6"
 navigationCompose = "2.9.6"
+pagingCompose = "3.3.6"
 adaptive = "1.2.0"
 material3AdaptiveNavigationSuite = "1.4.0"
 room = "2.8.4"
 ksp = "2.2.21-2.0.4"
 workRuntimeKtx = "2.11.0"
+pagingRuntimeKtx = "3.3.6"
 
 [libraries]
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -28,6 +30,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 rustore-appupdate = { module = "ru.rustore.sdk:appupdate" }
 rustore-bom = { module = "ru.rustore.sdk:bom", version.ref = "rustore-bom" }
@@ -59,6 +62,8 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+androidx-room-paging = { group = "androidx.room", name = "room-paging", version.ref = "room" }
+androidx-paging-runtime-ktx = { group = "androidx.paging", name = "paging-runtime-ktx", version.ref = "pagingRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

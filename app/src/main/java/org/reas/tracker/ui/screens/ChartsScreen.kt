@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -30,19 +30,22 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.compose.collectAsLazyPagingItems
 import org.reas.tracker.ui.components.BottomSheetInfo
 import org.reas.tracker.ui.components.InfoBottomSheet
 import org.reas.tracker.util.DateTimeFormatter.timeMsToString
@@ -50,6 +53,7 @@ import org.reas.tracker.ui.components.ListEntryWithImage
 import org.reas.tracker.ui.components.showAlbum
 import org.reas.tracker.ui.components.showArtist
 import org.reas.tracker.ui.components.showTrack
+import org.reas.tracker.ui.theme.TrackerTheme
 import org.reas.tracker.ui.viewmodels.ChartsScreenViewModel
 import org.reas.tracker.ui.viewmodels.ViewModelProvider
 import kotlin.enums.enumEntries
@@ -186,95 +190,113 @@ fun ChartsScreen(
         }
 
         if (chartType == ChartType.ARTISTS && chartSort == ChartSort.TIME) {
-            val artistsByTime by remember { viewModel.artists(startTimestamp, endTimestamp) }.collectAsState()
+            val artistsByTime = remember { viewModel.artists(startTimestamp, endTimestamp) }.collectAsLazyPagingItems()
             ChartColumn {
-                itemsIndexed(artistsByTime) { i, entry ->
-                    ChartEntry(
-                        number = i + 1,
-                        label = entry.artist,
-                        metricAsString = timeMsToString(entry.metric),
-                        metric = entry.metric.toDouble() / artistsByTime[0].metric,
-                        onClick = { bottomSheetState.showArtist(entry.artist) }
-                    )
+                items(artistsByTime.itemCount) { i ->
+                    val entry = artistsByTime[i]
+                    entry?.let {
+                        ChartEntry(
+                            number = i + 1,
+                            label = entry.artist,
+                            metricAsString = timeMsToString(entry.metric),
+                            metric = entry.metric.toDouble() / artistsByTime[0]!!.metric,
+                            onClick = { bottomSheetState.showArtist(entry.artist) }
+                        )
+                    }
                 }
             }
         }
 
         if (chartType == ChartType.ALBUMS && chartSort == ChartSort.TIME) {
-            val albumsByTime by remember { viewModel.albums(startTimestamp, endTimestamp) }.collectAsState()
+            val albumsByTime = remember { viewModel.albums(startTimestamp, endTimestamp) }.collectAsLazyPagingItems()
             ChartColumn {
-                itemsIndexed(albumsByTime) { i, entry ->
-                    ChartEntry(
-                        number = i + 1,
-                        label = entry.album,
-                        label2 = entry.artist,
-                        metricAsString = timeMsToString(entry.metric),
-                        metric = entry.metric.toDouble() / albumsByTime[0].metric,
-                        onClick = { bottomSheetState.showAlbum(entry.artist, entry.album) }
-                    )
+                items(albumsByTime.itemCount) { i ->
+                    val entry = albumsByTime[i]
+                    entry?.let {
+                        ChartEntry(
+                            number = i + 1,
+                            label = entry.album,
+                            label2 = entry.artist,
+                            metricAsString = timeMsToString(entry.metric),
+                            metric = entry.metric.toDouble() / albumsByTime[0]!!.metric,
+                            onClick = { bottomSheetState.showAlbum(entry.artist, entry.album) }
+                        )
+                    }
                 }
             }
         }
 
         if (chartType == ChartType.TRACKS && chartSort == ChartSort.TIME) {
-            val tracksByTime by remember { viewModel.tracks(startTimestamp, endTimestamp) }.collectAsState()
+            val tracksByTime = remember { viewModel.tracks(startTimestamp, endTimestamp) }.collectAsLazyPagingItems()
             ChartColumn {
-                itemsIndexed(tracksByTime) { i, entry ->
-                    ChartEntry(
-                        number = i + 1,
-                        label = entry.track,
-                        label2 = entry.artist,
-                        metricAsString = timeMsToString(entry.metric),
-                        metric = entry.metric.toDouble() / tracksByTime[0].metric,
-                        onClick = { bottomSheetState.showTrack(entry.artist, entry.track) }
-                    )
+                items(tracksByTime.itemCount) { i ->
+                    val entry = tracksByTime[i]
+                    entry?.let {
+                        ChartEntry(
+                            number = i + 1,
+                            label = entry.track,
+                            label2 = entry.artist,
+                            metricAsString = timeMsToString(entry.metric),
+                            metric = entry.metric.toDouble() / tracksByTime[0]!!.metric,
+                            onClick = { bottomSheetState.showTrack(entry.artist, entry.track) }
+                        )
+                    }
                 }
             }
         }
 
         if (chartType == ChartType.ARTISTS && chartSort == ChartSort.PLAYS) {
-            val artistsByPlayCount by remember { viewModel.artistsByPlayCount(startTimestamp, endTimestamp) }.collectAsState()
+            val artistsByPlayCount = remember { viewModel.artistsByPlayCount(startTimestamp, endTimestamp) }.collectAsLazyPagingItems()
             ChartColumn {
-                itemsIndexed(artistsByPlayCount) { i, entry ->
-                    ChartEntry(
-                        number = i + 1,
-                        label = entry.artist,
-                        metricAsString = "${entry.metric} plays",
-                        metric = entry.metric.toDouble() / artistsByPlayCount[0].metric,
-                        onClick = { bottomSheetState.showArtist(entry.artist) }
-                    )
+                items(artistsByPlayCount.itemCount) { i ->
+                    val entry = artistsByPlayCount[i]
+                    entry?.let {
+                        ChartEntry(
+                            number = i + 1,
+                            label = entry.artist,
+                            metricAsString = "${entry.metric} plays",
+                            metric = entry.metric.toDouble() / artistsByPlayCount[0]!!.metric,
+                            onClick = { bottomSheetState.showArtist(entry.artist) }
+                        )
+                    }
                 }
             }
         }
 
         if (chartType == ChartType.ALBUMS && chartSort == ChartSort.PLAYS) {
-            val albumsByPlayCount by remember { viewModel.albumsByPlayCount(startTimestamp, endTimestamp) }.collectAsState()
+            val albumsByPlayCount = remember { viewModel.albumsByPlayCount(startTimestamp, endTimestamp) }.collectAsLazyPagingItems()
             ChartColumn {
-                itemsIndexed(albumsByPlayCount) { i, entry ->
-                    ChartEntry(
-                        number = i + 1,
-                        label = entry.album,
-                        label2 = entry.artist,
-                        metricAsString = "${entry.metric} plays",
-                        metric = entry.metric.toDouble() / albumsByPlayCount[0].metric,
-                        onClick = { bottomSheetState.showAlbum(entry.artist, entry.album) }
-                    )
+                items(albumsByPlayCount.itemCount) { i ->
+                    val entry = albumsByPlayCount[i]
+                    entry?.let {
+                        ChartEntry(
+                            number = i + 1,
+                            label = entry.album,
+                            label2 = entry.artist,
+                            metricAsString = "${entry.metric} plays",
+                            metric = entry.metric.toDouble() / albumsByPlayCount[0]!!.metric,
+                            onClick = { bottomSheetState.showAlbum(entry.artist, entry.album) }
+                        )
+                    }
                 }
             }
         }
 
         if (chartType == ChartType.TRACKS && chartSort == ChartSort.PLAYS) {
-            val tracksByPlayCount by remember { viewModel.tracksByPlayCount(startTimestamp, endTimestamp) }.collectAsState()
+            val tracksByPlayCount = remember { viewModel.tracksByPlayCount(startTimestamp, endTimestamp) }.collectAsLazyPagingItems()
             ChartColumn {
-                itemsIndexed(tracksByPlayCount) { i, entry ->
-                    ChartEntry(
-                        number = i + 1,
-                        label = entry.track,
-                        label2 = entry.artist,
-                        metricAsString = "${entry.metric} plays",
-                        metric = entry.metric.toDouble() / tracksByPlayCount[0].metric,
-                        onClick = { bottomSheetState.showTrack(entry.artist, entry.track) }
-                    )
+                items(tracksByPlayCount.itemCount) { i ->
+                    val entry = tracksByPlayCount[i]
+                    entry?.let {
+                        ChartEntry(
+                            number = i + 1,
+                            label = entry.track,
+                            label2 = entry.artist,
+                            metricAsString = "${entry.metric} plays",
+                            metric = entry.metric.toDouble() / tracksByPlayCount[0]!!.metric,
+                            onClick = { bottomSheetState.showTrack(entry.artist, entry.track) }
+                        )
+                    }
                 }
             }
         }
@@ -324,19 +346,27 @@ private fun ChartEntry(
             modifier = Modifier.padding(end = 10.dp).fillMaxHeight(),
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                "$number. $label",
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleLarge
-            )
-            label2?.let {
+            Box(modifier = Modifier.height(28.dp)
+                .wrapContentHeight(align = Alignment.CenterVertically, unbounded = true),
+                    contentAlignment = Alignment.CenterStart) {
                 Text(
-                    label2,
+                    "$number. $label",
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleSmall
+                    style = MaterialTheme.typography.titleLarge
                 )
+            }
+            label2?.let {
+                Box(modifier = Modifier.height(20.dp)
+                    .wrapContentHeight(align = Alignment.CenterVertically, unbounded = true),
+                    contentAlignment = Alignment.CenterStart) {
+                    Text(
+                        label2,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                }
             }
             Spacer(Modifier.height(3.dp))
             Text(
@@ -351,6 +381,50 @@ private fun ChartEntry(
                 drawStopIndicator = {},
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
+    }
+}
+
+@Preview(heightDp = 87)
+@Composable
+private fun ChartEntryPreview() {
+    TrackerTheme {
+        Scaffold { innerPadding ->
+            ChartEntry(1, "Album Name", "Artist Name", 0.5, "Metric",
+                modifier = Modifier.padding(innerPadding))
+        }
+    }
+}
+
+@Preview(heightDp = 87)
+@Composable
+private fun ChartEntryPreviewDark() {
+    TrackerTheme(darkTheme = true) {
+        Scaffold { innerPadding ->
+            ChartEntry(1, "Album Name", "Artist Name", 0.5, "Metric",
+                modifier = Modifier.padding(innerPadding))
+        }
+    }
+}
+
+@Preview(heightDp = 87)
+@Composable
+private fun ChartEntryPreview2() {
+    TrackerTheme {
+        Scaffold { innerPadding ->
+            ChartEntry(1, "Album Name", null,  0.5, "Metric",
+                modifier = Modifier.padding(innerPadding))
+        }
+    }
+}
+
+@Preview(heightDp = 87)
+@Composable
+private fun ChartEntryPreviewDark2() {
+    TrackerTheme(darkTheme = true) {
+        Scaffold { innerPadding ->
+            ChartEntry(1, "Album Name", null, 0.5, "Metric",
+                modifier = Modifier.padding(innerPadding))
         }
     }
 }
