@@ -25,7 +25,7 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun trackPlays(artist: String, track: String) = repository.getTrackPlays(artist, track)
+    fun trackPlays(artist: String, track: String, album: String?) = repository.getTrackPlays(artist, track, album)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
@@ -33,7 +33,7 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun trackTimePlayed(artist: String, track: String) = repository.getTrackTimePlayed(artist, track)
+    fun trackTimePlayed(artist: String, track: String, album: String?) = repository.getTrackTimePlayed(artist, track, album)
         .map { timeMsToString(it) }
         .stateIn(
             scope = viewModelScope,

@@ -68,12 +68,19 @@ interface PlayDao {
     fun getMostPlayedArtistsByPlayCount(start: Long, end: Long): PagingSource<Int, ArtistInfo>
 
     @Query("SELECT COUNT(*) FROM plays WHERE artist = :artist AND track = :track " +
+            "AND (:album IS NULL OR album = :album) " +
             "AND timePlayed >= MIN(duration / 2, 240 * 1000)")
-    fun getTrackPlays(artist: String, track: String): Flow<Int>
+    fun getTrackPlays(artist: String, track: String, album: String?): Flow<Int>
 
     @Query("SELECT SUM(timePlayed) FROM plays WHERE artist = :artist AND track = :track " +
+            "AND (:album IS NULL OR album = :album) " +
             "AND timePlayed >= ${EventProcessor.SKIP_MIN_DURATION}")
-    fun getTrackTimePlayed(artist: String, track: String): Flow<Long>
+    fun getTrackTimePlayed(artist: String, track: String, album: String?): Flow<Long>
+
+    @Query("SELECT * FROM plays WHERE artist = :artist AND track = :track " +
+            "AND (:album IS NULL OR album = :album) " +
+            "AND timePlayed >= MIN(duration / 2, 240 * 1000) ORDER BY timestamp DESC")
+    fun getTrackHistory(artist: String, track: String, album: String?): PagingSource<Int, Play>
 
     @Query("SELECT artist, track, SUM(timePlayed) as metric FROM plays " +
             "WHERE timestamp >= :start AND timestamp < :end " +

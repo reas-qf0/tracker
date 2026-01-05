@@ -5,17 +5,22 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import org.reas.tracker.TrackerApplication
 
 object ViewModelProvider {
+    private val repository = TrackerApplication.instance!!.container.repository
     val Factory = viewModelFactory {
         initializer {
-            HistoryScreenViewModel(TrackerApplication.instance!!.container.repository)
+            HistoryScreenViewModel(repository)
         }
 
         initializer {
-            ChartsScreenViewModel(TrackerApplication.instance!!.container.repository)
+            ChartsScreenViewModel(repository)
         }
 
         initializer {
-            InfoBottomSheetsViewModel(TrackerApplication.instance!!.container.repository)
+            InfoBottomSheetsViewModel(repository)
+        }
+
+        initializer {
+            TrackHistoryViewModel(repository)
         }
     }
 }

@@ -90,7 +90,36 @@ fun TrackerNavHost(
             TrackHistoryScreen(
                 artist = artist,
                 track = track,
-                album = album
+                album = album,
+                navigateToArtist = { artist ->
+                    val artistE = encode(artist)
+                    navController.navigate("charts/artist/$artistE")
+                },
+                navigateToAlbum = { artist, album ->
+                    val artistE = encode(artist)
+                    val albumE = encode(album)
+                    navController.navigate("charts/album/$artistE/$albumE")
+                },
+                navigateToTrack = { artist, track, album ->
+                    val artistE = encode(artist)
+                    val trackE = encode(track)
+                    if (album != null) {
+                        val albumE = encode(album)
+                        navController.navigate("charts/track/$artistE/$trackE?album=$albumE")
+                    } else {
+                        navController.navigate("charts/track/$artistE/$trackE")
+                    }
+                },
+                navigateToTrackHistory = { artist, track, album ->
+                    val artistE = encode(artist)
+                    val trackE = encode(track)
+                    if (album != null) {
+                        val albumE = encode(album)
+                        navController.navigate("history/track/$artistE/$trackE?album=$albumE")
+                    } else {
+                        navController.navigate("history/track/$artistE/$trackE")
+                    }
+                }
             )
         }
 

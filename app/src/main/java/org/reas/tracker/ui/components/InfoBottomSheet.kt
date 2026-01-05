@@ -94,8 +94,8 @@ fun InfoBottomSheet(
         ) {
             Column {
                 track?.let {
-                    val trackPlays by remember { viewModel.trackPlays(artist, track) }.collectAsState()
-                    val trackTimePlayed by remember { viewModel.trackTimePlayed(artist, track) }.collectAsState()
+                    val trackPlays by remember { viewModel.trackPlays(artist, track, album) }.collectAsState()
+                    val trackTimePlayed by remember { viewModel.trackTimePlayed(artist, track, album) }.collectAsState()
                     HistoryBottomSheetComponent(
                         icon = Icons.Filled.MusicNote,
                         iconDescription = "Track",
