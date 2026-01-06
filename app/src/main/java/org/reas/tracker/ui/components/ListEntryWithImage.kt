@@ -3,12 +3,14 @@ package org.reas.tracker.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -17,9 +19,13 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun ListEntryWithImage(
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
+    alignment: Alignment.Vertical = Alignment.Top,
+    content: @Composable RowScope.() -> Unit,
 ) {
-    Row(modifier = modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = alignment
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxHeight()

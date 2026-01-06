@@ -1,0 +1,61 @@
+package org.reas.tracker.ui.components
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import org.reas.tracker.ui.navigation.ChartSort
+import kotlin.enums.enumEntries
+
+@Composable
+fun SortOrderSelectionChip(
+    value: ChartSort,
+    setValue: (ChartSort) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier) {
+        var expanded by remember { mutableStateOf(false) }
+        AssistChip(
+            onClick = { expanded = !expanded },
+            label = { Text(value.label) },
+            leadingIcon = {
+                Icon(
+                    value.icon,
+                    contentDescription = value.label,
+                    Modifier.size(AssistChipDefaults.IconSize)
+                )
+            }
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            enumEntries<ChartSort>().forEach { entry ->
+                DropdownMenuItem(
+                    leadingIcon = {
+                        Icon(
+                            entry.icon,
+                            contentDescription = entry.label,
+                            Modifier.size(AssistChipDefaults.IconSize)
+                        )
+                    },
+                    text = { Text(entry.label) },
+                    onClick = {
+                        setValue(entry)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}

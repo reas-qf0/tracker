@@ -4,20 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
-import androidx.savedstate.SavedState
+import androidx.navigation.compose.dialog
+import androidx.navigation.toRoute
 import com.google.firebase.auth.FirebaseUser
 import org.reas.tracker.R
+import org.reas.tracker.ui.dialogs.InfoBottomSheet
 import org.reas.tracker.ui.screens.*
-import kotlin.io.encoding.Base64
-
-private fun encode(s: String) = Base64.UrlSafe.encode(s.encodeToByteArray())
-private fun SavedState.decodeString(key: String) = getString(key)?.let {
-    Base64.UrlSafe.decode(it).decodeToString()
-}
 
 @Composable
 fun TrackerNavHost(
@@ -28,205 +22,73 @@ fun TrackerNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = "history"
+        startDestination = History
     ) {
-        composable(route = "history") {
+        composable<History> {
             title.value = stringResource(R.string.history)
             HistoryScreen(
-                navigateToArtist = { artist ->
-                    val artistE = encode(artist)
-                    navController.navigate("charts/artist/$artistE")
-                },
-                navigateToAlbum = { artist, album ->
-                    val artistE = encode(artist)
-                    val albumE = encode(album)
-                    navController.navigate("charts/album/$artistE/$albumE")
-                },
-                navigateToTrack = { artist, track, album ->
-                    val artistE = encode(artist)
-                    val trackE = encode(track)
-                    if (album != null) {
-                        val albumE = encode(album)
-                        navController.navigate("charts/track/$artistE/$trackE?album=$albumE")
-                    } else {
-                        navController.navigate("charts/track/$artistE/$trackE")
-                    }
-                },
-                navigateToTrackHistory = { artist, track, album ->
-                    val artistE = encode(artist)
-                    val trackE = encode(track)
-                    if (album != null) {
-                        val albumE = encode(album)
-                        navController.navigate("history/track/$artistE/$trackE?album=$albumE")
-                    } else {
-                        navController.navigate("history/track/$artistE/$trackE")
-                    }
-                }
+                navigateToBottomSheet = { navController.navigate(it) },
             )
         }
 
-        composable(
-            route = "history/track/{artist}/{track}?album={album}",
-            arguments = listOf(
-                navArgument("artist") {
-                    type = NavType.StringType
-                    nullable = false
-                },
-                navArgument("track") {
-                    type = NavType.StringType
-                    nullable = false
-                },
-                navArgument("album") {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            )
-        ) { backStackEntry ->
-            val arguments = backStackEntry.arguments!!
-            val artist = arguments.decodeString("artist")!!
-            val track = arguments.decodeString("track")!!
-            val album = arguments.decodeString("album")
-            title.value = "$artist - $track"
+        composable<TrackHistory> { backStackEntry ->
+            val arguments: TrackHistory = backStackEntry.toRoute()
+            title.value = "${arguments.artist} - ${arguments.track}"
             TrackHistoryScreen(
-                artist = artist,
-                track = track,
-                album = album,
-                navigateToArtist = { artist ->
-                    val artistE = encode(artist)
-                    navController.navigate("charts/artist/$artistE")
-                },
-                navigateToAlbum = { artist, album ->
-                    val artistE = encode(artist)
-                    val albumE = encode(album)
-                    navController.navigate("charts/album/$artistE/$albumE")
-                },
-                navigateToTrack = { artist, track, album ->
-                    val artistE = encode(artist)
-                    val trackE = encode(track)
-                    if (album != null) {
-                        val albumE = encode(album)
-                        navController.navigate("charts/track/$artistE/$trackE?album=$albumE")
-                    } else {
-                        navController.navigate("charts/track/$artistE/$trackE")
-                    }
-                },
-                navigateToTrackHistory = { artist, track, album ->
-                    val artistE = encode(artist)
-                    val trackE = encode(track)
-                    if (album != null) {
-                        val albumE = encode(album)
-                        navController.navigate("history/track/$artistE/$trackE?album=$albumE")
-                    } else {
-                        navController.navigate("history/track/$artistE/$trackE")
-                    }
-                }
+                arguments = arguments,
+                navigateToBottomSheet = { navController.navigate(it) },
             )
         }
 
-        composable(route = "charts") {
+        composable<Charts> { backStackEntry ->
+            val arguments: Charts = backStackEntry.toRoute()
             title.value = stringResource(R.string.charts)
             ChartsScreen(
-                navigateToArtist = { artist ->
-                    val artistE = encode(artist)
-                    navController.navigate("charts/artist/$artistE")
-                },
-                navigateToAlbum = { artist, album ->
-                    val artistE = encode(artist)
-                    val albumE = encode(album)
-                    navController.navigate("charts/album/$artistE/$albumE")
-                },
-                navigateToTrack = { artist, track, album ->
-                    val artistE = encode(artist)
-                    val trackE = encode(track)
-                    if (album != null) {
-                        val albumE = encode(album)
-                        navController.navigate("charts/track/$artistE/$trackE?album=$albumE")
-                    } else {
-                        navController.navigate("charts/track/$artistE/$trackE")
-                    }
-                },
-                navigateToTrackHistory = { artist, track, album ->
-                    val artistE = encode(artist)
-                    val trackE = encode(track)
-                    if (album != null) {
-                        val albumE = encode(album)
-                        navController.navigate("history/track/$artistE/$trackE?album=$albumE")
-                    } else {
-                        navController.navigate("history/track/$artistE/$trackE")
-                    }
-                }
+                arguments = arguments,
+                navigateToBottomSheet = { navController.navigate(it) },
+                navigateToCharts = { navController.navigate(it) }
             )
         }
 
-        composable(route = "settings") {
+        composable<Settings> {
             title.value = stringResource(R.string.settings)
             SettingsScreen(signOut = signOut)
         }
 
-        composable(
-            route = "charts/artist/{artist}",
-            arguments = listOf(
-                navArgument("artist") {
-                    type = NavType.StringType
-                    nullable = false
-                }
+        composable<ArtistInfo> { backStackEntry ->
+            val arguments: ArtistInfo = backStackEntry.toRoute()
+            title.value = arguments.artist
+            ArtistInfoScreen(
+                arguments = arguments,
+                navigateToArtist = { navController.navigate(it) }
             )
-        ) { backStackEntry ->
-            val arguments = backStackEntry.arguments!!
-            val artist = arguments.decodeString("artist")!!
-            title.value = artist
-            ArtistInfoScreen(artist = artist)
         }
 
-        composable(
-            route = "charts/album/{artist}/{album}",
-            arguments = listOf(
-                navArgument("artist") {
-                    type = NavType.StringType
-                    nullable = false
-                },
-                navArgument("album") {
-                    type = NavType.StringType
-                    nullable = false
-                }
-            )
-        ) { backStackEntry ->
-            val arguments = backStackEntry.arguments!!
-            val artist = arguments.decodeString("artist")!!
-            val album = arguments.decodeString("album")!!
-            title.value = "$artist - $album"
+        composable<AlbumInfo> { backStackEntry ->
+            val arguments: AlbumInfo = backStackEntry.toRoute()
+            title.value = "${arguments.artist} - ${arguments.album}"
             AlbumInfoScreen(
-                artist = artist,
-                album = album
+                arguments = arguments,
             )
         }
 
-        composable(
-            route = "charts/track/{artist}/{track}?album={album}",
-            arguments = listOf(
-                navArgument("artist") {
-                    type = NavType.StringType
-                    nullable = false
-                },
-                navArgument("track") {
-                    type = NavType.StringType
-                    nullable = false
-                },
-                navArgument("album") {
-                    type = NavType.StringType
-                    nullable = true
-                }
-            )
-        ) { backStackEntry ->
-            val arguments = backStackEntry.arguments!!
-            val artist = arguments.decodeString("artist")!!
-            val track = arguments.decodeString("track")!!
-            val album = arguments.decodeString("album")
-            title.value = "$artist - $track"
+        composable<TrackInfo> { backStackEntry ->
+            val arguments: TrackInfo = backStackEntry.toRoute()
+            title.value = "${arguments.artist} - ${arguments.track}"
             TrackInfoScreen(
-                artist = artist,
-                track = track,
-                album = album
+                arguments = arguments,
+            )
+        }
+
+        dialog<BottomSheetInfo> { backStackEntry ->
+            val arguments: BottomSheetInfo = backStackEntry.toRoute()
+            InfoBottomSheet(
+                arguments = arguments,
+                onDismiss = { navController.popBackStack() },
+                navigateToArtist = { navController.navigate(it) },
+                navigateToAlbum = { navController.navigate(it) },
+                navigateToTrack = { navController.navigate(it) },
+                navigateToTrackHistory = { navController.navigate(it) }
             )
         }
     }

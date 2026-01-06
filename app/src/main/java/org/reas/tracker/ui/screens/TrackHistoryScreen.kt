@@ -9,36 +9,31 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
-import org.reas.tracker.ui.components.BottomSheetInfo
 import org.reas.tracker.ui.components.HistoryEntry
-import org.reas.tracker.ui.components.InfoBottomSheet
-import org.reas.tracker.ui.components.showAlbumAndTrack
-import org.reas.tracker.ui.components.showTrack
+import org.reas.tracker.ui.navigation.BottomSheetInfo
+import org.reas.tracker.ui.navigation.TrackHistory
 import org.reas.tracker.ui.viewmodels.TrackHistoryViewModel
 import org.reas.tracker.ui.viewmodels.ViewModelProvider
 
 @Composable
 fun TrackHistoryScreen(
-    artist: String,
-    track: String,
+    arguments: TrackHistory,
     modifier: Modifier = Modifier,
-    album: String? = null,
-    navigateToArtist: (String) -> Unit,
-    navigateToAlbum: (String, String) -> Unit,
-    navigateToTrack: (String, String, String?) -> Unit,
-    navigateToTrackHistory: (String, String, String?) -> Unit,
+    navigateToBottomSheet: (BottomSheetInfo) -> Unit,
     viewModel: TrackHistoryViewModel = viewModel(factory = ViewModelProvider.Factory)
 ) {
+    val artist = arguments.artist
+    val track = arguments.track
+    val album = arguments.album
+
     val trackPlays by remember { viewModel.trackPlays(artist, track, album) }.collectAsState()
     val history = remember { viewModel.history(artist, track, album) }.collectAsLazyPagingItems()
-    val bottomSheetState = remember { mutableStateOf<BottomSheetInfo?>(null) }
 
     Column {
         Text(
@@ -62,12 +57,20 @@ fun TrackHistoryScreen(
                         isNowPlaying = false,
 
                         onClick = {
-                            if (scrobble.album != null)
-                                bottomSheetState.showAlbumAndTrack(
-                                    scrobble.artist, scrobble.track, scrobble.albumArtist, scrobble.album
-                                )
-                            else
-                                bottomSheetState.showTrack(scrobble.artist, scrobble.track)
+                            navigateToBottomSheet(
+                                if (scrobble.album != null)
+                                    BottomSheetInfo(
+                                        artist = scrobble.artist,
+                                        track = scrobble.track,
+                                        album = scrobble.album,
+                                        albumArtist = scrobble.albumArtist
+                                    )
+                                else
+                                    BottomSheetInfo(
+                                        artist = scrobble.artist,
+                                        track = scrobble.track
+                                    )
+                            )
                         },
                         onMore = {},
                         modifier = Modifier.padding(5.dp).height(84.dp)
@@ -76,12 +79,4 @@ fun TrackHistoryScreen(
             }
         }
     }
-
-    InfoBottomSheet(
-        bottomSheetState,
-        navigateToTrackHistory = navigateToTrackHistory,
-        navigateToTrack = navigateToTrack,
-        navigateToAlbum = navigateToAlbum,
-        navigateToArtist = navigateToArtist
-    )
 }

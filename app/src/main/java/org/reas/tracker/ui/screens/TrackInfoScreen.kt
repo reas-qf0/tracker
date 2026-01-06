@@ -3,19 +3,18 @@ package org.reas.tracker.ui.screens
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import org.reas.tracker.ui.navigation.TrackInfo
 
 @Composable
 fun TrackInfoScreen(
-    artist: String,
-    track: String,
+    arguments: TrackInfo,
     modifier: Modifier = Modifier,
-    album: String? = null
 ) {
     Text("""
         TrackInfoScreen
         
-        artist=$artist
-        track=$track
-        album=$album
+        artist=${arguments.artist}
+        track=${arguments.track}
+        album=${arguments.album}
     """.trimIndent())
 }

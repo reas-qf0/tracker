@@ -1,4 +1,4 @@
-package org.reas.tracker.ui.components
+package org.reas.tracker.ui.dialogs
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -28,7 +28,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,117 +39,89 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.reas.tracker.ui.navigation.AlbumInfo
+import org.reas.tracker.ui.navigation.ArtistInfo
+import org.reas.tracker.ui.navigation.BottomSheetInfo
+import org.reas.tracker.ui.navigation.TrackHistory
+import org.reas.tracker.ui.navigation.TrackInfo
 import org.reas.tracker.ui.viewmodels.InfoBottomSheetsViewModel
 import org.reas.tracker.ui.viewmodels.ViewModelProvider
-
-data class BottomSheetInfo(
-    val artist: String,
-    val track: String? = null,
-    val album: String? = null,
-    val albumArtist: String? = null
-)
-
-fun MutableState<BottomSheetInfo?>.showArtist(artist: String) {
-    value = BottomSheetInfo(artist = artist)
-}
-
-fun MutableState<BottomSheetInfo?>.showAlbum(artist: String, album: String) {
-    value = BottomSheetInfo(artist = artist, album = album, albumArtist = artist)
-}
-
-fun MutableState<BottomSheetInfo?>.showTrack(artist: String, track: String) {
-    value = BottomSheetInfo(artist = artist, track = track)
-}
-
-fun MutableState<BottomSheetInfo?>.showAlbumAndTrack(artist: String, track: String, albumArtist: String, album: String) {
-    value = BottomSheetInfo(artist = artist, track = track, albumArtist = albumArtist, album = album)
-}
-
-fun MutableState<BottomSheetInfo?>.hide() {
-    value = null
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoBottomSheet(
-    state: MutableState<BottomSheetInfo?>,
-    navigateToArtist: (String) -> Unit,
-    navigateToAlbum: (String, String) -> Unit,
-    navigateToTrack: (String, String, String?) -> Unit,
-    navigateToTrackHistory: (String, String, String?) -> Unit,
+    arguments: BottomSheetInfo,
+    onDismiss: () -> Unit,
+    navigateToArtist: (ArtistInfo) -> Unit,
+    navigateToAlbum: (AlbumInfo) -> Unit,
+    navigateToTrack: (TrackInfo) -> Unit,
+    navigateToTrackHistory: (TrackHistory) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InfoBottomSheetsViewModel = viewModel(factory = ViewModelProvider.Factory)
 ) {
-    val stateObj by state
+    val track = arguments.track
+    val album = arguments.album
+    val artist = arguments.artist
+    val albumArtist = arguments.albumArtist
 
-    stateObj?.let {
-        val track = stateObj!!.track
-        val album = stateObj!!.album
-        val artist = stateObj!!.artist
-        val albumArtist = stateObj!!.albumArtist
-        ModalBottomSheet(
-            onDismissRequest = { state.hide() },
-            modifier = modifier
-        ) {
-            Column {
-                track?.let {
-                    val trackPlays by remember { viewModel.trackPlays(artist, track, album) }.collectAsState()
-                    val trackTimePlayed by remember { viewModel.trackTimePlayed(artist, track, album) }.collectAsState()
-                    HistoryBottomSheetComponent(
-                        icon = Icons.Filled.MusicNote,
-                        iconDescription = "Track",
-                        header = stateObj!!.track!!,
-                        buttonContents = listOf(
-                            "Track plays" to trackPlays,
-                            "Time listened" to trackTimePlayed
-                        ),
-                        onMainButton = {
-                            state.hide()
-                            navigateToTrackHistory(artist, track, album)
-                        },
-                        onMore = {
-                            state.hide()
-                            navigateToTrack(artist, track, album)
-                        }
-                    )
-                    BottomSheetSpacer()
-                }
-
-                val artistPlays by remember { viewModel.artistPlays(artist) }.collectAsState()
-                val artistTimePlayed by remember { viewModel.artistTimePlayed(artist) }.collectAsState()
+    ModalBottomSheet(
+        onDismissRequest = { onDismiss() },
+        modifier = modifier
+    ) {
+        Column {
+            track?.let {
+                val trackPlays by remember { viewModel.trackPlays(artist, track, album) }.collectAsState()
+                val trackTimePlayed by remember { viewModel.trackTimePlayed(artist, track, album) }.collectAsState()
                 HistoryBottomSheetComponent(
-                    icon = Icons.Filled.Person,
-                    iconDescription = "Artist",
-                    header = artist,
+                    icon = Icons.Filled.MusicNote,
+                    iconDescription = "Track",
+                    header = track,
                     buttonContents = listOf(
-                        "Artist plays" to artistPlays,
-                        "Time listened" to artistTimePlayed
+                        "Track plays" to trackPlays,
+                        "Time listened" to trackTimePlayed
                     ),
+                    onMainButton = {
+                        navigateToTrackHistory(TrackHistory(artist, track, album))
+                    },
                     onMore = {
-                        state.hide()
-                        navigateToArtist(artist)
+                        navigateToTrack(TrackInfo(artist, album, track))
                     }
                 )
+                BottomSheetSpacer()
+            }
 
-                album?.let {
-                    albumArtist!!
-                    val albumPlays by remember { viewModel.albumPlays(albumArtist, album) }.collectAsState()
-                    val albumTimePlayed by remember { viewModel.albumTimePlayed(albumArtist, album) }.collectAsState()
-                    BottomSheetSpacer()
-                    HistoryBottomSheetComponent(
-                        icon = Icons.Filled.Album,
-                        iconDescription = "Album",
-                        header = album,
-                        buttonContents = listOf(
-                            "Album plays" to albumPlays,
-                            "Time listened" to albumTimePlayed
-                        ),
-                        onMore = {
-                            state.hide()
-                            navigateToAlbum(albumArtist, album)
-                        }
-                    )
+            val artistPlays by remember { viewModel.artistPlays(artist) }.collectAsState()
+            val artistTimePlayed by remember { viewModel.artistTimePlayed(artist) }.collectAsState()
+            HistoryBottomSheetComponent(
+                icon = Icons.Filled.Person,
+                iconDescription = "Artist",
+                header = artist,
+                buttonContents = listOf(
+                    "Artist plays" to artistPlays,
+                    "Time listened" to artistTimePlayed
+                ),
+                onMore = {
+                    navigateToArtist(ArtistInfo(artist))
                 }
+            )
+
+            album?.let {
+                albumArtist!!
+                val albumPlays by remember { viewModel.albumPlays(albumArtist, album) }.collectAsState()
+                val albumTimePlayed by remember { viewModel.albumTimePlayed(albumArtist, album) }.collectAsState()
+                BottomSheetSpacer()
+                HistoryBottomSheetComponent(
+                    icon = Icons.Filled.Album,
+                    iconDescription = "Album",
+                    header = album,
+                    buttonContents = listOf(
+                        "Album plays" to albumPlays,
+                        "Time listened" to albumTimePlayed
+                    ),
+                    onMore = {
+                        navigateToAlbum(AlbumInfo(albumArtist, album))
+                    }
+                )
             }
         }
     }
