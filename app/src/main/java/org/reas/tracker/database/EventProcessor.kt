@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import org.reas.tracker.AppDataContainer
 import org.reas.tracker.MainActivity
 import org.reas.tracker.R
+import org.reas.tracker.android.DataStoreWrapper.Companion.SCROBBLING_ENABLED
 import org.reas.tracker.android.NotificationWrapper
 import kotlin.jvm.java
 import kotlin.math.min
@@ -23,6 +24,7 @@ class EventProcessor(private val container: AppDataContainer) {
     }
 
     private val repository = container.repository
+    private val preferences = container.preferences
     private val notificationId = NotificationWrapper.reserveId()
     private var notificationBuilder: (Notification.Builder.() -> Unit)? = null
 
@@ -49,7 +51,7 @@ class EventProcessor(private val container: AppDataContainer) {
     suspend fun displayNotificationLoop() {
         while (true) {
             val b = notificationBuilder
-            if (b != null)
+            if (b != null && preferences.getValue(SCROBBLING_ENABLED, true))
                 NotificationWrapper.show(container.context, "Now Playing", notificationId, b)
             else
                 NotificationWrapper.hide(notificationId)
@@ -93,6 +95,10 @@ class EventProcessor(private val container: AppDataContainer) {
 
     @OptIn(ExperimentalUuidApi::class)
     suspend fun feed(event: Event, sync: Boolean = false) {
+        if (!sync && !preferences.getValue(SCROBBLING_ENABLED, true)) {
+            // scrobbling is disabled
+            return
+        }
         if (container.repository.getEvents(listOf(event.id)).isNotEmpty()) {
             // event already in local database => processed, do nothing
             return

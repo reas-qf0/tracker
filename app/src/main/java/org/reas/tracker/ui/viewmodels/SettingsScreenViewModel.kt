@@ -1,4 +1,4 @@
-package org.reas.tracker.ui.screens
+package org.reas.tracker.ui.viewmodels
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -6,8 +6,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.reas.tracker.TrackerApplication
+import org.reas.tracker.android.DataStoreWrapper.Companion.SCROBBLING_ENABLED
 import org.reas.tracker.rustore.CheckStatus
 import org.reas.tracker.rustore.UpdateStatus
 import ru.rustore.sdk.appupdate.model.AppUpdateInfo
@@ -20,6 +24,8 @@ data class UpdateState(
 
 class SettingsScreenViewModel : ViewModel() {
     private val updateManager = TrackerApplication.instance!!.container.updateManager
+    private val preferences = TrackerApplication.instance!!.container.preferences
+
     var updateState by mutableStateOf(UpdateState(
         text = "Check for updates",
         action = { checkForUpdates() }
@@ -69,5 +75,23 @@ class SettingsScreenViewModel : ViewModel() {
                 }
             }
         }
+    }
+
+    fun isScrobblingEnabled() = preferences.get(SCROBBLING_ENABLED)
+        .map { it ?: true }
+        .stateIn(
+            viewModelScope,
+            started = SharingStarted.Companion.WhileSubscribed(TIMEOUT_MILLIS),
+            initialValue = true
+        )
+
+    fun setScrobblingEnabled(x: Boolean) {
+        viewModelScope.launch {
+            preferences.set(SCROBBLING_ENABLED, x)
+        }
+    }
+
+    companion object {
+        private const val TIMEOUT_MILLIS = 5_000L
     }
 }

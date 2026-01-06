@@ -6,8 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -15,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import org.reas.tracker.R
 import org.reas.tracker.BuildConfig
+import org.reas.tracker.ui.viewmodels.SettingsScreenViewModel
 
 @Composable
 fun SettingsScreen(
@@ -26,12 +31,6 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.padding(horizontal = 10.dp)
     ) {
-        Button(
-            onClick = signOut,
-            modifier = modifier
-        ) {
-            Text(stringResource(R.string.sign_out))
-        }
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -43,6 +42,25 @@ fun SettingsScreen(
             ) {
                 Text(viewModel.updateState.text)
             }
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val scrobblingEnabled by remember { viewModel.isScrobblingEnabled() }.collectAsState()
+            Text("Enable Tracking")
+            Spacer(Modifier.weight(1.0F))
+            Switch(
+                checked = scrobblingEnabled,
+                onCheckedChange = { viewModel.setScrobblingEnabled(it) }
+            )
+        }
+
+        Button(
+            onClick = signOut,
+            modifier = modifier
+        ) {
+            Text(stringResource(R.string.sign_out))
         }
     }
 }

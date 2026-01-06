@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
         authManager.onSignIn { user ->
             cloudSave.setId(user.uid)
             cloudSave.submitBatchEvents()
-            cloudSave.trackRemoteEvents()
+            cloudSave.trackRemoteEvents(lifecycleScope)
         }
         authManager.onSignOut {
             cloudSave.onSignOut()

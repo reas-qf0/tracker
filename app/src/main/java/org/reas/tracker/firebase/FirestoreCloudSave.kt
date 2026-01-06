@@ -5,7 +5,9 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.firestore
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.reas.tracker.AppDataContainer
 import org.reas.tracker.database.Event
 
@@ -58,7 +60,7 @@ class FirestoreCloudSave(private val container: AppDataContainer) {
         batch.forEach { event -> submitEvent(event) }
     }
 
-    fun trackRemoteEvents() {
+    fun trackRemoteEvents(scope: CoroutineScope) {
         val id = userId ?: return
         listener = eventsCollection(id).addSnapshotListener { snapshot, error ->
             if (error != null) {
@@ -78,7 +80,7 @@ class FirestoreCloudSave(private val container: AppDataContainer) {
                 }
                 .also { Log.i(TAG, "syncing a batch of ${it.size} events")}
                 .map { Event.fromMap(it.document.data) }
-            runBlocking {
+            scope.launch(Dispatchers.IO) {
                 container.eventProcessor.feedBatch(batch, sync = true)
             }
         }
