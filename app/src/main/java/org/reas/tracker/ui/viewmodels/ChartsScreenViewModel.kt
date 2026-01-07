@@ -11,19 +11,12 @@ import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.reas.tracker.database.Repository
+import org.reas.tracker.ui.components.ChartEntryUiState
 import org.reas.tracker.ui.navigation.BottomSheetInfo
 import org.reas.tracker.ui.navigation.ChartSort
 import org.reas.tracker.ui.navigation.ChartType
 import org.reas.tracker.ui.navigation.Charts
 import org.reas.tracker.util.DateTimeFormatter.timeMsToString
-
-data class ChartEntryUiState(
-    val label: String,
-    val label2: String?,
-    val metric: Double,
-    val metricAsString: String,
-    val bottomSheetInfo: BottomSheetInfo
-)
 
 class ChartsScreenViewModel(private val repository: Repository) : ViewModel() {
     private fun<T : Any> get(factory: () -> PagingSource<Int, T>, transform: (T) -> ChartEntryUiState) = Pager(

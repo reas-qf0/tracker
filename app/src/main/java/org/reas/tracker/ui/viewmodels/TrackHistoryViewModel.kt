@@ -17,7 +17,7 @@ class TrackHistoryViewModel(private val repository: Repository): ViewModel() {
         config = PagingConfig(pageSize = 50, initialLoadSize = 50)
     ).flow.cachedIn(viewModelScope)
 
-    fun trackPlays(artist: String, track: String, album: String?) = repository.getTrackPlays(artist, track, album)
+    fun trackPlays(artist: String, track: String, album: String?) = repository.getTrackPlays(artist, track, album, 0L, Long.MAX_VALUE)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,

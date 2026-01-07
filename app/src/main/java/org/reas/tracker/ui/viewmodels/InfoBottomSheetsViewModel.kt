@@ -9,7 +9,7 @@ import org.reas.tracker.database.Repository
 import org.reas.tracker.util.DateTimeFormatter.timeMsToString
 
 class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel() {
-    fun artistPlays(artist: String) = repository.getArtistPlays(artist)
+    fun artistPlays(artist: String) = repository.getArtistPlays(artist, 0L, Long.MAX_VALUE)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
@@ -17,7 +17,7 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun artistTimePlayed(artist: String) = repository.getArtistTimePlayed(artist)
+    fun artistTimePlayed(artist: String) = repository.getArtistTimePlayed(artist, 0L, Long.MAX_VALUE)
         .map { timeMsToString(it) }
         .stateIn(
             scope = viewModelScope,
@@ -25,7 +25,7 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun trackPlays(artist: String, track: String, album: String?) = repository.getTrackPlays(artist, track, album)
+    fun trackPlays(artist: String, track: String, album: String?) = repository.getTrackPlays(artist, track, album, 0L, Long.MAX_VALUE)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
@@ -33,7 +33,7 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun trackTimePlayed(artist: String, track: String, album: String?) = repository.getTrackTimePlayed(artist, track, album)
+    fun trackTimePlayed(artist: String, track: String, album: String?) = repository.getTrackTimePlayed(artist, track, album, 0L, Long.MAX_VALUE)
         .map { timeMsToString(it) }
         .stateIn(
             scope = viewModelScope,
@@ -41,7 +41,7 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun albumPlays(artist: String, album: String) = repository.getAlbumPlays(artist, album)
+    fun albumPlays(artist: String, album: String) = repository.getAlbumPlays(artist, album, 0L, Long.MAX_VALUE)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
@@ -49,7 +49,7 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun albumTimePlayed(artist: String, album: String) = repository.getAlbumTimePlayed(artist, album)
+    fun albumTimePlayed(artist: String, album: String) = repository.getAlbumTimePlayed(artist, album, 0L, Long.MAX_VALUE)
         .map { timeMsToString(it) }
         .stateIn(
             scope = viewModelScope,

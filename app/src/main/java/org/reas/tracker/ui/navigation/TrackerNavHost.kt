@@ -60,7 +60,8 @@ fun TrackerNavHost(
             title.value = arguments.artist
             ArtistInfoScreen(
                 arguments = arguments,
-                navigateToArtist = { navController.navigate(it) }
+                navigateToArtist = { navController.navigate(it) },
+                navigateToBottomSheet = { navController.navigate(it) }
             )
         }
 

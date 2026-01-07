@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import org.reas.tracker.ui.components.ChartColumn
-import org.reas.tracker.ui.components.ChartEntry
 import org.reas.tracker.ui.components.ChartTypeSelectionChip
 import org.reas.tracker.ui.components.SortOrderSelectionChip
 import org.reas.tracker.ui.navigation.BottomSheetInfo
@@ -40,15 +39,10 @@ fun ChartsScreen(
             SortOrderSelectionChip(chartSort, { navigateToCharts(arguments.copy(sort = it)) })
         }
 
-        ChartColumn(info) { i, entry ->
-            ChartEntry(
-                number = i,
-                label = entry.label,
-                label2 = entry.label2,
-                metricAsString = entry.metricAsString,
-                metric = entry.metric / info[0]!!.metric,
-                onClick = { navigateToBottomSheet(entry.bottomSheetInfo) }
-            )
-        }
+        ChartColumn(
+            info,
+            onClick = { entry -> navigateToBottomSheet(entry.bottomSheetInfo) },
+            modifier = Modifier.padding(vertical = 5.dp)
+        )
     }
 }

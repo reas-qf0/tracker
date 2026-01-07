@@ -22,5 +22,9 @@ object ViewModelProvider {
         initializer {
             TrackHistoryViewModel(repository)
         }
+
+        initializer {
+            ArtistInfoScreenViewModel(repository)
+        }
     }
 }
