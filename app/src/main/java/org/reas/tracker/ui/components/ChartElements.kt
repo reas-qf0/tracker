@@ -1,6 +1,5 @@
 package org.reas.tracker.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,13 +9,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
@@ -29,7 +28,8 @@ data class ChartEntryUiState(
     val label2: String?,
     val metric: Double,
     val metricAsString: String,
-    val bottomSheetInfo: BottomSheetInfo
+    val bottomSheetInfo: BottomSheetInfo,
+    val url: suspend () -> Any? = { null }
 )
 
 @Composable
@@ -72,7 +72,8 @@ fun ChartColumn(
                         label2 = entry.label2,
                         metricAsString = entry.metricAsString,
                         metric = entry.metric / items[0]!!.metric,
-                        onClick = { onClick(entry) }
+                        onClick = { onClick(entry) },
+                        url = entry.url
                     )
                 }
             }
@@ -89,15 +90,16 @@ fun ChartEntry(
     metric: Double,
     metricAsString: String,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    url: suspend () -> Any? = { null }
 ) {
     ListEntryWithImage(
+        dynamicColor = true,
         modifier = modifier
             .height(87.dp)
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(5.dp))
-            .clickable(onClick = onClick)
-            .padding(5.dp)
+            .clickable(onClick = onClick),
+        url = url
     ) {
         Column(
             modifier = Modifier.padding(end = 10.dp).fillMaxHeight(),
@@ -126,7 +128,7 @@ fun ChartEntry(
             Spacer(Modifier.height(2.dp))
             LinearProgressIndicator(
                 progress = { metric.toFloat() },
-                trackColor = MaterialTheme.colorScheme.surfaceContainer,
+                trackColor = Color.Transparent,
                 drawStopIndicator = {},
                 modifier = Modifier.fillMaxWidth(),
             )

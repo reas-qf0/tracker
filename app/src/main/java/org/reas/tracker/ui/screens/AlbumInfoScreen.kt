@@ -80,7 +80,8 @@ fun AlbumInfoScreen(
         ) {
             ListEntryWithImage(
                 modifier = Modifier.height(125.dp),
-                alignment = Alignment.CenterVertically
+                alignment = Alignment.CenterVertically,
+                url = { viewModel.getAlbumImageUrl(artist, album) }
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,

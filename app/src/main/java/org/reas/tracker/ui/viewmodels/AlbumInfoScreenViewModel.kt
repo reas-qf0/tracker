@@ -11,11 +11,15 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.reas.tracker.database.Repository
+import org.reas.tracker.network.NetworkRepository
 import org.reas.tracker.ui.components.ChartEntryUiState
 import org.reas.tracker.ui.navigation.BottomSheetInfo
 import org.reas.tracker.util.DateTimeFormatter.timeMsToString
 
-class AlbumInfoScreenViewModel(private val repository: Repository): ViewModel() {
+class AlbumInfoScreenViewModel(
+    private val repository: Repository,
+    private val networkRepository: NetworkRepository
+): ViewModel() {
     private fun<T : Any> get(factory: () -> PagingSource<Int, T>, transform: (T) -> ChartEntryUiState) = Pager(
         initialKey = 0,
         pagingSourceFactory = factory,
@@ -79,6 +83,9 @@ class AlbumInfoScreenViewModel(private val repository: Repository): ViewModel() 
             bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track)
         )
     }
+
+    suspend fun getAlbumImageUrl(artist: String, album: String) =
+        networkRepository.getAlbumImageUrl(artist, album, "large")
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L

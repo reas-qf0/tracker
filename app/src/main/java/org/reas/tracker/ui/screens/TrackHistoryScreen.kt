@@ -56,6 +56,9 @@ fun TrackHistoryScreen(
                         timestamp = scrobble.timestamp,
                         isNowPlaying = false,
 
+                        imageUrl = {
+                            scrobble.album?.let { viewModel.getAlbumImageUrl(scrobble.artist, it) }
+                        },
                         onClick = {
                             navigateToBottomSheet(
                                 if (scrobble.album != null)

@@ -6,13 +6,14 @@ import org.reas.tracker.TrackerApplication
 
 object ViewModelProvider {
     private val repository = TrackerApplication.instance!!.container.repository
+    private val networkRepository = TrackerApplication.instance!!.container.networkRepository
     val Factory = viewModelFactory {
         initializer {
-            HistoryScreenViewModel(repository)
+            HistoryScreenViewModel(repository, networkRepository)
         }
 
         initializer {
-            ChartsScreenViewModel(repository)
+            ChartsScreenViewModel(repository, networkRepository)
         }
 
         initializer {
@@ -20,7 +21,7 @@ object ViewModelProvider {
         }
 
         initializer {
-            TrackHistoryViewModel(repository)
+            TrackHistoryViewModel(repository, networkRepository)
         }
 
         initializer {
@@ -28,7 +29,7 @@ object ViewModelProvider {
         }
 
         initializer {
-            AlbumInfoScreenViewModel(repository)
+            AlbumInfoScreenViewModel(repository, networkRepository)
         }
 
         initializer {

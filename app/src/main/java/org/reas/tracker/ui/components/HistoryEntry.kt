@@ -1,6 +1,5 @@
 package org.reas.tracker.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
@@ -42,10 +40,11 @@ fun HistoryEntry(
     artist: String,
     album: String?,
     timestamp: Long,
-    isNowPlaying: Boolean,
-    onClick: () -> Unit,
-    onMore: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isNowPlaying: Boolean = false,
+    imageUrl: suspend () -> Any? = { null },
+    onClick: () -> Unit = {},
+    onMore: () -> Unit = {},
 ) {
     val bgColor = if (isNowPlaying)
         MaterialTheme.colorScheme.surfaceContainerHighest
@@ -55,10 +54,10 @@ fun HistoryEntry(
     val scope = rememberCoroutineScope()
 
     ListEntryWithImage(
-        modifier = modifier
-            .background(bgColor, RoundedCornerShape(5.dp))
-            .clickable(onClick = onClick)
-            .padding(5.dp)
+        backgroundColor = bgColor,
+        dynamicColor = true,
+        url = imageUrl,
+        modifier = modifier.clickable(onClick = onClick)
     ) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -153,6 +152,7 @@ private fun HistoryEntryPreview() {
 
                 onClick = {},
                 onMore = {},
+                imageUrl = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -173,6 +173,7 @@ private fun HistoryEntryPreviewDark() {
 
                 onClick = {},
                 onMore = {},
+                imageUrl = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -193,6 +194,7 @@ private fun HistoryEntryNoAlbumPreview() {
 
                 onClick = {},
                 onMore = {},
+                imageUrl = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -213,6 +215,7 @@ private fun HistoryEntryNoAlbumPreviewDark() {
 
                 onClick = {},
                 onMore = {},
+                imageUrl = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -233,6 +236,7 @@ private fun HistoryEntryNpPreview() {
 
                 onClick = {},
                 onMore = {},
+                imageUrl = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -253,6 +257,7 @@ private fun HistoryEntryNpPreviewDark() {
 
                 onClick = {},
                 onMore = {},
+                imageUrl = {},
                 modifier = Modifier.padding(innerPadding)
             )
         }

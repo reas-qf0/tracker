@@ -8,8 +8,12 @@ import androidx.paging.cachedIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 import org.reas.tracker.database.Repository
+import org.reas.tracker.network.NetworkRepository
 
-class HistoryScreenViewModel(private val repository: Repository): ViewModel() {
+class HistoryScreenViewModel(
+    private val repository: Repository,
+    private val networkRepository: NetworkRepository
+): ViewModel() {
     val nowPlaying = repository.getNowPlayingTracks()
         .stateIn(
             scope = viewModelScope,
@@ -21,6 +25,9 @@ class HistoryScreenViewModel(private val repository: Repository): ViewModel() {
         pagingSourceFactory = { repository.getRecentPlays() },
         config = PagingConfig(pageSize = 50, initialLoadSize = 50)
     ).flow.cachedIn(viewModelScope)
+
+    suspend fun getAlbumImageUrl(artist: String, album: String) =
+        networkRepository.getAlbumImageUrl(artist, album, "large")
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L

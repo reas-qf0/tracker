@@ -13,6 +13,8 @@ import org.reas.tracker.database.EventProcessor
 import org.reas.tracker.database.RoomRepository
 import org.reas.tracker.firebase.AuthManager
 import org.reas.tracker.firebase.FirestoreCloudSave
+import org.reas.tracker.network.NetworkRepository
+import org.reas.tracker.network.RetrofitNetworkRepository
 import org.reas.tracker.rustore.UpdateManager
 
 class AppDataContainer(val context: Context) {
@@ -21,6 +23,9 @@ class AppDataContainer(val context: Context) {
     val authManager = AuthManager(context)
     val repository: Repository by lazy {
         RoomRepository(AppDatabase.getDatabase(context))
+    }
+    val networkRepository: NetworkRepository by lazy {
+        RetrofitNetworkRepository()
     }
     val cloudSave = FirestoreCloudSave(this)
     val eventProcessor = EventProcessor(this)

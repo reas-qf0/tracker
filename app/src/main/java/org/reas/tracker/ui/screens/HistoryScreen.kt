@@ -35,6 +35,9 @@ fun HistoryScreen(
                 timestamp = scrobble.timestamp,
                 isNowPlaying = true,
 
+                imageUrl = {
+                    scrobble.album?.let { viewModel.getAlbumImageUrl(scrobble.artist, it) }
+                },
                 onClick = {
                     navigateToBottomSheet(
                         if (scrobble.album != null)
@@ -69,6 +72,9 @@ fun HistoryScreen(
                     timestamp = scrobble.timestamp,
                     isNowPlaying = false,
 
+                    imageUrl = {
+                        scrobble.album?.let { viewModel.getAlbumImageUrl(scrobble.artist, it) }
+                    },
                     onClick = {
                         navigateToBottomSheet(
                             if (scrobble.album != null)

@@ -9,8 +9,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import org.reas.tracker.database.Repository
+import org.reas.tracker.network.NetworkRepository
 
-class TrackHistoryViewModel(private val repository: Repository): ViewModel() {
+class TrackHistoryViewModel(
+    private val repository: Repository,
+    private val networkRepository: NetworkRepository
+): ViewModel() {
     fun history(artist: String, track: String, album: String?) = Pager(
         initialKey = 0,
         pagingSourceFactory = { repository.getTrackHistory(artist, track, album) },
@@ -24,6 +28,9 @@ class TrackHistoryViewModel(private val repository: Repository): ViewModel() {
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = "..."
         )
+
+    suspend fun getAlbumImageUrl(artist: String, album: String) =
+        networkRepository.getAlbumImageUrl(artist, album, "large")
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L

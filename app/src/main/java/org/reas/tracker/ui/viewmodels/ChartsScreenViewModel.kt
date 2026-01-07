@@ -11,6 +11,7 @@ import androidx.paging.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.reas.tracker.database.Repository
+import org.reas.tracker.network.NetworkRepository
 import org.reas.tracker.ui.components.ChartEntryUiState
 import org.reas.tracker.ui.navigation.BottomSheetInfo
 import org.reas.tracker.ui.navigation.ChartSort
@@ -18,7 +19,10 @@ import org.reas.tracker.ui.navigation.ChartType
 import org.reas.tracker.ui.navigation.Charts
 import org.reas.tracker.util.DateTimeFormatter.timeMsToString
 
-class ChartsScreenViewModel(private val repository: Repository) : ViewModel() {
+class ChartsScreenViewModel(
+    private val repository: Repository,
+    private val networkRepository: NetworkRepository
+) : ViewModel() {
     private fun<T : Any> get(factory: () -> PagingSource<Int, T>, transform: (T) -> ChartEntryUiState) = Pager(
         initialKey = 0,
         pagingSourceFactory = factory,
@@ -49,7 +53,8 @@ class ChartsScreenViewModel(private val repository: Repository) : ViewModel() {
             label2 = info.artist,
             metric = info.metric.toDouble(),
             metricAsString = timeMsToString(info.metric),
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album)
+            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album),
+            url = { getAlbumImageUrl(info.artist, info.album) }
         )
     }
 
@@ -85,7 +90,8 @@ class ChartsScreenViewModel(private val repository: Repository) : ViewModel() {
             label2 = info.artist,
             metric = info.metric.toDouble(),
             metricAsString = "${info.metric} plays",
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album)
+            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album),
+            url = { getAlbumImageUrl(info.artist, info.album) }
         )
     }
 
@@ -124,4 +130,7 @@ class ChartsScreenViewModel(private val repository: Repository) : ViewModel() {
             else -> throw IllegalArgumentException("unreachable")
         }
     }
+
+    suspend fun getAlbumImageUrl(artist: String, album: String) =
+        networkRepository.getAlbumImageUrl(artist, album, "large")
 }
