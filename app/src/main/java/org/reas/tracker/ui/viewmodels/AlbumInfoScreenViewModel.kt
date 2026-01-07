@@ -15,7 +15,7 @@ import org.reas.tracker.ui.components.ChartEntryUiState
 import org.reas.tracker.ui.navigation.BottomSheetInfo
 import org.reas.tracker.util.DateTimeFormatter.timeMsToString
 
-class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel() {
+class AlbumInfoScreenViewModel(private val repository: Repository): ViewModel() {
     private fun<T : Any> get(factory: () -> PagingSource<Int, T>, transform: (T) -> ChartEntryUiState) = Pager(
         initialKey = 0,
         pagingSourceFactory = factory,
@@ -26,21 +26,21 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
             it.map { info -> transform(info) }
         }
 
-    fun plays(artist: String, start: Long, end: Long) = repository.getArtistPlays(artist, start, end)
+    fun plays(artist: String, album: String, start: Long, end: Long) = repository.getAlbumPlays(artist, album, start, end)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = -1
         )
 
-    fun timePlayed(artist: String, start: Long, end: Long) = repository.getArtistTimePlayed(artist, start, end)
+    fun timePlayed(artist: String, album: String, start: Long, end: Long) = repository.getAlbumTimePlayed(artist, album, start, end)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = -1L
         )
 
-    fun rank(time: Long, start: Long, end: Long) = repository.getArtistRank(time, start, end)
+    fun rank(time: Long, start: Long, end: Long) = repository.getAlbumRank(time, start, end)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -48,7 +48,7 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
             initialValue = "..."
         )
 
-    fun playRank(count: Int, start: Long, end: Long) = repository.getArtistRankByPlayCount(count, start, end)
+    fun playRank(count: Int, start: Long, end: Long) = repository.getAlbumRankByPlayCount(count, start, end)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -56,32 +56,8 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
             initialValue = "..."
         )
 
-    fun topAlbums(artist: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedAlbumsFromArtist(artist, start, end) }
-    ) { info ->
-        ChartEntryUiState(
-            label = info.album,
-            label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = timeMsToString(info.metric),
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album)
-        )
-    }
-
-    fun topAlbumsByPlayCount(artist: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedAlbumsFromArtistByPlayCount(artist, start, end) }
-    ) { info ->
-        ChartEntryUiState(
-            label = info.album,
-            label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = "${info.metric} plays",
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album)
-        )
-    }
-
-    fun topTracks(artist: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedTracksFromArtist(artist, start, end) }
+    fun topTracks(artist: String, album: String, start: Long, end: Long) = get(
+        { repository.getMostPlayedTracksFromAlbum(artist, album, start, end) }
     ) { info ->
         ChartEntryUiState(
             label = info.track,
@@ -92,8 +68,8 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
         )
     }
 
-    fun topTracksByPlayCount(artist: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedTracksFromArtistByPlayCount(artist, start, end) }
+    fun topTracksByPlayCount(artist: String, album: String, start: Long, end: Long) = get(
+        { repository.getMostPlayedTracksFromAlbumByPlayCount(artist, album, start, end) }
     ) { info ->
         ChartEntryUiState(
             label = info.track,

@@ -92,7 +92,8 @@ data class AlbumInfo(
 data class TrackInfo(
     val artist: String,
     val album: String?,
-    val track: String
+    val track: String,
+    val sort: ChartSort = ChartSort.TIME
 )
 
 @Serializable

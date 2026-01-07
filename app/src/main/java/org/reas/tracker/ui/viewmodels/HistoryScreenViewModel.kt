@@ -13,7 +13,7 @@ class HistoryScreenViewModel(private val repository: Repository): ViewModel() {
     val nowPlaying = repository.getNowPlayingTracks()
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Companion.WhileSubscribed(TIMEOUT_MILLIS),
+            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = listOf()
         )
     val history = Pager(

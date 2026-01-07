@@ -3,6 +3,7 @@ package org.reas.tracker.ui.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,4 +55,22 @@ fun ConstrainedText(
             modifier = Modifier.firstBaselineToTop(baselineHeight)
         )
     }
+}
+
+
+@Composable
+fun AutosizingText(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle = LocalTextStyle.current,
+    color: Color = Color.Unspecified,
+) {
+    Text(
+        text,
+        style = style,
+        color = color,
+        autoSize = TextAutoSize.StepBased(maxFontSize = style.fontSize),
+        maxLines = 1,
+        modifier = modifier
+    )
 }

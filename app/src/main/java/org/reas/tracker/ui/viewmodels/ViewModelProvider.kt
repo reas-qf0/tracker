@@ -26,5 +26,13 @@ object ViewModelProvider {
         initializer {
             ArtistInfoScreenViewModel(repository)
         }
+
+        initializer {
+            AlbumInfoScreenViewModel(repository)
+        }
+
+        initializer {
+            TrackInfoScreenViewModel(repository)
+        }
     }
 }

@@ -81,7 +81,7 @@ class SettingsScreenViewModel : ViewModel() {
         .map { it ?: true }
         .stateIn(
             viewModelScope,
-            started = SharingStarted.Companion.WhileSubscribed(TIMEOUT_MILLIS),
+            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = true
         )
 

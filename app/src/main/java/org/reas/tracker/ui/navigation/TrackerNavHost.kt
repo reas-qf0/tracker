@@ -70,6 +70,8 @@ fun TrackerNavHost(
             title.value = "${arguments.artist} - ${arguments.album}"
             AlbumInfoScreen(
                 arguments = arguments,
+                navigateToAlbum = { navController.navigate(it) },
+                navigateToBottomSheet = { navController.navigate(it) }
             )
         }
 
@@ -78,6 +80,8 @@ fun TrackerNavHost(
             title.value = "${arguments.artist} - ${arguments.track}"
             TrackInfoScreen(
                 arguments = arguments,
+                navigateToTrack = { navController.navigate(it) },
+                navigateToBottomSheet = { navController.navigate(it) }
             )
         }
 

@@ -21,7 +21,7 @@ class TrackHistoryViewModel(private val repository: Repository): ViewModel() {
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Companion.WhileSubscribed(TIMEOUT_MILLIS),
+            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = "..."
         )
 

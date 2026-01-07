@@ -123,7 +123,11 @@ class EventProcessor(private val container: AppDataContainer) {
                 val events = container.repository.getEventsFromPlayer(player)
                 repository.deleteEventsFromPlayer(player)
                 repository.clearPlaysFromPlayer(player)
-                feedBatch(events, true)
+                if (sync) {
+                    Log.e(TAG, "!!! resync shouldn't happen twice, aborting")
+                } else {
+                    feedBatch(events, true)
+                }
             }
 
             val lastPlay = repository.getLastPlayFromPlayer(event.playerId)
@@ -168,12 +172,16 @@ class EventProcessor(private val container: AppDataContainer) {
     }
 
     suspend fun feedBatch(events: List<Event>, sync: Boolean = false) {
-        Log.d(TAG, "feedBatch $events")
-        events.sortedWith { event1, event2 ->            // sort each group by (timestamp, isPlaying)
+        Log.d(TAG, "feedBatch:")
+        val sortedEvents = events.sortedWith { event1, event2 ->            // sort each group by (timestamp, isPlaying)
             if (event1.timestamp != event2.timestamp)
                 event1.timestamp.compareTo(event2.timestamp)
             else event1.isPlaying.compareTo(event2.isPlaying)
-        }.forEach { event ->
+        }
+        sortedEvents.forEach { event ->
+            Log.d(TAG, "    $event")
+        }
+        sortedEvents.forEach { event ->
             feed(event, sync)
         }
     }

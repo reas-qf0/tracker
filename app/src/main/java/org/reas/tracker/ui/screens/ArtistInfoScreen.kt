@@ -1,23 +1,15 @@
 package org.reas.tracker.ui.screens
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowRight
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,14 +19,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.reas.tracker.ui.components.AutosizingText
 import org.reas.tracker.ui.components.ChartColumn
+import org.reas.tracker.ui.components.InfoBox
+import org.reas.tracker.ui.components.InfoChartHeader
 import org.reas.tracker.ui.components.ListEntryWithImage
 import org.reas.tracker.ui.components.SortOrderSelectionChip
 import org.reas.tracker.ui.navigation.ArtistInfo
@@ -58,12 +52,16 @@ fun ArtistInfoScreen(
     val start = 0L
     val end = Long.MAX_VALUE
 
-    val plays by remember { viewModel.artistPlays(artist, start, end) }.collectAsState()
-    val timePlayed by remember { viewModel.artistTimePlayed(artist, start, end) }.collectAsState()
+    val plays by remember { viewModel.plays(artist, start, end) }.collectAsState()
+    val timePlayed by remember { viewModel.timePlayed(artist, start, end) }.collectAsState()
+    val playsAsString = if (plays == -1) "..." else plays.toString()
+    val timePlayedAsString = if (timePlayed == -1L) "..." else timeMsToString(timePlayed)
     val rank by remember(plays, timePlayed) {
         when (sort) {
-            ChartSort.PLAYS -> viewModel.playRank(plays, start, end)
-            ChartSort.TIME -> viewModel.rank(timePlayed, start, end)
+            ChartSort.PLAYS ->
+                if (plays == -1) MutableStateFlow("...") else viewModel.playRank(plays, start, end)
+            ChartSort.TIME ->
+                if (timePlayed == -1L) MutableStateFlow("...") else viewModel.rank(timePlayed, start, end)
         }
     }.collectAsState()
     val albums = remember {
@@ -92,11 +90,9 @@ fun ArtistInfoScreen(
                 modifier = Modifier.height(125.dp),
                 alignment = Alignment.CenterVertically
             ) {
-                Text(
+                AutosizingText(
                     artist,
                     style = MaterialTheme.typography.displaySmall,
-                    textAlign = TextAlign.Center,
-                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1.0F)
                 )
             }
@@ -105,86 +101,35 @@ fun ArtistInfoScreen(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1.0F)
-                        .border(1.dp, Color.Gray, MaterialTheme.shapes.medium)
-                        .aspectRatio(1.0F),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(plays.toString(), style = MaterialTheme.typography.headlineSmall)
-                        Text("plays", color = MaterialTheme.colorScheme.secondary)
-                    }
+                InfoBox {
+                    AutosizingText(playsAsString, style = MaterialTheme.typography.headlineSmall)
+                    Text("plays", color = MaterialTheme.colorScheme.secondary)
                 }
-                Box(
-                    modifier = Modifier
-                        .weight(1.0F)
-                        .border(1.dp, Color.Gray, MaterialTheme.shapes.medium)
-                        .aspectRatio(1.0F),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            timeMsToString(timePlayed),
-                            style = MaterialTheme.typography.headlineSmall,
-                            autoSize = TextAutoSize.StepBased(
-                                maxFontSize = MaterialTheme.typography.headlineSmall.fontSize
-                            ),
-                            maxLines = 1
-                        )
-                        Text("time played", color = MaterialTheme.colorScheme.secondary)
-                    }
+                InfoBox {
+                    AutosizingText(timePlayedAsString, style = MaterialTheme.typography.headlineSmall)
+                    Text("time played", color = MaterialTheme.colorScheme.secondary)
                 }
-                Box(
-                    modifier = Modifier
-                        .weight(1.0F)
-                        .border(1.dp, Color.Gray, MaterialTheme.shapes.medium)
-                        .aspectRatio(1.0F),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            rank,
-                            style = MaterialTheme.typography.headlineSmall,
-                            autoSize = TextAutoSize.StepBased(
-                                maxFontSize = MaterialTheme.typography.headlineSmall.fontSize
-                            ),
-                            maxLines = 1
-                        )
-                        Text(
-                            when (sort) {
-                                ChartSort.TIME -> "in charts\nby time"
-                                ChartSort.PLAYS -> "in charts\nby plays"
-                            },
-                            color = MaterialTheme.colorScheme.secondary,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                InfoBox {
+                    AutosizingText(rank, style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        when (sort) {
+                            ChartSort.TIME -> "in charts\nby time"
+                            ChartSort.PLAYS -> "in charts\nby plays"
+                        },
+                        color = MaterialTheme.colorScheme.secondary,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
 
             Spacer(Modifier.height(5.dp))
             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            InfoChartHeader(
+                "Top albums",
+                onClick = {},
                 modifier = Modifier.padding(top = 5.dp)
-            ) {
-                Text("Top albums", style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 10.dp))
-                Spacer(Modifier.weight(1.0F))
-                AssistChip(
-                    onClick = {},
-                    label = { Text("More") },
-                    leadingIcon = {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowRight,
-                            "More"
-                        )
-                    }
-                )
-            }
+            )
             ChartColumn(
                 albums, limit = 5,
                 onClick = { entry -> navigateToBottomSheet(entry.bottomSheetInfo) },
@@ -193,24 +138,11 @@ fun ArtistInfoScreen(
             Spacer(Modifier.height(5.dp))
             HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            InfoChartHeader(
+                "Top tracks",
+                onClick = {},
                 modifier = Modifier.padding(top = 5.dp)
-            ) {
-                Text("Top tracks", style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 10.dp))
-                Spacer(Modifier.weight(1.0F))
-                AssistChip(
-                    onClick = {},
-                    label = { Text("More") },
-                    leadingIcon = {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowRight,
-                            "More"
-                        )
-                    }
-                )
-            }
+            )
             ChartColumn(
                 tracks, limit = 5,
                 onClick = { entry -> navigateToBottomSheet(entry.bottomSheetInfo) },

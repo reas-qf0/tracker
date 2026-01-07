@@ -36,6 +36,8 @@ interface Repository {
     fun getMostPlayedTracksFromArtistByPlayCount(artist: String, start: Long, end: Long): PagingSource<Int, TrackInfo>
     fun getMostPlayedTracksFromAlbum(artist: String, album: String, start: Long, end: Long): PagingSource<Int, TrackInfo>
     fun getMostPlayedTracksFromAlbumByPlayCount(artist: String, album: String, start: Long, end: Long): PagingSource<Int, TrackInfo>
+    fun getAlbumRank(time: Long, start: Long, end: Long): Flow<Int>
+    fun getAlbumRankByPlayCount(count: Int, start: Long, end: Long) : Flow<Int>
 
     fun getAlbumPlays(artist: String, album: String, start: Long, end: Long): Flow<Int>
     fun getAlbumTimePlayed(artist: String, album: String, start: Long, end: Long): Flow<Long>
@@ -43,6 +45,8 @@ interface Repository {
     fun getMostPlayedAlbumsByPlayCount(start: Long, end: Long): PagingSource<Int, AlbumInfo>
     fun getMostPlayedAlbumsFromArtist(artist: String, start: Long, end: Long): PagingSource<Int, AlbumInfo>
     fun getMostPlayedAlbumsFromArtistByPlayCount(artist: String, start: Long, end: Long): PagingSource<Int, AlbumInfo>
+    fun getTrackRank(time: Long, start: Long, end: Long): Flow<Int>
+    fun getTrackRankByPlayCount(count: Int, start: Long, end: Long) : Flow<Int>
 }
 
 
@@ -76,6 +80,8 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override fun getMostPlayedAlbumsByPlayCount(start: Long, end: Long) = db.playDao().getMostPlayedAlbumsByPlayCount(start, end,)
     override fun getMostPlayedAlbumsFromArtist(artist: String, start: Long, end: Long) = db.playDao().getMostPlayedAlbumsFromArtist(artist, start, end)
     override fun getMostPlayedAlbumsFromArtistByPlayCount(artist: String, start: Long, end: Long) = db.playDao().getMostPlayedAlbumsFromArtistByPlayCount(artist, start, end)
+    override fun getAlbumRank(time: Long, start: Long, end: Long) = db.playDao().getAlbumRank(time, start, end)
+    override fun getAlbumRankByPlayCount(count: Int, start: Long, end: Long) = db.playDao().getAlbumRankByPlayCount(count, start, end)
 
     override fun getTrackPlays(artist: String, track: String, album: String?, start: Long, end: Long) = db.playDao().getTrackPlays(artist, track, album, start, end)
     override fun getTrackTimePlayed(artist: String, track: String, album: String?, start: Long, end: Long) = db.playDao().getTrackTimePlayed(artist, track, album, start, end)
@@ -86,4 +92,6 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override fun getMostPlayedTracksFromArtistByPlayCount(artist: String, start: Long, end: Long) = db.playDao().getMostPlayedTracksFromArtistByPlayCount(artist, start, end)
     override fun getMostPlayedTracksFromAlbum(artist: String, album: String, start: Long, end: Long) = db.playDao().getMostPlayedTracksFromAlbum(artist, album, start, end)
     override fun getMostPlayedTracksFromAlbumByPlayCount(artist: String, album: String, start: Long, end: Long) = db.playDao().getMostPlayedTracksFromAlbumByPlayCount(artist, album, start, end)
+    override fun getTrackRank(time: Long, start: Long, end: Long) = db.playDao().getTrackRank(time, start, end)
+    override fun getTrackRankByPlayCount(count: Int, start: Long, end: Long) = db.playDao().getTrackRankByPlayCount(count, start, end)
 }
