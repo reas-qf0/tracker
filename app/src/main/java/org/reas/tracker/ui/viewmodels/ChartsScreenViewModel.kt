@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.reas.tracker.database.Repository
 import org.reas.tracker.network.NetworkRepository
+import org.reas.tracker.supabase.CustomImageStorage
 import org.reas.tracker.ui.components.ChartEntryUiState
 import org.reas.tracker.ui.navigation.BottomSheetInfo
 import org.reas.tracker.ui.navigation.ChartSort
@@ -41,7 +42,8 @@ class ChartsScreenViewModel(
             label2 = null,
             metric = info.metric.toDouble(),
             metricAsString = timeMsToString(info.metric),
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist)
+            bottomSheetInfo = BottomSheetInfo(artist = info.artist),
+            url = { getArtistImageUrl(info.artist) }
         )
     }
 
@@ -66,7 +68,8 @@ class ChartsScreenViewModel(
             label2 = info.artist,
             metric = info.metric.toDouble(),
             metricAsString = timeMsToString(info.metric),
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track)
+            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track),
+            url = { getTrackImageUrl(info.artist, info.track) }
         )
     }
 
@@ -78,7 +81,8 @@ class ChartsScreenViewModel(
             label2 = null,
             metric = info.metric.toDouble(),
             metricAsString = "${info.metric} plays",
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist)
+            bottomSheetInfo = BottomSheetInfo(artist = info.artist),
+            url = { getArtistImageUrl(info.artist) }
         )
     }
 
@@ -103,7 +107,8 @@ class ChartsScreenViewModel(
             label2 = info.artist,
             metric = info.metric.toDouble(),
             metricAsString = "${info.metric} plays",
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track)
+            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track),
+            url = { getTrackImageUrl(info.artist, info.track) }
         )
     }
 
@@ -131,6 +136,20 @@ class ChartsScreenViewModel(
         }
     }
 
-    suspend fun getAlbumImageUrl(artist: String, album: String) =
-        networkRepository.getAlbumImageUrl(artist, album, "large")
+    suspend fun getArtistImageUrl(artist: String) =
+        repository.getCustomImage(listOf("artist", artist))?.let {
+            CustomImageStorage.get(it)
+        }
+
+    suspend fun getAlbumImageUrl(artist: String, album: String): String? {
+        repository.getCustomImage(listOf("album", artist, album))?.let {
+            return CustomImageStorage.get(it)
+        }
+        return networkRepository.getAlbumImageUrl(artist, album, "large")
+    }
+
+    suspend fun getTrackImageUrl(artist: String, track: String) =
+        repository.getCustomImage(listOf("track", artist, track))?.let {
+            CustomImageStorage.get(it)
+        }
 }

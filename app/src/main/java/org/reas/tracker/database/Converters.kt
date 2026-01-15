@@ -6,12 +6,14 @@ import kotlinx.serialization.json.Json
 
 class Converters {
     @TypeConverter
-    fun encodeList(list: MutableList<String>): String {
-        return Json.encodeToString(list)
-    }
+    fun encodeMutableList(list: MutableList<String>): String = Json.encodeToString(list)
 
     @TypeConverter
-    fun decodeList(value: String): MutableList<String> {
-        return Json.decodeFromString(value)
-    }
+    fun decodeMutableList(value: String): MutableList<String> = Json.decodeFromString(value)
+
+    @TypeConverter
+    fun encodeList(list: List<String>): String = Json.encodeToString(list)
+
+    @TypeConverter
+    fun decodeList(value: String): List<String> = Json.decodeFromString(value)
 }

@@ -1,5 +1,6 @@
 package org.reas.tracker.ui.dialogs
 
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhotoFilter
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DividerDefaults
@@ -39,6 +41,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.reas.tracker.ui.components.ImagePicker
 import org.reas.tracker.ui.navigation.AlbumInfo
 import org.reas.tracker.ui.navigation.ArtistInfo
 import org.reas.tracker.ui.navigation.BottomSheetInfo
@@ -85,6 +88,9 @@ fun InfoBottomSheet(
                     },
                     onMore = {
                         navigateToTrack(TrackInfo(artist, album, track))
+                    },
+                    onUploadImage = { uri ->
+                        viewModel.uploadImage(listOf("track", artist, track), uri)
                     }
                 )
                 BottomSheetSpacer()
@@ -102,6 +108,9 @@ fun InfoBottomSheet(
                 ),
                 onMore = {
                     navigateToArtist(ArtistInfo(artist))
+                },
+                onUploadImage = { uri ->
+                    viewModel.uploadImage(listOf("artist", artist), uri)
                 }
             )
 
@@ -120,6 +129,9 @@ fun InfoBottomSheet(
                     ),
                     onMore = {
                         navigateToAlbum(AlbumInfo(albumArtist, album))
+                    },
+                    onUploadImage = { uri ->
+                        viewModel.uploadImage(listOf("album", albumArtist, album), uri)
                     }
                 )
             }
@@ -143,9 +155,12 @@ private fun HistoryBottomSheetComponent(
     header: String,
     buttonContents: List<Pair<String, String>>,
     onMore: () -> Unit,
-    onMainButton: () -> Unit = onMore
+    onMainButton: () -> Unit = onMore,
+    onUploadImage: (Uri) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var filePickerOpened by remember { mutableStateOf(false) }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.clickable(onClick = { expanded = !expanded })
@@ -160,7 +175,14 @@ private fun HistoryBottomSheetComponent(
             overflow = TextOverflow.Ellipsis
         )
     }
-    Spacer(Modifier.height(5.dp))
+    Row(modifier = Modifier.padding(10.dp)) {
+        Icon(
+            Icons.Filled.PhotoFilter,
+            "Upload Image",
+            tint = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.clickable(onClick = { filePickerOpened = true })
+        )
+    }
     Row(modifier = Modifier.fillMaxWidth()) {
         Button(
             shape = RoundedCornerShape(5.dp),
@@ -208,4 +230,10 @@ private fun HistoryBottomSheetComponent(
             }
         }
     }
+
+    ImagePicker(
+        filePickerOpened,
+        onDismiss = { filePickerOpened = false },
+        onSelected = onUploadImage
+    )
 }

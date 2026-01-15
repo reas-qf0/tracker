@@ -30,7 +30,9 @@ class FirestoreCloudSave(private val container: AppDataContainer) {
         val id = userId
         if (id == null) {
             Log.w(TAG, "event ${event.id} not submitted due to not being logged in")
-            queue.add(event)
+            synchronized(this) {
+                queue.add(event)
+            }
             return
         }
         eventsCollection(id)

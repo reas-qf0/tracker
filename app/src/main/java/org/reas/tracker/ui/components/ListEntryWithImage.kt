@@ -28,6 +28,8 @@ import com.skydoves.landscapist.coil3.CoilImage
 import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.palette.PalettePlugin
 import com.skydoves.landscapist.palette.rememberPaletteState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 private const val DYNAMIC_COLOR_STRENGTH = 0.1F
 
@@ -42,7 +44,9 @@ fun ListEntryWithImage(
 ) {
     var model by remember { mutableStateOf<Any?>(null) }
     LaunchedEffect(Unit) {
-        model = url()
+        launch(Dispatchers.IO) {
+            model = url()
+        }
     }
 
     var palette by rememberPaletteState(null)

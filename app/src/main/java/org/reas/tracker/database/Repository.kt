@@ -47,6 +47,11 @@ interface Repository {
     fun getMostPlayedAlbumsFromArtistByPlayCount(artist: String, start: Long, end: Long): PagingSource<Int, AlbumInfo>
     fun getTrackRank(time: Long, start: Long, end: Long): Flow<Int>
     fun getTrackRankByPlayCount(count: Int, start: Long, end: Long) : Flow<Int>
+
+    suspend fun insertCustomImage(customImage: CustomImage)
+    suspend fun updateCustomImage(customImage: CustomImage)
+    suspend fun deleteCustomImage(customImage: CustomImage)
+    fun getCustomImage(arguments: List<String>): String?
 }
 
 
@@ -94,4 +99,9 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override fun getMostPlayedTracksFromAlbumByPlayCount(artist: String, album: String, start: Long, end: Long) = db.playDao().getMostPlayedTracksFromAlbumByPlayCount(artist, album, start, end)
     override fun getTrackRank(time: Long, start: Long, end: Long) = db.playDao().getTrackRank(time, start, end)
     override fun getTrackRankByPlayCount(count: Int, start: Long, end: Long) = db.playDao().getTrackRankByPlayCount(count, start, end)
+
+    override suspend fun insertCustomImage(customImage: CustomImage) = db.customImageDao().insert(customImage)
+    override suspend fun updateCustomImage(customImage: CustomImage) = db.customImageDao().update(customImage)
+    override suspend fun deleteCustomImage(customImage: CustomImage) = db.customImageDao().delete(customImage)
+    override fun getCustomImage(arguments: List<String>) = db.customImageDao().get(arguments)
 }

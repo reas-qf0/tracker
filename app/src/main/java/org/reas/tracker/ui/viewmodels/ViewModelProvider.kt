@@ -17,7 +17,7 @@ object ViewModelProvider {
         }
 
         initializer {
-            InfoBottomSheetsViewModel(repository)
+            InfoBottomSheetsViewModel(repository, TrackerApplication.instance!!.contentResolver)
         }
 
         initializer {

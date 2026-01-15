@@ -172,7 +172,7 @@ class EventProcessor(private val container: AppDataContainer) {
     }
 
     suspend fun feedBatch(events: List<Event>, sync: Boolean = false) {
-        Log.d(TAG, "feedBatch:")
+        Log.d(TAG, "feedBatch: ")
         val sortedEvents = events.sortedWith { event1, event2 ->            // sort each group by (timestamp, isPlaying)
             if (event1.timestamp != event2.timestamp)
                 event1.timestamp.compareTo(event2.timestamp)
