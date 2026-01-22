@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.Intent
 import android.util.Log
-import kotlinx.coroutines.flow.first
 import org.reas.tracker.AppDataContainer
 import org.reas.tracker.MainActivity
 import org.reas.tracker.R
@@ -94,9 +93,9 @@ class EventProcessor(private val container: AppDataContainer) {
             return
         }
 
-        repository.getNowPlayingTracks().first().forEach { play ->
-            plugHole(play)
-        }
+//        repository.getNowPlayingTracks().first().forEach { play ->
+//            plugHole(play)
+//        }
 
         Log.d(TAG, "feed $event")
         val lastEvent = container.repository.getLastEventFromPlayer(event.playerId)
