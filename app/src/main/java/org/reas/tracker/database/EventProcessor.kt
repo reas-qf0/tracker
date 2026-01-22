@@ -94,8 +94,10 @@ class EventProcessor(private val container: AppDataContainer) {
             return
         }
 
-        repository.getNowPlayingTracks().first().forEach { play ->
-            plugHole(play)
+        if (!sync) {
+            repository.getNowPlayingTracks().first().forEach { play ->
+                plugHole(play)
+            }
         }
 
         Log.d(TAG, "feed $event")
