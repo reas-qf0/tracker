@@ -48,9 +48,10 @@
     <string name="requesting">Посылается запрос…</string>
     <string name="request_failed">Не удалось послать запрос</string>
     <string name="launching">Запуск…</string>
-    <string name="launch_failed">Не удалось запустить</string>
+    <string name="launch_failed">Ревью не удалось запустить или оно было закрыто пользователем</string>
     <string name="thank_you">Спасибо!</string>
     <string name="seconds_ago">%1$d сек. назад</string>
     <string name="minutes_ago">%1$d мин. назад</string>
     <string name="hours_ago">%1$d час. назад</string>
+    <string name="update_canceled">Обновление отменено</string>
 </resources>

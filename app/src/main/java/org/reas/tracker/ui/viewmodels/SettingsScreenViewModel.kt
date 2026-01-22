@@ -82,6 +82,10 @@ class SettingsScreenViewModel : ViewModel() {
                         text = R.string.installing,
                         action = null
                     )
+                    is UpdateStatus.Canceled -> ButtonState(
+                        text = R.string.update_canceled,
+                        action = { downloadUpdate(updateInfo) }
+                    )
                 }
             }
         }

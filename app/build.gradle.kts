@@ -19,8 +19,8 @@ android {
         applicationId = "org.reas.tracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.1"
+        versionCode = 4
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -31,7 +31,7 @@ android {
             val keystoreProperties = Properties()
             keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
-            storeFile = File(keystoreProperties["storeFile"].toString())
+            storeFile = rootProject.file(keystoreProperties["storeFile"].toString())
             storePassword = keystoreProperties["storePassword"].toString()
             keyAlias = keystoreProperties["keyAlias"].toString()
             keyPassword = keystoreProperties["keyPassword"].toString()

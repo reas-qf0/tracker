@@ -1,8 +1,11 @@
 package org.reas.tracker.rustore
 
+import android.app.Activity
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
@@ -27,6 +30,7 @@ sealed class UpdateStatus {
     data class Downloading(val progress: Float): UpdateStatus()
     class Failed(): UpdateStatus()
     class Ready(): UpdateStatus()
+    class Canceled(): UpdateStatus()
 }
 
 class UpdateManager(context: Context) {
@@ -49,21 +53,36 @@ class UpdateManager(context: Context) {
     }
 
     fun update(updateInfo: AppUpdateInfo): Flow<UpdateStatus> = callbackFlow {
+        fun sendFromListener(x: UpdateStatus) {
+            trySendBlocking(x).onFailure { e ->
+                Log.e(TAG, "couldn't send value to ui flow", e)
+            }
+        }
+
         val listener = object : InstallStateUpdateListener {
             override fun onStateUpdated(state: InstallState) {
                 when (state.installStatus) {
                     InstallStatus.DOWNLOADED -> {
-                        trySend(UpdateStatus.Ready()).isSuccess
+                        sendFromListener(UpdateStatus.Ready())
+                        rustoreUpdateManager.completeUpdate(
+                            AppUpdateOptions.Builder()
+                                .appUpdateType(AppUpdateType.FLEXIBLE)
+                                .build()
+                        ).addOnFailureListener { throwable ->
+                            Log.e(TAG, "update error", throwable)
+                            sendFromListener(UpdateStatus.Failed())
+                            close()
+                        }
                     }
                     InstallStatus.DOWNLOADING -> {
                         val totalBytes = state.totalBytesToDownload
                         val bytesDownloaded = state.bytesDownloaded
                         val progress = bytesDownloaded.toFloat() / totalBytes
-                        trySend(UpdateStatus.Downloading(progress)).isSuccess
+                        sendFromListener(UpdateStatus.Downloading(progress))
                     }
                     InstallStatus.FAILED -> {
                         Log.e(TAG, "Downloading error")
-                        trySend(UpdateStatus.Failed()).isSuccess
+                        sendFromListener(UpdateStatus.Failed())
                         close()
                     }
                 }
@@ -77,7 +96,10 @@ class UpdateManager(context: Context) {
                 .appUpdateType(AppUpdateType.FLEXIBLE)
                 .build()
         ).addOnSuccessListener { resultCode ->
-            close()
+            if (resultCode == Activity.RESULT_CANCELED) {
+                sendFromListener(UpdateStatus.Canceled())
+                close()
+            }
         }
         .addOnFailureListener { throwable ->
             Log.e(TAG, "startUpdateFlow error", throwable)

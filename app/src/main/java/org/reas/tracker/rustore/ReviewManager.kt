@@ -23,7 +23,7 @@ class ReviewManager(context: Context) {
             val reviewInfo = rustoreUpdate.requestReviewFlow().await()
             emit(ReviewStatus.Launching())
             try {
-                rustoreUpdate.launchReviewFlow(reviewInfo)
+                rustoreUpdate.launchReviewFlow(reviewInfo).await()
                 emit(ReviewStatus.Complete())
             } catch (e: Throwable) {
                 Log.e(TAG, "launchReviewFlow failed", e)

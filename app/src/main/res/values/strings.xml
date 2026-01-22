@@ -48,9 +48,10 @@
     <string name="requesting">Requesting…</string>
     <string name="request_failed">Request failed</string>
     <string name="launching">Launching…</string>
-    <string name="launch_failed">Launch failed</string>
+    <string name="launch_failed">Review failed to launch or dismissed</string>
     <string name="thank_you">Thank you!</string>
     <string name="seconds_ago">%1$d secs ago</string>
     <string name="minutes_ago">%1$d mins ago</string>
     <string name="hours_ago">%1$d hrs ago</string>
+    <string name="update_canceled">Update canceled</string>
 </resources>
