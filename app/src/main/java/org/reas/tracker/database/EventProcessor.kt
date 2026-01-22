@@ -25,37 +25,36 @@ class EventProcessor(private val container: AppDataContainer) {
 
     private val repository = container.repository
     private val preferences = container.preferences
-    private val notificationId = NotificationWrapper.reserveId()
+    private var notificationId = -1
     private var notificationBuilder: (Notification.Builder.() -> Unit)? = null
 
     private fun updateNotification(event: Event) {
         Log.d(TAG, "updateNotification")
-        if (event.isPlaying)
+        if (event.isPlaying) {
             notificationBuilder = {
                 setContentTitle(event.track)
                 setContentText(event.artist)
                 setSmallIcon(R.drawable.ic_launcher_foreground)
 
                 val resultIntent = Intent(container.context, MainActivity::class.java)
-                val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(container.context).run {
-                    addNextIntentWithParentStack(resultIntent)
-                    getPendingIntent(0,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-                }
+                val resultPendingIntent: PendingIntent? =
+                    TaskStackBuilder.create(container.context).run {
+                        addNextIntentWithParentStack(resultIntent)
+                        getPendingIntent(
+                            0,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
+                    }
                 setContentIntent(resultPendingIntent)
             }
-        else
+            notificationId = NotificationWrapper.show(
+                container.context,
+                "Now Playing",
+                params = notificationBuilder!!
+            )
+        } else {
             notificationBuilder = null
-    }
-
-    suspend fun displayNotificationLoop() {
-        while (true) {
-            val b = notificationBuilder
-            if (b != null && preferences.getValue(SCROBBLING_ENABLED, true))
-                NotificationWrapper.show(container.context, "Now Playing", notificationId, b)
-            else
-                NotificationWrapper.hide(notificationId)
-            delay(1000)
+            NotificationWrapper.hide(notificationId)
         }
     }
 
@@ -84,15 +83,6 @@ class EventProcessor(private val container: AppDataContainer) {
         return false
     }
 
-    suspend fun plugHolesLoop() {
-        while (true) {
-            repository.getNowPlayingTracks().first().forEach { play ->
-                plugHole(play)
-            }
-            delay(1000)
-        }
-    }
-
     @OptIn(ExperimentalUuidApi::class)
     suspend fun feed(event: Event, sync: Boolean = false) {
         if (!sync && !preferences.getValue(SCROBBLING_ENABLED, true)) {
@@ -102,6 +92,10 @@ class EventProcessor(private val container: AppDataContainer) {
         if (container.repository.getEvents(listOf(event.id)).isNotEmpty()) {
             // event already in local database => processed, do nothing
             return
+        }
+
+        repository.getNowPlayingTracks().first().forEach { play ->
+            plugHole(play)
         }
 
         Log.d(TAG, "feed $event")

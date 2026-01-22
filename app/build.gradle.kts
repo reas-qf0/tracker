@@ -75,6 +75,7 @@ dependencies {
     implementation(libs.ktor.client.cio)
     implementation(platform(libs.rustore.bom))
     implementation(libs.rustore.appupdate)
+    implementation(libs.rustore.review)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)

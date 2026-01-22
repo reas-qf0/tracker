@@ -16,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.reas.tracker.TrackerApplication
+import org.reas.tracker.android.NotifListenerService.Companion.TAG
 import org.reas.tracker.database.Event
 
 private val MediaMetadata.title
@@ -79,6 +80,7 @@ private class SessionListener(val scope: CoroutineScope): MediaSessionManager.On
     private var controllerMap = hashMapOf<String, MediaController>()
 
     override fun onActiveSessionsChanged(controllers: List<MediaController>?) {
+        Log.d("SessionListener", "onActiveSessionsChanged $controllers")
         if (controllers == null) return
 
         val newControllerMap = hashMapOf(
@@ -110,6 +112,7 @@ class NotifListenerService: NotificationListenerService() {
     }
 
     private fun init() {
+        Log.d(TAG, "init")
         if (listener != null) return
         val sessManager = getSystemService<MediaSessionManager>()!!
         val component = ComponentName(this, this::class.java)
@@ -119,15 +122,10 @@ class NotifListenerService: NotificationListenerService() {
 
         sessManager.addOnActiveSessionsChangedListener(listener!!, component)
         listener!!.onActiveSessionsChanged(sessManager.getActiveSessions(component))
-        scope.launch(Dispatchers.Default) {
-            container.eventProcessor.displayNotificationLoop()
-        }
-        scope.launch(Dispatchers.IO) {
-            container.eventProcessor.plugHolesLoop()
-        }
     }
 
     private fun destroy() {
+        Log.d(TAG, "destroy")
         val sessManager = getSystemService<MediaSessionManager>()!!
         sessManager.removeOnActiveSessionsChangedListener(listener!!)
         listener = null
@@ -136,6 +134,8 @@ class NotifListenerService: NotificationListenerService() {
     }
 
     override fun onListenerConnected() {
+        super.onListenerConnected()
+        Log.d(TAG, "onListenerConnected")
         if (!initialized) {
             synchronized(this) {
                 if (!initialized) {
@@ -147,6 +147,12 @@ class NotifListenerService: NotificationListenerService() {
     }
 
     override fun onListenerDisconnected() {
+        super.onListenerDisconnected()
+        Log.d(TAG, "onListenerDisconnected")
         destroy()
+    }
+
+    companion object {
+        private const val TAG = "NotifListenerService"
     }
 }

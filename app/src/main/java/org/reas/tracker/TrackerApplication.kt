@@ -15,6 +15,7 @@ import org.reas.tracker.firebase.AuthManager
 import org.reas.tracker.firebase.FirestoreCloudSave
 import org.reas.tracker.network.NetworkRepository
 import org.reas.tracker.network.RetrofitNetworkRepository
+import org.reas.tracker.rustore.ReviewManager
 import org.reas.tracker.rustore.UpdateManager
 
 class AppDataContainer(val context: Context) {
@@ -30,6 +31,7 @@ class AppDataContainer(val context: Context) {
     val cloudSave = FirestoreCloudSave(this)
     val eventProcessor = EventProcessor(this)
     val updateManager = UpdateManager(context)
+    val reviewManager = ReviewManager(context)
 }
 
 class TrackerApplication : Application() {

@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,19 +36,6 @@ fun SettingsScreen(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Current version: ${BuildConfig.VERSION_NAME}")
-            Spacer(Modifier.weight(1.0F))
-            Button(
-                enabled = viewModel.updateState.action != null,
-                onClick = viewModel.updateState.action ?: {}
-            ) {
-                Text(viewModel.updateState.text)
-            }
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
             val scrobblingEnabled by remember { viewModel.isScrobblingEnabled() }.collectAsState()
             Text("Enable Tracking")
             Spacer(Modifier.weight(1.0F))
@@ -57,10 +46,39 @@ fun SettingsScreen(
         }
 
         Button(
+            onClick = { viewModel.restartService() },
+            modifier = modifier
+        ) {
+            Text("Restart Service")
+        }
+
+        Button(
             onClick = signOut,
             modifier = modifier
         ) {
             Text(stringResource(R.string.sign_out))
+        }
+
+        HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Current version: ${BuildConfig.VERSION_NAME}")
+            Spacer(Modifier.weight(1.0F))
+            Button(
+                enabled = viewModel.updateState.action != null,
+                onClick = viewModel.updateState.action ?: {}
+            ) {
+                Text(viewModel.updateState.text)
+            }
+        }
+
+        Button(
+            enabled = viewModel.reviewState.action != null,
+            onClick = viewModel.reviewState.action ?: {}
+        ) {
+            Text(viewModel.reviewState.text)
         }
     }
 }

@@ -46,6 +46,7 @@ landscapist-coil3 = { module = "com.github.skydoves:landscapist-coil3", version.
 landscapist-palette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
+rustore-review = { module = "ru.rustore.sdk:review" }
 rustore-appupdate = { module = "ru.rustore.sdk:appupdate" }
 rustore-bom = { module = "ru.rustore.sdk:bom", version.ref = "rustore-bom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
