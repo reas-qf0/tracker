@@ -39,7 +39,7 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
 
         if (artists.isNotEmpty()) {
             NotificationWrapper.show(container.context, "Daily Report") {
-                setSmallIcon(R.drawable.ic_launcher_foreground)
+                setSmallIcon(R.drawable.ic_stat_name)
                 setContentTitle(container.context.getString(R.string.daily_report_header))
                 setStyle(
                     Notification.BigTextStyle().bigText(

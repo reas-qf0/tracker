@@ -33,7 +33,7 @@ class EventProcessor(private val container: AppDataContainer) {
             notificationBuilder = {
                 setContentTitle(event.track)
                 setContentText(event.artist)
-                setSmallIcon(R.drawable.ic_launcher_foreground)
+                setSmallIcon(R.drawable.ic_stat_name)
 
                 val resultIntent = Intent(container.context, MainActivity::class.java)
                 val resultPendingIntent: PendingIntent? =

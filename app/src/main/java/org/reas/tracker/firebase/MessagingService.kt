@@ -19,7 +19,7 @@ class MessagingService : FirebaseMessagingService() {
                 setContentText(notification.body)
                 setAutoCancel(true)
                 setSound(defaultSoundUri)
-                setSmallIcon(R.drawable.ic_launcher_foreground)
+                setSmallIcon(R.drawable.ic_stat_name)
             }
         }
     }
