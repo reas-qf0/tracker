@@ -38,9 +38,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import org.reas.tracker.R
 import org.reas.tracker.ui.components.ImagePicker
 import org.reas.tracker.ui.navigation.AlbumInfo
 import org.reas.tracker.ui.navigation.ArtistInfo
@@ -77,11 +79,11 @@ fun InfoBottomSheet(
                 val trackTimePlayed by remember { viewModel.trackTimePlayed(artist, track, album) }.collectAsState()
                 HistoryBottomSheetComponent(
                     icon = Icons.Filled.MusicNote,
-                    iconDescription = "Track",
+                    iconDescription = stringResource(R.string.track),
                     header = track,
                     buttonContents = listOf(
-                        "Track plays" to trackPlays,
-                        "Time listened" to trackTimePlayed
+                        R.string.track_plays to trackPlays,
+                        R.string.time_listened to trackTimePlayed
                     ),
                     onMainButton = {
                         navigateToTrackHistory(TrackHistory(artist, track, album))
@@ -100,11 +102,11 @@ fun InfoBottomSheet(
             val artistTimePlayed by remember { viewModel.artistTimePlayed(artist) }.collectAsState()
             HistoryBottomSheetComponent(
                 icon = Icons.Filled.Person,
-                iconDescription = "Artist",
+                iconDescription = stringResource(R.string.artist),
                 header = artist,
                 buttonContents = listOf(
-                    "Artist plays" to artistPlays,
-                    "Time listened" to artistTimePlayed
+                    R.string.artist_plays to artistPlays,
+                    R.string.time_listened to artistTimePlayed
                 ),
                 onMore = {
                     navigateToArtist(ArtistInfo(artist))
@@ -121,11 +123,11 @@ fun InfoBottomSheet(
                 BottomSheetSpacer()
                 HistoryBottomSheetComponent(
                     icon = Icons.Filled.Album,
-                    iconDescription = "Album",
+                    iconDescription = stringResource(R.string.album),
                     header = album,
                     buttonContents = listOf(
-                        "Album plays" to albumPlays,
-                        "Time listened" to albumTimePlayed
+                        R.string.album_plays to albumPlays,
+                        R.string.time_listened to albumTimePlayed
                     ),
                     onMore = {
                         navigateToAlbum(AlbumInfo(albumArtist, album))
@@ -153,7 +155,7 @@ private fun HistoryBottomSheetComponent(
     icon: ImageVector,
     iconDescription: String,
     header: String,
-    buttonContents: List<Pair<String, String>>,
+    buttonContents: List<Pair<Int, String>>,
     onMore: () -> Unit,
     onMainButton: () -> Unit = onMore,
     onUploadImage: (Uri) -> Unit
@@ -193,7 +195,10 @@ private fun HistoryBottomSheetComponent(
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
             contentPadding = PaddingValues(0.dp),
             onClick = onMainButton,
-            modifier = Modifier.weight(2.0F).padding(5.dp).height(100.dp)
+            modifier = Modifier
+                .weight(2.0F)
+                .padding(5.dp)
+                .height(100.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxSize(),
@@ -205,8 +210,15 @@ private fun HistoryBottomSheetComponent(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(line1, style = MaterialTheme.typography.bodySmall)
-                        Text(line2, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                        Text(
+                            stringResource(line1),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            line2,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -219,7 +231,10 @@ private fun HistoryBottomSheetComponent(
             ),
             contentPadding = PaddingValues(0.dp),
             onClick = onMore,
-            modifier = Modifier.weight(1.0F).padding(5.dp).height(100.dp)
+            modifier = Modifier
+                .weight(1.0F)
+                .padding(5.dp)
+                .height(100.dp)
         ) {
             Column(
                 verticalArrangement = Arrangement.Center,

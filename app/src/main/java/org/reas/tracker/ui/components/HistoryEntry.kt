@@ -15,23 +15,16 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import org.reas.tracker.R
 import org.reas.tracker.ui.theme.TrackerTheme
 import org.reas.tracker.ui.theme.Typography
-import org.reas.tracker.util.DateTimeFormatter.dateTimeToString
-import org.reas.tracker.util.DateTimeFormatter.dateToString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,8 +43,6 @@ fun HistoryEntry(
         MaterialTheme.colorScheme.surfaceContainerHighest
     else
         MaterialTheme.colorScheme.surfaceContainer
-    val tooltipState = rememberTooltipState()
-    val scope = rememberCoroutineScope()
 
     ListEntryWithImage(
         backgroundColor = bgColor,
@@ -100,37 +91,23 @@ fun HistoryEntry(
                 }
                 Spacer(Modifier.width(5.dp))
                 Column(
-                    modifier = Modifier.fillMaxHeight().padding(bottom = 3.dp),
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(bottom = 3.dp),
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     if (isNowPlaying)
                         Icon(
                             Icons.Filled.PlayArrow,
-                            "Now Playing",
+                            stringResource(R.string.now_playing),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     else {
-                        TooltipBox(
-                            positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
-                            tooltip = {
-                                PlainTooltip(
-                                    containerColor = MaterialTheme.colorScheme.background,
-                                    contentColor = MaterialTheme.colorScheme.primary
-                                ) {
-                                    Text(dateTimeToString(timestamp))
-                                }
-                            },
-                            state = tooltipState
-                        ) {
-                            Text(
-                                dateToString(timestamp),
-                                style = Typography.bodySmall,
-                                color = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.clickable(onClick = {
-                                    scope.launch { tooltipState.show() }
-                                })
-                            )
-                        }
+                        Timestamp(
+                            timestamp,
+                            style = Typography.bodySmall,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
                     }
                 }
             }

@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.Intent
 import android.util.Log
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import org.reas.tracker.AppDataContainer
 import org.reas.tracker.MainActivity
@@ -25,7 +24,7 @@ class EventProcessor(private val container: AppDataContainer) {
 
     private val repository = container.repository
     private val preferences = container.preferences
-    private var notificationId = -1
+    private var notificationId = NotificationWrapper.reserveId()
     private var notificationBuilder: (Notification.Builder.() -> Unit)? = null
 
     private fun updateNotification(event: Event) {
@@ -47,10 +46,11 @@ class EventProcessor(private val container: AppDataContainer) {
                     }
                 setContentIntent(resultPendingIntent)
             }
-            notificationId = NotificationWrapper.show(
+            NotificationWrapper.show(
                 container.context,
                 "Now Playing",
-                params = notificationBuilder!!
+                notificationId,
+                notificationBuilder!!
             )
         } else {
             notificationBuilder = null

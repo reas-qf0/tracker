@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.reas.tracker.R
 import org.reas.tracker.TrackerApplication
 import org.reas.tracker.android.DataStoreWrapper.Companion.SCROBBLING_ENABLED
 import org.reas.tracker.android.NotifListenerService
@@ -18,10 +19,9 @@ import org.reas.tracker.rustore.CheckStatus
 import org.reas.tracker.rustore.ReviewStatus
 import org.reas.tracker.rustore.UpdateStatus
 import ru.rustore.sdk.appupdate.model.AppUpdateInfo
-import kotlin.math.roundToInt
 
 data class ButtonState(
-    val text: String,
+    val text: Int,
     val action: (() -> Unit)? // null means button is disabled
 )
 
@@ -32,12 +32,12 @@ class SettingsScreenViewModel : ViewModel() {
     private val context = TrackerApplication.instance!!.container.context
 
     var updateState by mutableStateOf(ButtonState(
-        text = "Check for updates",
+        text = R.string.check_for_updates,
         action = { checkForUpdates() }
     ))
 
     var reviewState by mutableStateOf(ButtonState(
-        text = "Leave a review",
+        text = R.string.leave_a_review,
         action = { review() }
     ))
 
@@ -46,19 +46,19 @@ class SettingsScreenViewModel : ViewModel() {
             updateManager.checkForUpdates().collect { status ->
                 updateState = when (status) {
                     is CheckStatus.Available -> ButtonState(
-                        text = "Install update",
+                        text = R.string.install_update,
                         action = { downloadUpdate(status.updateInfo) }
                     )
                     is CheckStatus.Checking -> ButtonState(
-                        text = "Checking for updates...",
+                        text = R.string.checking_for_updates,
                         action = null
                     )
                     is CheckStatus.Failed -> ButtonState(
-                        text = "Failed to check",
+                        text = R.string.failed_to_check,
                         action = { checkForUpdates() }
                     )
                     is CheckStatus.Latest -> ButtonState(
-                        text = "No updates",
+                        text = R.string.no_updates,
                         action = { checkForUpdates() }
                     )
                 }
@@ -71,15 +71,15 @@ class SettingsScreenViewModel : ViewModel() {
             updateManager.update(updateInfo).collect { status ->
                 updateState = when (status) {
                     is UpdateStatus.Downloading -> ButtonState(
-                        text = "Downloading... (${(status.progress * 100).roundToInt()})%",
+                        text = R.string.downloading,
                         action = null
                     )
                     is UpdateStatus.Failed -> ButtonState(
-                        text = "Failed to update",
+                        text = R.string.failed_to_update,
                         action = { downloadUpdate(updateInfo) }
                     )
                     is UpdateStatus.Ready -> ButtonState(
-                        text = "Installing...",
+                        text = R.string.installing,
                         action = null
                     )
                 }
@@ -110,23 +110,23 @@ class SettingsScreenViewModel : ViewModel() {
             reviewManager.review().collect { status ->
                 reviewState = when (status) {
                     is ReviewStatus.Requesting -> ButtonState(
-                        text = "Requesting...",
+                        text = R.string.requesting,
                         action = null
                     )
                     is ReviewStatus.RequestError -> ButtonState(
-                        text = "Request failed",
+                        text = R.string.request_failed,
                         action = { review() }
                     )
                     is ReviewStatus.Launching -> ButtonState(
-                        text = "Launching...",
+                        text = R.string.launching,
                         action = null
                     )
                     is ReviewStatus.LaunchError -> ButtonState(
-                        text = "Launch failed",
+                        text = R.string.launch_failed,
                         action = { review() }
                     )
                     is ReviewStatus.Complete -> ButtonState(
-                        text = "Thank you!",
+                        text = R.string.thank_you,
                         action = { review() }
                     )
                 }

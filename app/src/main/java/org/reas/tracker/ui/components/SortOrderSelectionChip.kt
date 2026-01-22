@@ -8,6 +8,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import org.reas.tracker.ui.navigation.ChartSort
 
 @Composable
@@ -21,11 +22,11 @@ fun SortOrderSelectionChip(
             onClick = { setValue(
                 if (value == ChartSort.TIME) ChartSort.PLAYS else ChartSort.TIME
             ) },
-            label = { Text(value.label) },
+            label = { Text(stringResource(value.label)) },
             leadingIcon = {
                 Icon(
                     value.icon,
-                    contentDescription = value.label,
+                    contentDescription = stringResource(value.label),
                     Modifier.size(AssistChipDefaults.IconSize)
                 )
             }

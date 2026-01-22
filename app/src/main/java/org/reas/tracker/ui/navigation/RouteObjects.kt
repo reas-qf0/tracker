@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import org.reas.tracker.R
 
 
 @Serializable
@@ -16,24 +17,24 @@ enum class ChartType {
     ARTISTS {
         override val icon: ImageVector
             get() = Icons.Filled.Person
-        override val label: String
-            get() = "Artists"
+        override val label: Int
+            get() = R.string.artists
     },
     ALBUMS {
         override val icon: ImageVector
             get() = Icons.Filled.Album
-        override val label: String
-            get() = "Albums"
+        override val label: Int
+            get() = R.string.albums
     },
     TRACKS {
         override val icon: ImageVector
             get() = Icons.Filled.MusicNote
-        override val label: String
-            get() = "Tracks"
+        override val label: Int
+            get() = R.string.tracks
     };
 
     @Transient abstract val icon: ImageVector
-    @Transient abstract val label: String
+    @Transient abstract val label: Int
 }
 
 
@@ -42,17 +43,17 @@ enum class ChartSort {
     TIME {
         override val icon: ImageVector
             get() = Icons.Filled.AccessTime
-        override val label: String
-            get() = "Time"
+        override val label: Int
+            get() = R.string.time_played
     }, PLAYS {
         override val icon: ImageVector
             get() = Icons.Filled.PlayArrow
-        override val label: String
-            get() = "Plays"
+        override val label: Int
+            get() = R.string.plays
     };
 
     @Transient abstract val icon: ImageVector
-    @Transient abstract val label: String
+    @Transient abstract val label: Int
 }
 
 

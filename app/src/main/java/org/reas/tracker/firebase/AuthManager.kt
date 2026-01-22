@@ -103,7 +103,7 @@ class AuthManager(private val context: Context) {
             }
         } catch (e: GetCredentialException) {
             Log.e(TAG, "Couldn't retrieve user's credentials: ${e.localizedMessage}")
-            Toast.makeText(context, "Sign in failed", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.sign_in_failed), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -133,7 +133,7 @@ class AuthManager(private val context: Context) {
                             firebaseAuthWithGoogle(googleIdTokenCredential.idToken)
                         } catch (e: GoogleIdTokenParsingException) {
                             Log.e(TAG, "Received an invalid google id token response", e)
-                            Toast.makeText(context, "Sign in failed", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, context.getString(R.string.sign_in_failed), Toast.LENGTH_LONG).show()
                         }
                     } else {
                         // Catch any unrecognized credential type here.
@@ -163,7 +163,7 @@ class AuthManager(private val context: Context) {
             onSignOutCallback()
         } catch (e: ClearCredentialException) {
             Log.e(TAG, "Couldn't clear user credentials: ${e.localizedMessage}")
-            Toast.makeText(context, "Sign out failed", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.sign_out_failed), Toast.LENGTH_LONG).show()
         }
     }
 

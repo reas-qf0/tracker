@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import org.reas.tracker.ui.navigation.ChartType
 import kotlin.enums.enumEntries
 
@@ -24,15 +25,15 @@ fun ChartTypeSelectionChip(
     setValue: (ChartType) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box {
+    Box(modifier = modifier) {
         var expanded by remember { mutableStateOf(false) }
         AssistChip(
             onClick = { expanded = !expanded },
-            label = { Text(value.label) },
+            label = { Text(stringResource(value.label)) },
             leadingIcon = {
                 Icon(
                     value.icon,
-                    contentDescription = value.label,
+                    contentDescription = stringResource(value.label),
                     Modifier.size(AssistChipDefaults.IconSize)
                 )
             }
@@ -46,11 +47,11 @@ fun ChartTypeSelectionChip(
                     leadingIcon = {
                         Icon(
                             entry.icon,
-                            contentDescription = entry.label,
+                            contentDescription = stringResource(entry.label),
                             Modifier.size(AssistChipDefaults.IconSize)
                         )
                     },
-                    text = { Text(entry.label) },
+                    text = { Text(stringResource(entry.label)) },
                     onClick = {
                         setValue(entry)
                         expanded = false

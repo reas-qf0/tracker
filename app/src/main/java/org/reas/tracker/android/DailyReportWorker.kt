@@ -40,17 +40,23 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
         if (artists.isNotEmpty()) {
             NotificationWrapper.show(container.context, "Daily Report") {
                 setSmallIcon(R.drawable.ic_launcher_foreground)
-                setContentTitle("Here's what you listened to today!")
+                setContentTitle(container.context.getString(R.string.daily_report_header))
                 setStyle(
                     Notification.BigTextStyle().bigText(
                         Html.fromHtml("""
-                            <b>Most played artists:</b><br>${
+                            <b>${
+                                container.context.getString(R.string.daily_report_artists)
+                            }</b><br>${
                                 artists.joinToString("<br>") { it.artist }
                             }<br>
-                            <b>Most played albums:</b><br>${
+                            <b>${
+                                container.context.getString(R.string.daily_report_albums)
+                            }</b><br>${
                                 albums.joinToString("<br>") { "${it.artist} - ${it.album}" }
                             }<br>
-                            <b>Most played tracks:</b><br>${
+                            <b>${
+                                container.context.getString(R.string.daily_report_tracks)
+                            }</b><br>${
                                 tracks.joinToString("<br>") { "${it.artist} - ${it.track}" }
                             }
                         """.trimIndent())

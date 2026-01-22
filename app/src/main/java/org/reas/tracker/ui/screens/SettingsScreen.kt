@@ -37,7 +37,7 @@ fun SettingsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val scrobblingEnabled by remember { viewModel.isScrobblingEnabled() }.collectAsState()
-            Text("Enable Tracking")
+            Text(stringResource(R.string.enable_tracking))
             Spacer(Modifier.weight(1.0F))
             Switch(
                 checked = scrobblingEnabled,
@@ -49,7 +49,7 @@ fun SettingsScreen(
             onClick = { viewModel.restartService() },
             modifier = modifier
         ) {
-            Text("Restart Service")
+            Text(stringResource(R.string.restart_service))
         }
 
         Button(
@@ -64,13 +64,13 @@ fun SettingsScreen(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Current version: ${BuildConfig.VERSION_NAME}")
+            Text(stringResource(R.string.current_version, BuildConfig.VERSION_NAME))
             Spacer(Modifier.weight(1.0F))
             Button(
                 enabled = viewModel.updateState.action != null,
                 onClick = viewModel.updateState.action ?: {}
             ) {
-                Text(viewModel.updateState.text)
+                Text(stringResource(viewModel.updateState.text))
             }
         }
 
@@ -78,7 +78,7 @@ fun SettingsScreen(
             enabled = viewModel.reviewState.action != null,
             onClick = viewModel.reviewState.action ?: {}
         ) {
-            Text(viewModel.reviewState.text)
+            Text(stringResource(viewModel.reviewState.text))
         }
     }
 }

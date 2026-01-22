@@ -19,7 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import org.reas.tracker.R
 
 
 @Composable
@@ -59,11 +61,11 @@ fun InfoChartHeader(
         Spacer(Modifier.weight(1.0F))
         AssistChip(
             onClick = onClick,
-            label = { Text("More") },
+            label = { Text(stringResource(R.string.more)) },
             leadingIcon = {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowRight,
-                    "More"
+                    stringResource(R.string.more)
                 )
             }
         )

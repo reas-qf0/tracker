@@ -16,10 +16,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.reas.tracker.R
 import org.reas.tracker.ui.components.AutosizingText
 import org.reas.tracker.ui.components.InfoBox
 import org.reas.tracker.ui.components.ListEntryWithImage
@@ -98,21 +100,21 @@ fun TrackInfoScreen(
             ) {
                 InfoBox {
                     AutosizingText(playsAsString, style = MaterialTheme.typography.headlineSmall)
-                    Text("plays", color = MaterialTheme.colorScheme.secondary)
+                    Text(stringResource(R.string.plays).lowercase(), color = MaterialTheme.colorScheme.secondary)
                 }
                 InfoBox {
                     AutosizingText(
                         timePlayedAsString,
                         style = MaterialTheme.typography.headlineSmall
                     )
-                    Text("time played", color = MaterialTheme.colorScheme.secondary)
+                    Text(stringResource(R.string.time_played).lowercase(), color = MaterialTheme.colorScheme.secondary)
                 }
                 InfoBox {
                     AutosizingText(rank, style = MaterialTheme.typography.headlineSmall)
                     Text(
                         when (sort) {
-                            ChartSort.TIME -> "in charts\nby time"
-                            ChartSort.PLAYS -> "in charts\nby plays"
+                            ChartSort.TIME -> stringResource(R.string.in_charts_by_time)
+                            ChartSort.PLAYS -> stringResource(R.string.in_charts_by_plays)
                         },
                         color = MaterialTheme.colorScheme.secondary,
                         textAlign = TextAlign.Center

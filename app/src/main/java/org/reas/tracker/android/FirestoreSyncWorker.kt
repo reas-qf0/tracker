@@ -18,7 +18,7 @@ class FirestoreSyncWorker(context: Context, params: WorkerParameters):
     private val container = TrackerApplication.instance!!.container
     override suspend fun doWork(): Result {
         val notif = NotificationWrapper.show(container.context, "Sync Indicator") {
-            setContentTitle("Backup in progress...")
+            setContentTitle(container.context.getString(R.string.backup_in_progress))
             setSmallIcon(R.drawable.ic_launcher_foreground)
         }
         container.cloudSave.submitBatchEvents()
