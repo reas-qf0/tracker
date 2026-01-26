@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.reas.tracker2.ui.components.ChartColumn
 import com.reas.tracker2.ui.components.ChartTypeSelectionChip
@@ -17,7 +16,7 @@ import com.reas.tracker2.ui.components.SortOrderSelectionChip
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.Charts
 import com.reas.tracker2.ui.viewmodels.ChartsScreenViewModel
-import com.reas.tracker2.ui.viewmodels.ViewModelProvider
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ChartsScreen(
@@ -25,7 +24,7 @@ fun ChartsScreen(
     navigateToBottomSheet: (BottomSheetInfo) -> Unit,
     navigateToCharts: (Charts) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ChartsScreenViewModel = viewModel(factory = ViewModelProvider.Factory)
+    viewModel: ChartsScreenViewModel = koinViewModel()
 ) {
     val chartType = arguments.type
     val chartSort = arguments.sort

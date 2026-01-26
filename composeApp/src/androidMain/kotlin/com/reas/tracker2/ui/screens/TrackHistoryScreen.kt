@@ -12,21 +12,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.reas.tracker2.ui.components.HistoryEntry
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.TrackHistory
 import com.reas.tracker2.ui.viewmodels.TrackHistoryViewModel
-import com.reas.tracker2.ui.viewmodels.ViewModelProvider
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun TrackHistoryScreen(
     arguments: TrackHistory,
     modifier: Modifier = Modifier,
     navigateToBottomSheet: (BottomSheetInfo) -> Unit,
-    viewModel: TrackHistoryViewModel = viewModel(factory = ViewModelProvider.Factory)
+    viewModel: TrackHistoryViewModel = koinViewModel()
 ) {
     val artist = arguments.artist
     val track = arguments.track

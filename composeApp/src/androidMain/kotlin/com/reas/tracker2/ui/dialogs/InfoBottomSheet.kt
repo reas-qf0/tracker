@@ -39,7 +39,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.reas.tracker2.R
 import com.reas.tracker2.ui.navigation.AlbumInfo
 import com.reas.tracker2.ui.navigation.ArtistInfo
@@ -47,7 +46,7 @@ import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.TrackHistory
 import com.reas.tracker2.ui.navigation.TrackInfo
 import com.reas.tracker2.ui.viewmodels.InfoBottomSheetsViewModel
-import com.reas.tracker2.ui.viewmodels.ViewModelProvider
+import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,7 +58,7 @@ fun InfoBottomSheet(
     navigateToTrack: (TrackInfo) -> Unit,
     navigateToTrackHistory: (TrackHistory) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: InfoBottomSheetsViewModel = viewModel(factory = ViewModelProvider.Factory)
+    viewModel: InfoBottomSheetsViewModel = koinViewModel()
 ) {
     val track = arguments.track
     val album = arguments.album

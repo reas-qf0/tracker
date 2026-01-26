@@ -6,11 +6,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import com.reas.tracker2.TrackerApplication
+import com.reas.tracker2.android.DataStoreWrapper
 import com.reas.tracker2.android.DataStoreWrapper.Companion.SCROBBLING_ENABLED
 
-class SettingsScreenViewModel : ViewModel() {
-    private val preferences = TrackerApplication.instance!!.container.preferences
+class SettingsScreenViewModel(
+    private val preferences: DataStoreWrapper
+) : ViewModel() {
 
     fun isScrobblingEnabled() = preferences.get(SCROBBLING_ENABLED)
         .map { it ?: true }

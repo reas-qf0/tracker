@@ -9,19 +9,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.reas.tracker2.ui.components.HistoryEntry
 import com.reas.tracker2.ui.viewmodels.HistoryScreenViewModel
-import com.reas.tracker2.ui.viewmodels.ViewModelProvider
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun HistoryScreen(
     navigateToBottomSheet: (BottomSheetInfo) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HistoryScreenViewModel = viewModel(factory = ViewModelProvider.Factory)
+    viewModel: HistoryScreenViewModel = koinViewModel()
 ) {
     val nowPlaying by viewModel.nowPlaying.collectAsState()
     val history = viewModel.history.collectAsLazyPagingItems()

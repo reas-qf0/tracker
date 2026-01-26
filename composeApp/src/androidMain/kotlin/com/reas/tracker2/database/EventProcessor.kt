@@ -3,12 +3,13 @@ package com.reas.tracker2.database
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.TaskStackBuilder
+import android.content.Context
 import android.content.Intent
 import android.util.Log
 import kotlinx.coroutines.flow.first
-import com.reas.tracker2.AppDataContainer
 import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
+import com.reas.tracker2.android.DataStoreWrapper
 import com.reas.tracker2.android.DataStoreWrapper.Companion.SCROBBLING_ENABLED
 import com.reas.tracker2.android.NotificationWrapper
 import kotlin.jvm.java
@@ -16,14 +17,17 @@ import kotlin.math.min
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-class EventProcessor(private val container: AppDataContainer) {
+class EventProcessor(
+    private val repository: Repository,
+    private val preferences: DataStoreWrapper,
+    private val context: Context
+) {
     companion object {
         const val SKIP_MIN_DURATION = 2000L
         private const val TAG = "EventProcessor"
     }
 
-    private val repository = container.repository
-    private val preferences = container.preferences
+
     private var notificationId = NotificationWrapper.reserveId()
     private var notificationBuilder: (Notification.Builder.() -> Unit)? = null
 
@@ -35,9 +39,9 @@ class EventProcessor(private val container: AppDataContainer) {
                 setContentText(event.artist)
                 setSmallIcon(R.drawable.ic_stat_name)
 
-                val resultIntent = Intent(container.context, MainActivity::class.java)
+                val resultIntent = Intent(context, MainActivity::class.java)
                 val resultPendingIntent: PendingIntent? =
-                    TaskStackBuilder.create(container.context).run {
+                    TaskStackBuilder.create(context).run {
                         addNextIntentWithParentStack(resultIntent)
                         getPendingIntent(
                             0,
@@ -47,7 +51,7 @@ class EventProcessor(private val container: AppDataContainer) {
                 setContentIntent(resultPendingIntent)
             }
             NotificationWrapper.show(
-                container.context,
+                context,
                 "Now Playing",
                 notificationId,
                 notificationBuilder!!
@@ -89,7 +93,7 @@ class EventProcessor(private val container: AppDataContainer) {
             // scrobbling is disabled
             return
         }
-        if (container.repository.getEvents(listOf(event.id)).isNotEmpty()) {
+        if (repository.getEvents(listOf(event.id)).isNotEmpty()) {
             // event already in local database => processed, do nothing
             return
         }
@@ -101,9 +105,9 @@ class EventProcessor(private val container: AppDataContainer) {
         }
 
         Log.d(TAG, "feed $event")
-        val lastEvent = container.repository.getLastEventFromPlayer(event.playerId)
+        val lastEvent = repository.getLastEventFromPlayer(event.playerId)
         if (lastEvent == null) {
-            container.repository.insertPlay(Play.Companion.fromEvent(event))
+            repository.insertPlay(Play.Companion.fromEvent(event))
         } else {
             if (lastEvent.isEqual(event)) {
                 // duplicate message from MediaListener
@@ -116,7 +120,7 @@ class EventProcessor(private val container: AppDataContainer) {
                 // a hack but works for now
                 val player = event.playerId
                 Log.d(TAG, "out-of-sync events; reprocessing all events from $player")
-                val events = container.repository.getEventsFromPlayer(player)
+                val events = repository.getEventsFromPlayer(player)
                 repository.deleteEventsFromPlayer(player)
                 repository.clearPlaysFromPlayer(player)
                 if (sync) {
@@ -148,7 +152,7 @@ class EventProcessor(private val container: AppDataContainer) {
                 }
                 // & replace the cached play for this app
                 val play = Play.Companion.fromEvent(event)
-                container.repository.insertPlay(play)
+                repository.insertPlay(play)
             } else {
                 if (!event.isPlaying && !lastEvent.isPlaying)
                     return // duplicate stop event

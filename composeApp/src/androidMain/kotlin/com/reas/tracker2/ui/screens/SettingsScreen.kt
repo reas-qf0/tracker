@@ -17,15 +17,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.reas.tracker2.R
 import com.reas.tracker2.BuildConfig
 import com.reas.tracker2.ui.viewmodels.SettingsScreenViewModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
-    viewModel: SettingsScreenViewModel = viewModel()
+    viewModel: SettingsScreenViewModel = koinViewModel()
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(10.dp),

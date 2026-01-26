@@ -15,8 +15,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import com.reas.tracker2.TrackerApplication
 import com.reas.tracker2.database.Event
+import com.reas.tracker2.database.EventProcessor
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 private val MediaMetadata.title
     get() = this.getString(MediaMetadata.METADATA_KEY_TITLE)
@@ -29,8 +31,11 @@ private val MediaMetadata.albumArtist
 private val MediaMetadata.duration
     get() = this.getLong(MediaMetadata.METADATA_KEY_DURATION)
 
-private class MediaCallback(private val scope: CoroutineScope, private val appId: String): MediaController.Callback() {
-    private val container = TrackerApplication.instance!!.container
+private class MediaCallback(
+    private val scope: CoroutineScope,
+    private val appId: String
+): MediaController.Callback(), KoinComponent {
+    private val eventProcessor: EventProcessor by inject()
     private var currentMetadata: MediaMetadata? = null
 
     override fun onMetadataChanged(metadata: MediaMetadata?) {
@@ -62,7 +67,7 @@ private class MediaCallback(private val scope: CoroutineScope, private val appId
                 duration = metadata.duration,
                 isPlaying = state.state == PlaybackState.STATE_PLAYING
             )
-            container.eventProcessor.feed(event)
+            eventProcessor.feed(event)
         }
     }
 
@@ -100,7 +105,6 @@ private class SessionListener(val scope: CoroutineScope): MediaSessionManager.On
 }
 
 class NotifListenerService: NotificationListenerService() {
-    private val container = TrackerApplication.instance!!.container
     private var initialized = false
     private lateinit var job: Job
     private lateinit var scope: CoroutineScope

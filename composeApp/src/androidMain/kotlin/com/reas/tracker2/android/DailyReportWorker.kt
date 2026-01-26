@@ -10,9 +10,10 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import com.reas.tracker2.AppDataContainer
 import com.reas.tracker2.R
-import com.reas.tracker2.TrackerApplication
+import com.reas.tracker2.database.Repository
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
@@ -21,10 +22,10 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 class DailyReportWorker(context: Context, params: WorkerParameters):
-    CoroutineWorker(context, params) {
-    private val container = TrackerApplication.instance!!.container
+    CoroutineWorker(context, params), KoinComponent {
+    private val repository: Repository by inject()
+
     override suspend fun doWork(): Result {
-        val repository = container.repository
         val startTime = clock.now().minus(1.days).toEpochMilliseconds()
         val endTime = clock.now().toEpochMilliseconds()
         val artists = (repository.getMostPlayedArtists(startTime, endTime).load(
@@ -38,24 +39,24 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
         ) as PagingSource.LoadResult.Page).data
 
         if (artists.isNotEmpty()) {
-            NotificationWrapper.show(container.context, "Daily Report") {
+            NotificationWrapper.show(applicationContext, "Daily Report") {
                 setSmallIcon(R.drawable.ic_stat_name)
-                setContentTitle(container.context.getString(R.string.daily_report_header))
+                setContentTitle(applicationContext.getString(R.string.daily_report_header))
                 setStyle(
                     Notification.BigTextStyle().bigText(
                         Html.fromHtml("""
                             <b>${
-                                container.context.getString(R.string.daily_report_artists)
+                                applicationContext.getString(R.string.daily_report_artists)
                             }</b><br>${
                                 artists.joinToString("<br>") { it.artist }
                             }<br>
                             <b>${
-                                container.context.getString(R.string.daily_report_albums)
+                                applicationContext.getString(R.string.daily_report_albums)
                             }</b><br>${
                                 albums.joinToString("<br>") { "${it.artist} - ${it.album}" }
                             }<br>
                             <b>${
-                                container.context.getString(R.string.daily_report_tracks)
+                                applicationContext.getString(R.string.daily_report_tracks)
                             }</b><br>${
                                 tracks.joinToString("<br>") { "${it.artist} - ${it.track}" }
                             }
@@ -71,7 +72,7 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
         private const val COUNT = 3
         private val clock = Clock.System
 
-        fun start(container: AppDataContainer) {
+        fun start(context: Context) {
             val calendar: Calendar = Calendar.getInstance()
             val nowMillis: Long = calendar.getTimeInMillis()
 
@@ -90,7 +91,7 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
                 .setInitialDelay(diff,TimeUnit.MILLISECONDS)
                 .build()
             WorkManager
-                .getInstance(container.context)
+                .getInstance(context)
                 .enqueueUniquePeriodicWork(
                     "DailyReportWorker",
                     ExistingPeriodicWorkPolicy.REPLACE,

@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.reas.tracker2.R
 import com.reas.tracker2.ui.components.AutosizingText
@@ -30,8 +29,8 @@ import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.navigation.TrackInfo
 import com.reas.tracker2.ui.viewmodels.TrackInfoScreenViewModel
-import com.reas.tracker2.ui.viewmodels.ViewModelProvider
 import com.reas.tracker2.util.DateTimeFormatter.timeMsToString
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun TrackInfoScreen(
@@ -39,7 +38,7 @@ fun TrackInfoScreen(
     navigateToTrack: (TrackInfo) -> Unit,
     navigateToBottomSheet: (BottomSheetInfo) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: TrackInfoScreenViewModel = viewModel(factory = ViewModelProvider.Factory)
+    viewModel: TrackInfoScreenViewModel = koinViewModel()
 ) {
     val artist = arguments.artist
     val album = arguments.album

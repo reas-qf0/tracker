@@ -12,7 +12,6 @@ import com.reas.tracker2.android.NotificationWrapper
 import com.reas.tracker2.ui.TrackerApp
 
 class MainActivity : ComponentActivity() {
-    private val container = TrackerApplication.Companion.instance!!.container
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,7 +23,7 @@ class MainActivity : ComponentActivity() {
         NotificationWrapper.createChannel("Sync Indicator", 0)
         NotificationWrapper.createChannel("Daily Report", 1)
 
-        DailyReportWorker.start(container)
+        DailyReportWorker.start(this)
 
         setContent {
             TrackerApp(

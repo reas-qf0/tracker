@@ -23,7 +23,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.reas.tracker2.R
@@ -38,8 +37,8 @@ import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.theme.TrackerTheme
 import com.reas.tracker2.ui.viewmodels.ArtistInfoScreenViewModel
-import com.reas.tracker2.ui.viewmodels.ViewModelProvider
 import com.reas.tracker2.util.DateTimeFormatter.timeMsToString
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun ArtistInfoScreen(
@@ -47,7 +46,7 @@ fun ArtistInfoScreen(
     navigateToArtist: (ArtistInfo) -> Unit,
     navigateToBottomSheet: (BottomSheetInfo) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ArtistInfoScreenViewModel = viewModel(factory = ViewModelProvider.Factory)
+    viewModel: ArtistInfoScreenViewModel = koinViewModel()
 ) {
     val artist = arguments.artist
     val sort = arguments.sort
