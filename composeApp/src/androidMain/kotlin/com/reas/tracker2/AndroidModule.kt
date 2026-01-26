@@ -15,20 +15,20 @@ import com.reas.tracker2.ui.viewmodels.InfoBottomSheetsViewModel
 import com.reas.tracker2.ui.viewmodels.SettingsScreenViewModel
 import com.reas.tracker2.ui.viewmodels.TrackHistoryViewModel
 import com.reas.tracker2.ui.viewmodels.TrackInfoScreenViewModel
-import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val module = module {
-    factoryOf(::DataStoreWrapper)
-    factory {
+    singleOf(::DataStoreWrapper)
+    single {
         RoomRepository(AppDatabase.getDatabase(get()))
     } bind Repository::class
-    factory {
+    single {
         RetrofitNetworkRepository()
     } bind NetworkRepository::class
-    factoryOf(::EventProcessor)
+    singleOf(::EventProcessor)
 
     viewModelOf(::HistoryScreenViewModel)
     viewModelOf(::ChartsScreenViewModel)
