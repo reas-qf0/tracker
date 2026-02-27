@@ -7,7 +7,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
-import com.reas.tracker2.database.Play
+import com.reas.tracker2.database.objects.Play
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
 

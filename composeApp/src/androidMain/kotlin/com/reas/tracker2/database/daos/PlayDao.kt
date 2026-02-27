@@ -1,12 +1,15 @@
-package com.reas.tracker2.database
+package com.reas.tracker2.database.daos
 
 import androidx.paging.PagingSource
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy.Companion.REPLACE
 import androidx.room.Query
 import androidx.room.Update
+import com.reas.tracker2.database.objects.Play
+import com.reas.tracker2.util.EventProcessor
 import kotlinx.coroutines.flow.Flow
 
 data class ArtistInfo(
@@ -35,10 +38,11 @@ private const val matchesArtist = "artist = :artist"
 private const val matchesAlbum = "albumArtist = :artist AND album = :album"
 private const val matchesTrack = "artist = :artist AND track = :track AND (:album IS NULL OR album = :album)"
 private const val hasAlbum = "NOT (album IS NULL)"
+private const val sourceMatches = "sourceDevice = :device AND sourceApp = :app"
 
 @Dao
 interface PlayDao {
-    @Insert
+    @Insert(onConflict = REPLACE)
     suspend fun insert(play: Play): Long
 
     @Update
@@ -47,16 +51,13 @@ interface PlayDao {
     @Delete
     suspend fun delete(play: Play)
 
-    @Query("SELECT * FROM plays WHERE playerId = :playerid ORDER BY timestamp DESC LIMIT 1")
-    suspend fun getLastPlayFromPlayer(playerid: String): Play?
-
-    @Query("DELETE FROM plays WHERE playerId = :playerId")
-    suspend fun clearPlaysFromPlayer(playerId: String)
+    @Query("SELECT * FROM plays WHERE $sourceMatches ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLastPlayFromSource(device: String?, app: String?): Play?
 
     @Query("SELECT * FROM plays WHERE lastPlaying = 1")
     fun getNowPlayingTracks(): Flow<List<Play>>
 
-    @Query("SELECT * FROM plays WHERE $isFullPlay ORDER BY timestamp DESC")
+    @Query("SELECT * FROM plays WHERE $isFullPlay AND lastPlaying = 0 ORDER BY timestamp DESC")
     fun getRecentPlays(): PagingSource<Int, Play>
 
     @Query("SELECT COUNT(*) FROM plays " +

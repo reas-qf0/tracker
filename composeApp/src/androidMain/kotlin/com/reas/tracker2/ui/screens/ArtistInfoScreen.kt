@@ -14,7 +14,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -23,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.reas.tracker2.R
@@ -53,8 +53,8 @@ fun ArtistInfoScreen(
     val start = 0L
     val end = Long.MAX_VALUE
 
-    val plays by remember { viewModel.plays(artist, start, end) }.collectAsState()
-    val timePlayed by remember { viewModel.timePlayed(artist, start, end) }.collectAsState()
+    val plays by remember { viewModel.plays(artist, start, end) }.collectAsStateWithLifecycle()
+    val timePlayed by remember { viewModel.timePlayed(artist, start, end) }.collectAsStateWithLifecycle()
     val playsAsString = if (plays == -1) "..." else plays.toString()
     val timePlayedAsString = if (timePlayed == -1L) "..." else timeMsToString(timePlayed)
     val rank by remember(plays, timePlayed) {
@@ -64,7 +64,7 @@ fun ArtistInfoScreen(
             ChartSort.TIME ->
                 if (timePlayed == -1L) MutableStateFlow("...") else viewModel.rank(timePlayed, start, end)
         }
-    }.collectAsState()
+    }.collectAsStateWithLifecycle()
     val albums = remember {
         when (sort) {
             ChartSort.TIME -> viewModel.topAlbums(artist, start, end)

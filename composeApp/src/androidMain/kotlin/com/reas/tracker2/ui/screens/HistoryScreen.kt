@@ -5,10 +5,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.reas.tracker2.ui.components.HistoryEntry
@@ -22,11 +22,14 @@ fun HistoryScreen(
     modifier: Modifier = Modifier,
     viewModel: HistoryScreenViewModel = koinViewModel()
 ) {
-    val nowPlaying by viewModel.nowPlaying.collectAsState()
+    val nowPlaying by viewModel.nowPlaying.collectAsStateWithLifecycle()
     val history = viewModel.history.collectAsLazyPagingItems()
 
     LazyColumn(modifier = modifier) {
-        items(nowPlaying) { scrobble ->
+        items(
+            nowPlaying,
+            key = { scrobble -> scrobble.key }
+        ) { scrobble ->
             HistoryEntry(
                 title = scrobble.track,
                 artist = scrobble.artist,
@@ -58,7 +61,7 @@ fun HistoryScreen(
 
         items(
             history.itemCount,
-            key = history.itemKey { it.id }
+            key = history.itemKey { scrobble -> scrobble.key }
         ) { index ->
             val scrobble = history[index]
             scrobble?.let {

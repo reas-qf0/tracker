@@ -2,7 +2,7 @@
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
-agp = "8.13.2"
+agp = "8.12.0"
 datastore = "1.2.0"
 landscapist = "2.8.3"
 retrofit = "3.0.0"

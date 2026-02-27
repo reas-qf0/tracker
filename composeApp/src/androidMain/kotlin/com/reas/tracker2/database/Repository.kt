@@ -1,22 +1,25 @@
 package com.reas.tracker2.database
 
 import androidx.paging.PagingSource
+import com.reas.tracker2.database.daos.AlbumInfo
+import com.reas.tracker2.database.daos.ArtistInfo
+import com.reas.tracker2.database.objects.Event
+import com.reas.tracker2.database.objects.Play
+import com.reas.tracker2.database.daos.TrackInfo
 import kotlinx.coroutines.flow.Flow
 
 interface Repository {
     suspend fun insertEvent(event: Event): Long
     suspend fun updateEvent(event: Event)
     suspend fun deleteEvent(event: Event)
-    suspend fun getLastEventFromPlayer(playerId: String): Event?
-    suspend fun getEventsFromPlayer(playerId: String): List<Event>
-    suspend fun deleteEventsFromPlayer(playerId: String)
-    suspend fun getEvents(eventIds: List<String>): List<Event>
+    suspend fun getLocalEvent(app: String, timestamp: Long): Event
+    fun getEvents(): Flow<List<Event>>
+    suspend fun clearQueue(app: String, timestamp: Long)
 
     suspend fun insertPlay(play: Play): Long
     suspend fun updatePlay(play: Play)
     suspend fun deletePlay(play: Play)
-    suspend fun getLastPlayFromPlayer(playerId: String): Play?
-    suspend fun clearPlaysFromPlayer(playerId: String)
+    suspend fun getLastPlayFromSource(device: String?, app: String?): Play?
     fun getNowPlayingTracks(): Flow<List<Play>>
     fun getRecentPlays(): PagingSource<Int, Play>
 
@@ -47,28 +50,21 @@ interface Repository {
     fun getMostPlayedAlbumsFromArtistByPlayCount(artist: String, start: Long, end: Long): PagingSource<Int, AlbumInfo>
     fun getTrackRank(time: Long, start: Long, end: Long): Flow<Int>
     fun getTrackRankByPlayCount(count: Int, start: Long, end: Long) : Flow<Int>
-
-    suspend fun insertCustomImage(customImage: CustomImage)
-    suspend fun updateCustomImage(customImage: CustomImage)
-    suspend fun deleteCustomImage(customImage: CustomImage)
-    fun getCustomImage(arguments: List<String>): String?
 }
 
 
 class RoomRepository(private val db: AppDatabase) : Repository {
-    override suspend fun insertEvent(event: Event) = db.eventsDao().insert(event)
-    override suspend fun deleteEvent(event: Event) = db.eventsDao().delete(event)
-    override suspend fun updateEvent(event: Event) = db.eventsDao().update(event)
-    override suspend fun getLastEventFromPlayer(playerId: String) = db.eventsDao().getLastEventFromPlayer(playerId)
-    override suspend fun getEventsFromPlayer(playerId: String) = db.eventsDao().getEventsFromPlayer(playerId)
-    override suspend fun deleteEventsFromPlayer(playerId: String) = db.eventsDao().deleteEventsFromPlayer(playerId)
-    override suspend fun getEvents(eventIds: List<String>) = db.eventsDao().getEvents(eventIds)
+    override suspend fun insertEvent(event: Event) = db.eventDao().insert(event)
+    override suspend fun deleteEvent(event: Event) = db.eventDao().delete(event)
+    override suspend fun updateEvent(event: Event) = db.eventDao().update(event)
+    override suspend fun getLocalEvent(app: String, timestamp: Long) = db.eventDao().getLocalEvent(app, timestamp)
+    override fun getEvents() = db.eventDao().getEvents()
+    override suspend fun clearQueue(app: String, timestamp: Long) = db.eventDao().clearQueue(app, timestamp)
 
     override suspend fun insertPlay(play: Play) = db.playDao().insert(play)
     override suspend fun deletePlay(play: Play) = db.playDao().delete(play)
     override suspend fun updatePlay(play: Play) = db.playDao().update(play)
-    override suspend fun getLastPlayFromPlayer(playerId: String) = db.playDao().getLastPlayFromPlayer(playerId)
-    override suspend fun clearPlaysFromPlayer(playerId: String) = db.playDao().clearPlaysFromPlayer(playerId)
+    override suspend fun getLastPlayFromSource(device: String?, app: String?) = db.playDao().getLastPlayFromSource(device, app)
     override fun getNowPlayingTracks(): Flow<List<Play>> = db.playDao().getNowPlayingTracks()
     override fun getRecentPlays() = db.playDao().getRecentPlays()
 
@@ -99,9 +95,4 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override fun getMostPlayedTracksFromAlbumByPlayCount(artist: String, album: String, start: Long, end: Long) = db.playDao().getMostPlayedTracksFromAlbumByPlayCount(artist, album, start, end)
     override fun getTrackRank(time: Long, start: Long, end: Long) = db.playDao().getTrackRank(time, start, end)
     override fun getTrackRankByPlayCount(count: Int, start: Long, end: Long) = db.playDao().getTrackRankByPlayCount(count, start, end)
-
-    override suspend fun insertCustomImage(customImage: CustomImage) = db.customImageDao().insert(customImage)
-    override suspend fun updateCustomImage(customImage: CustomImage) = db.customImageDao().update(customImage)
-    override suspend fun deleteCustomImage(customImage: CustomImage) = db.customImageDao().delete(customImage)
-    override fun getCustomImage(arguments: List<String>) = db.customImageDao().get(arguments)
 }

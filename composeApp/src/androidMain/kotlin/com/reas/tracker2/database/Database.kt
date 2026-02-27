@@ -5,14 +5,17 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.reas.tracker2.database.objects.Event
+import com.reas.tracker2.database.daos.EventDao
+import com.reas.tracker2.database.objects.Play
+import com.reas.tracker2.database.daos.PlayDao
 
-@Database(entities = [Event::class, Play::class, CustomImage::class], version = 3, exportSchema = false)
+@Database(entities = [Event::class, Play::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
-    abstract fun eventsDao(): EventsDao
+    abstract fun eventDao(): EventDao
     abstract fun playDao(): PlayDao
-    abstract fun customImageDao(): CustomImageDao
 
     companion object {
         @Volatile

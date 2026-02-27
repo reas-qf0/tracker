@@ -24,6 +24,7 @@ import kotlin.time.ExperimentalTime
 class DailyReportWorker(context: Context, params: WorkerParameters):
     CoroutineWorker(context, params), KoinComponent {
     private val repository: Repository by inject()
+    private val notif: NotificationWrapper by inject()
 
     override suspend fun doWork(): Result {
         val startTime = clock.now().minus(1.days).toEpochMilliseconds()
@@ -39,7 +40,7 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
         ) as PagingSource.LoadResult.Page).data
 
         if (artists.isNotEmpty()) {
-            NotificationWrapper.show(applicationContext, "Daily Report") {
+            notif.show("Daily Report") {
                 setSmallIcon(R.drawable.ic_stat_name)
                 setContentTitle(applicationContext.getString(R.string.daily_report_header))
                 setStyle(

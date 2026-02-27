@@ -26,15 +26,6 @@
         </activity>
 
         <service
-            android:name=".firebase.MessagingService"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-            </intent-filter>
-        </service>
-
-        <service
             android:name=".android.NotifListenerService"
             android:enabled="true"
             android:exported="false"
