@@ -60,7 +60,7 @@ private class MediaCallback(
                     }
                 setContentIntent(resultPendingIntent)
 
-                val deleteIntent = Intent(context, MainActivity::class.java)
+                val deleteIntent = Intent(context, NotifListenerService::class.java)
                 deleteIntent.putExtra("org.reas.tracker2.appId", appId)
                 val deletePendingIntent = PendingIntent.getService(context, 42, deleteIntent,
                     PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
@@ -132,36 +132,52 @@ private class MediaCallback(
 }
 
 private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListener {
-    private var callbacks = mutableMapOf<MediaController, MediaCallback>()
+    private val controllers = mutableMapOf<String, MediaController>()
+    private var callbacks = mutableMapOf<String, MediaCallback>()
 
-    override fun onActiveSessionsChanged(controllers: List<MediaController>?) {
-        Log.d(TAG, "onActiveSessionsChanged $controllers")
-        if (controllers == null) return
+    override fun onActiveSessionsChanged(ctrl: List<MediaController>?) {
+        Log.d(TAG, "onActiveSessionsChanged $ctrl")
+        if (ctrl == null) return
 
-        val oldControllers = callbacks.keys
-        val newControllers = controllers.toMutableSet()
-        oldControllers.minus(newControllers).forEach { controller ->
-            val callback = callbacks[controller]!!
-            controller.unregisterCallback(callback)
-            callbacks.remove(controller)
+        val oldControllers = controllers.keys
+        val newControllerMap = ctrl.associateBy { it.packageName }
+        val newControllers = newControllerMap.keys
+
+        // rewire callbacks for any refreshed controllers with the same package name
+        // (happens e.g. if the service gets restarted)
+        oldControllers.intersect(newControllers).forEach { appId ->
+            if (controllers[appId] != newControllerMap[appId]) {
+                val callback = callbacks[appId]!!
+                controllers[appId]!!.unregisterCallback(callback)
+                newControllerMap[appId]!!.registerCallback(callback)
+                controllers[appId] = newControllerMap[appId]!!
+            }
         }
-        newControllers.minus(oldControllers).forEach { controller ->
-            val callback = MediaCallback(controller.packageName)
+
+        // remove callbacks for disconnected session controllers
+        oldControllers.minus(newControllers).forEach { appId ->
+            val callback = callbacks[appId]!!
+            controllers[appId]!!.unregisterCallback(callback)
+            callbacks.remove(appId)
+            controllers.remove(appId)
+        }
+
+        // add callbacks for new session controllers
+        newControllers.minus(oldControllers).forEach { appId ->
+            val callback = MediaCallback(appId)
+            val controller = newControllerMap[appId]!!
             controller.registerCallback(callback)
             controller.metadata?.let { callback.onMetadataChanged(it) }
             controller.playbackState?.let { callback.onPlaybackStateChanged(it) }
             controller.extras?.let { callback.onExtrasChanged(it) }
-            callbacks[controller] = callback
+            callbacks[appId] = callback
+            controllers[appId] = controller
         }
     }
 
     fun onNotificationDismissed(appId: String) {
         Log.d("TAG", "onNotificationDismissed($appId)")
-        callbacks.forEach { controller, callback ->
-            if (controller.packageName == appId) {
-                callback.onNotificationDismissed()
-            }
-        }
+        callbacks[appId]?.onNotificationDismissed()
     }
 
     companion object {

@@ -10,7 +10,7 @@ import com.reas.tracker2.database.daos.EventDao
 import com.reas.tracker2.database.objects.Play
 import com.reas.tracker2.database.daos.PlayDao
 
-@Database(entities = [Event::class, Play::class], version = 2, exportSchema = false)
+@Database(entities = [Event::class, Play::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
