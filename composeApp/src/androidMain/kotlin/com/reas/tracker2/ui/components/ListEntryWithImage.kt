@@ -32,7 +32,7 @@ import com.skydoves.landscapist.palette.rememberPaletteState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-private const val DYNAMIC_COLOR_STRENGTH = 0.1F
+private const val DYNAMIC_COLOR_STRENGTH = 0.25F
 
 @Composable
 fun ListEntryWithImage(
@@ -60,11 +60,16 @@ fun ListEntryWithImage(
         if (palette == null || !dynamicColor)
             backgroundColor
         else {
-            Color(ColorUtils.blendARGB(
-                backgroundColor.toArgb(),
-                palette!!.getDominantColor(backgroundColor.toArgb()),
-                DYNAMIC_COLOR_STRENGTH
-            ))
+            val background = FloatArray(3)
+            val coverColor = FloatArray(3)
+            val result = FloatArray(3)
+            ColorUtils.colorToHSL(backgroundColor.toArgb(), background)
+            ColorUtils.colorToHSL(
+                palette!!.getDarkMutedColor(backgroundColor.toArgb()),
+                coverColor
+            )
+            ColorUtils.blendHSL(background, coverColor, DYNAMIC_COLOR_STRENGTH, result)
+            Color(ColorUtils.HSLToColor(result))
         }
     )
 
