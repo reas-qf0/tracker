@@ -22,9 +22,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        notif.deletePreviousChannels()
-        notif.createChannel("Now Playing", 2)
-        notif.createChannel("Daily Report", 1)
+        notif.createChannels()
 
         DailyReportWorker.start(this)
 

@@ -10,27 +10,41 @@ import android.os.Build
 import android.util.Log
 import androidx.core.app.ActivityCompat
 
+private data class ChannelDescription(
+    val id: String,
+    val name: String,
+    val importance: Int,
+    val configuration: NotificationChannel.() -> Unit = {}
+)
+
 class NotificationWrapper(
     private val context: Context,
     private val notificationManager: NotificationManager
 ) {
+    private val channelDescriptions = listOf(
+        ChannelDescription("0", "Now Playing", 2),
+        ChannelDescription("1", "Daily Report", 1)
+    )
+
     private val channels = hashMapOf<String, String>()
     private var nextId = 0
 
-    fun createChannel(name: String, importance: Int, params: NotificationChannel.() -> Unit = {}) {
-        val channelIdString = channels.size.toString()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelIdString, name, importance).apply(params)
-            notificationManager.createNotificationChannel(channel)
-            channels[name] = channelIdString
+    init {
+        channelDescriptions.forEach {
+            channels[it.name] = it.id
         }
     }
 
-    fun deletePreviousChannels() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            notificationManager.notificationChannels.forEach { channel ->
-                notificationManager.deleteNotificationChannel(channel.id)
-            }
+    fun createChannels() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+            return
+
+        notificationManager.notificationChannels.forEach { channel ->
+            notificationManager.deleteNotificationChannel(channel.id)
+        }
+        channelDescriptions.forEach {
+            val channel = NotificationChannel(it.id, it.name, it.importance).apply(it.configuration)
+            notificationManager.createNotificationChannel(channel)
         }
     }
 
