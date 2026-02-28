@@ -1,5 +1,6 @@
 package com.reas.tracker2.ui.components
 
+import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
@@ -45,7 +46,12 @@ fun ListEntryWithImage(
     var model by remember { mutableStateOf<Any?>(null) }
     LaunchedEffect(Unit) {
         launch(Dispatchers.IO) {
-            model = url()
+            model = try {
+                url()
+            } catch (e: Throwable) {
+                Log.w("ListEntryWithImage", "Couldn't retrieve image url", e)
+                null
+            }
         }
     }
 
