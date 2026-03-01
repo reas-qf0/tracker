@@ -57,7 +57,7 @@ interface PlayDao {
     @Query("SELECT * FROM plays WHERE lastPlaying = 1")
     fun getNowPlayingTracks(): Flow<List<Play>>
 
-    @Query("SELECT * FROM plays WHERE $isFullPlay AND lastPlaying = 0 ORDER BY timestamp DESC")
+    @Query("SELECT * FROM plays WHERE lastPlaying = 1 UNION SELECT * FROM plays WHERE $isFullPlay AND lastPlaying = 0 ORDER BY timestamp DESC")
     fun getRecentPlays(): PagingSource<Int, Play>
 
     @Query("SELECT COUNT(*) FROM plays " +

@@ -35,13 +35,15 @@ fun TrackHistoryScreen(
     val history = remember { viewModel.history(artist, track, album) }.collectAsLazyPagingItems()
 
     Column {
-        Text(
-            "Plays: $trackPlays",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(start = 10.dp, bottom = 10.dp)
-        )
-
         LazyColumn(modifier = modifier) {
+            item(key = "header") {
+                Text(
+                    "Plays: $trackPlays",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(start = 10.dp, bottom = 10.dp)
+                )
+            }
+
             items(
                 history.itemCount,
                 key = history.itemKey { scrobble -> scrobble.key }

@@ -39,8 +39,8 @@ class EventProcessor(
         val app = events[0].sourceApp
         var play = repository.getLastPlayFromSource("", app)
         val eventsSorted = events.sortedBy { it.timestamp }
-        if (play != null && eventsSorted[0].timestamp < play.lastTimestamp) {
-            Log.e(TAG, "ERROR: out-of-sync events app=$app")
+        if (play != null && eventsSorted[0].timestamp < play.timestamp) {
+            Log.e(TAG, "ERROR: out-of-sync events app=$app eventTimestamp=${eventsSorted[0].timestamp} playTimestamp=${play.timestamp}")
             return null
         }
 
@@ -54,21 +54,38 @@ class EventProcessor(
             val shouldPlugHole = event.timestamp - play.lastTimestamp + play.lastPosition > play.duration
             if (play.lastPlaying && shouldPlugHole) {
                 play.lastPlaying = false
-                play.timePlayed += play.duration + 1 - play.lastPosition
+                play.timePlayed += play.duration - play.lastPosition
                 play.associatedEvents.add(0L)
             }
             if (play.associatedEvents.last() == 0L && !shouldPlugHole) {
                 play.lastPlaying = true
-                play.timePlayed -= play.duration + 1 - play.lastPosition
+                play.timePlayed -= play.duration - play.lastPosition
                 play.associatedEvents.removeAt(play.associatedEvents.size - 1)
             }
             if (play.lastPlaying && !shouldPlugHole) {
                 play.timePlayed += event.timestamp - play.lastTimestamp
             }
 
-            if (event.isPlaying && (!event.metadataEqual(play) || event.position <= SKIP_MIN_DURATION)) {
-                play.lastPlaying = false
-                play = flush(event, play)
+            if (event.isPlaying) {
+                if (event.position <= SKIP_MIN_DURATION) {
+                    if (event.metadataEqual(play) && play.lastPosition <= SKIP_MIN_DURATION) {
+                        play.lastPlaying = event.isPlaying
+                        play.lastPosition = event.position
+                        play.associatedEvents.add(event.timestamp)
+                    } else {
+                        play.lastPlaying = false
+                        play = flush(event, play)
+                    }
+                } else {
+                    if (event.metadataEqual(play)) {
+                        play.lastPlaying = event.isPlaying
+                        play.lastPosition = event.position
+                        play.associatedEvents.add(event.timestamp)
+                    } else {
+                        play.lastPlaying = false
+                        play = flush(event, play)
+                    }
+                }
             } else {
                 play.lastPlaying = event.isPlaying
                 play.lastPosition = event.position

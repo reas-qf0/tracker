@@ -25,7 +25,4 @@ interface EventDao {
 
     @Query("DELETE FROM events WHERE sourceApp = :app AND timestamp <= :timestamp")
     suspend fun clearQueue(app: String, timestamp: Long)
-
-    @Query("SELECT * FROM events WHERE sourceApp = :app AND timestamp = :timestamp")
-    suspend fun getLocalEvent(app: String, timestamp: Long): Event
 }

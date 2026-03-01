@@ -12,7 +12,6 @@ interface Repository {
     suspend fun insertEvent(event: Event): Long
     suspend fun updateEvent(event: Event)
     suspend fun deleteEvent(event: Event)
-    suspend fun getLocalEvent(app: String, timestamp: Long): Event
     fun getEvents(): Flow<List<Event>>
     suspend fun clearQueue(app: String, timestamp: Long)
 
@@ -57,7 +56,6 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override suspend fun insertEvent(event: Event) = db.eventDao().insert(event)
     override suspend fun deleteEvent(event: Event) = db.eventDao().delete(event)
     override suspend fun updateEvent(event: Event) = db.eventDao().update(event)
-    override suspend fun getLocalEvent(app: String, timestamp: Long) = db.eventDao().getLocalEvent(app, timestamp)
     override fun getEvents() = db.eventDao().getEvents()
     override suspend fun clearQueue(app: String, timestamp: Long) = db.eventDao().clearQueue(app, timestamp)
 

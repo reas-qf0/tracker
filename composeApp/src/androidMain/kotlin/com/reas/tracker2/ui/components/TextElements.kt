@@ -111,7 +111,7 @@ fun Timestamp(
         tooltip = {
             PlainTooltip(
                 containerColor = MaterialTheme.colorScheme.background,
-                contentColor = MaterialTheme.colorScheme.primary
+                contentColor = MaterialTheme.colorScheme.secondary
             ) {
                 Text(dateTimeFormatter.format(Date(timestamp)))
             }

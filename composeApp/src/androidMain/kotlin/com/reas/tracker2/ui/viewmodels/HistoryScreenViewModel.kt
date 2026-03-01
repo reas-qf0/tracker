@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
 import com.reas.tracker2.database.objects.Play
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
@@ -15,12 +13,6 @@ class HistoryScreenViewModel(
     private val repository: Repository,
     private val networkRepository: NetworkRepository
 ): ViewModel() {
-    val nowPlaying = repository.getNowPlayingTracks()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = listOf()
-        )
     val history = Pager(
         initialKey = 0,
         pagingSourceFactory = { repository.getRecentPlays() },

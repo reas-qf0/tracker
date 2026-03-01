@@ -48,6 +48,7 @@ private class MediaCallback(
                 setContentTitle(event.track)
                 setContentText(event.artist)
                 setSmallIcon(R.drawable.ic_stat_name)
+                setShowWhen(false)
 
                 val resultIntent = Intent(context, MainActivity::class.java)
                 val resultPendingIntent =
@@ -98,6 +99,7 @@ private class MediaCallback(
 
         currentMetadata?.let {
             val metadata = currentMetadata!!
+            if (metadata.artist == "" || metadata.title == "") return@let
 
             val event = Event(
                 track = metadata.title,
