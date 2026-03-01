@@ -12,6 +12,7 @@ import android.os.SystemClock
 import android.service.notification.NotificationListenerService
 import android.util.Log
 import androidx.core.content.getSystemService
+import co.touchlab.kermit.Logger
 import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
 import com.reas.tracker2.database.objects.Event
@@ -31,6 +32,8 @@ private val MediaMetadata.albumArtist
 private val MediaMetadata.duration
     get() = this.getLong(MediaMetadata.METADATA_KEY_DURATION)
 
+private const val TAG = "NotificationListenerService"
+
 private class MediaCallback(
     private val appId: String
 ): MediaController.Callback(), KoinComponent {
@@ -42,7 +45,7 @@ private class MediaCallback(
     private var currentMetadata: MediaMetadata? = null
 
     private fun updateNotification(event: Event) {
-        Log.d(TAG, "updateNotification")
+        Logger.d(TAG) { "updateNotification" }
         if (event.isPlaying) {
             notificationBuilder = { context ->
                 setContentTitle(event.track)
@@ -86,14 +89,14 @@ private class MediaCallback(
     }
 
     override fun onMetadataChanged(metadata: MediaMetadata?) {
-        Log.d(TAG, "onMetadataChanged($appId) $metadata")
+        Logger.d(TAG) { "onMetadataChanged($appId) $metadata" }
 
         if (metadata == null) return
         currentMetadata = metadata
     }
 
     override fun onPlaybackStateChanged(state: PlaybackState?) {
-        Log.d(TAG, "onPlaybackStateChanged($appId) $state")
+        Logger.d(TAG) { "onPlaybackStateChanged($appId) $state" }
 
         if (state == null) return
 
@@ -120,16 +123,12 @@ private class MediaCallback(
     }
 
     override fun onSessionDestroyed() {
-        Log.d(TAG, "onSessionDestroyed($appId)")
+        Logger.d(TAG) { "onSessionDestroyed($appId)" }
     }
 
     fun onNotificationDismissed() {
         notificationId = notificationManager.reserveId()
         showNotification()
-    }
-
-    companion object {
-        private val TAG = "NotificationListenerService"
     }
 }
 
@@ -138,7 +137,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
     private var callbacks = mutableMapOf<String, MediaCallback>()
 
     override fun onActiveSessionsChanged(ctrl: List<MediaController>?) {
-        Log.d(TAG, "onActiveSessionsChanged $ctrl")
+        Logger.d(TAG) { "onActiveSessionsChanged $ctrl" }
         if (ctrl == null) return
 
         val oldControllers = controllers.keys
@@ -178,12 +177,8 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
     }
 
     fun onNotificationDismissed(appId: String) {
-        Log.d("TAG", "onNotificationDismissed($appId)")
+        Logger.d(TAG) { "onNotificationDismissed($appId)" }
         callbacks[appId]?.onNotificationDismissed()
-    }
-
-    companion object {
-        private const val TAG = "NotificationListenerService"
     }
 }
 
@@ -216,7 +211,7 @@ class NotifListenerService: NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        Log.d(TAG, "onListenerConnected")
+        Logger.d(TAG) { "onListenerConnected" }
         if (!initialized) {
             synchronized(this) {
                 if (!initialized) {
@@ -231,9 +226,5 @@ class NotifListenerService: NotificationListenerService() {
         super.onListenerDisconnected()
         Log.d(TAG, "onListenerDisconnected")
         destroy()
-    }
-
-    companion object {
-        private const val TAG = "NotificationListenerService"
     }
 }

@@ -10,6 +10,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import co.touchlab.kermit.Logger
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
 import org.koin.core.component.KoinComponent
@@ -86,7 +87,7 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
                 calendar.add(Calendar.DATE, 1)
             }
             val diff = calendar.getTimeInMillis() - nowMillis
-            Log.d("DailyReportWorker", "Work will run in $diff milliseconds")
+            Logger.d("DailyReportWorker") { "Work will run in $diff milliseconds" }
 
             val request = PeriodicWorkRequestBuilder<DailyReportWorker>(1, TimeUnit.DAYS)
                 .setInitialDelay(diff,TimeUnit.MILLISECONDS)

@@ -1,0 +1,53 @@
+package com.reas.tracker2
+
+import com.reas.tracker2.database.AppDatabase
+import com.reas.tracker2.database.Repository
+import com.reas.tracker2.database.RoomRepository
+import com.reas.tracker2.network.NetworkRepository
+import com.reas.tracker2.network.RetrofitNetworkRepository
+import com.reas.tracker2.ui.viewmodels.AlbumInfoScreenViewModel
+import com.reas.tracker2.ui.viewmodels.ArtistInfoScreenViewModel
+import com.reas.tracker2.ui.viewmodels.ChartsScreenViewModel
+import com.reas.tracker2.ui.viewmodels.HistoryScreenViewModel
+import com.reas.tracker2.ui.viewmodels.InfoBottomSheetsViewModel
+import com.reas.tracker2.ui.viewmodels.SettingsScreenViewModel
+import com.reas.tracker2.ui.viewmodels.TrackHistoryViewModel
+import com.reas.tracker2.ui.viewmodels.TrackInfoScreenViewModel
+import com.reas.tracker2.util.EventProcessor
+import org.koin.core.KoinApplication
+import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModelOf
+import org.koin.dsl.KoinAppDeclaration
+import org.koin.dsl.bind
+import org.koin.dsl.includes
+import org.koin.dsl.module
+
+val sharedModule = module {
+    single {
+        RoomRepository(AppDatabase.getDatabase(get()))
+    } bind Repository::class
+    single {
+        RetrofitNetworkRepository()
+    } bind NetworkRepository::class
+    singleOf(::EventProcessor)
+
+    viewModelOf(::HistoryScreenViewModel)
+    viewModelOf(::ChartsScreenViewModel)
+    viewModelOf(::InfoBottomSheetsViewModel)
+    viewModelOf(::TrackHistoryViewModel)
+    viewModelOf(::ArtistInfoScreenViewModel)
+    viewModelOf(::AlbumInfoScreenViewModel)
+    viewModelOf(::TrackInfoScreenViewModel)
+    viewModelOf(::SettingsScreenViewModel)
+}
+
+expect val platformModule: Module
+
+fun startKoinMp(config: KoinAppDeclaration? = null): KoinApplication {
+    return startKoin {
+        includes(config)
+        modules(sharedModule, platformModule)
+    }
+}

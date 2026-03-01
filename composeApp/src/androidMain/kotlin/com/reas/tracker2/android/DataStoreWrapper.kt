@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import kotlin.text.get
 
+// TODO: currently unused, reuse when settings storage is implemented (maybe)
 class DataStoreWrapper(private val context: Context) {
     val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
