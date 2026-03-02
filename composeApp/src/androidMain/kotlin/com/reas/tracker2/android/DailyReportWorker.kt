@@ -13,6 +13,7 @@ import androidx.work.WorkerParameters
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.shared.TimePeriod
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.Calendar
@@ -28,15 +29,17 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
     private val notif: NotificationWrapper by inject()
 
     override suspend fun doWork(): Result {
-        val startTime = clock.now().minus(1.days).toEpochMilliseconds()
-        val endTime = clock.now().toEpochMilliseconds()
-        val artists = (repository.getMostPlayedArtists(startTime, endTime).load(
+        val period = TimePeriod(
+            clock.now() - 1.days,
+            clock.now()
+        )
+        val artists = (repository.getMostPlayedArtists(period).load(
             PagingSource.LoadParams.Refresh(0, COUNT, false)
         ) as PagingSource.LoadResult.Page).data
-        val albums = (repository.getMostPlayedAlbums(startTime, endTime).load(
+        val albums = (repository.getMostPlayedAlbums(period).load(
             PagingSource.LoadParams.Refresh(0, COUNT, false)
         ) as PagingSource.LoadResult.Page).data
-        val tracks = (repository.getMostPlayedTracks(startTime, endTime).load(
+        val tracks = (repository.getMostPlayedTracks(period).load(
             PagingSource.LoadParams.Refresh(0, COUNT, false)
         ) as PagingSource.LoadResult.Page).data
 
@@ -55,12 +58,12 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
                             <b>${
                                 applicationContext.getString(R.string.daily_report_albums)
                             }</b><br>${
-                                albums.joinToString("<br>") { "${it.artist} - ${it.album}" }
+                                albums.joinToString("<br>") { "${it._artist} - ${it._album}" }
                             }<br>
                             <b>${
                                 applicationContext.getString(R.string.daily_report_tracks)
                             }</b><br>${
-                                tracks.joinToString("<br>") { "${it.artist} - ${it.track}" }
+                                tracks.joinToString("<br>") { "${it._artist} - ${it._track}" }
                             }
                         """.trimIndent())
                     )

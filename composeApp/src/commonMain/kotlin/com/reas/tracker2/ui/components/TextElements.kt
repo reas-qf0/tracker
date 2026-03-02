@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -33,6 +34,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeComponents
+import kotlinx.datetime.format.DateTimeFormat
+import kotlinx.datetime.format.MonthNames
+import kotlinx.datetime.format.byUnicodePattern
+import kotlinx.datetime.format.char
 import org.jetbrains.compose.resources.stringResource
 import tracker2.composeapp.generated.resources.Res
 import tracker2.composeapp.generated.resources.hours_ago
@@ -40,6 +48,13 @@ import tracker2.composeapp.generated.resources.minutes_ago
 import tracker2.composeapp.generated.resources.seconds_ago
 import java.text.SimpleDateFormat
 import java.util.Date
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 
 private fun Modifier.firstBaselineToTop(
     firstBaselineToTop: Dp,
@@ -102,7 +117,7 @@ fun AutosizingText(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Timestamp(
-    timestamp: Long,
+    timestamp: Instant,
     modifier: Modifier = Modifier,
     style: TextStyle = LocalTextStyle.current,
     color: Color = Color.Unspecified,
@@ -116,17 +131,17 @@ fun Timestamp(
                 containerColor = MaterialTheme.colorScheme.background,
                 contentColor = MaterialTheme.colorScheme.secondary
             ) {
-                Text(dateTimeFormatter.format(Date(timestamp)))
+                Text(timestamp.printLong())
             }
         },
         state = tooltipState
     ) {
-        var difference by remember { mutableLongStateOf(timeAgoInMs(timestamp)) }
+        var difference by remember { mutableStateOf(Clock.System.now() - timestamp) }
 
-        val showSeconds by remember { derivedStateOf { difference < 60L * 1000L } }
+        val showSeconds by remember { derivedStateOf { difference < 1.minutes } }
         if (showSeconds) {
             Text(
-                stringResource(Res.string.seconds_ago, difference / 1000L),
+                stringResource(Res.string.seconds_ago, difference.inWholeSeconds),
                 modifier = modifier.clickable(onClick = {
                     scope.launch { tooltipState.show() }
                 }),
@@ -134,17 +149,17 @@ fun Timestamp(
                 color = color
             )
             LaunchedEffect(difference) {
-                delay(1000L - (difference % 1000L))
-                difference = timeAgoInMs(timestamp)
+                delay((difference.inWholeSeconds + 1).seconds)
+                difference = Clock.System.now() - timestamp
             }
         }
 
         val showMinutes by remember { derivedStateOf {
-            60L * 1000L <= difference && difference < 60L * 60L * 1000L
+            1.minutes <= difference && difference < 1.hours
         } }
         if (showMinutes) {
             Text(
-                stringResource(Res.string.minutes_ago, difference / (60L * 1000L)),
+                stringResource(Res.string.minutes_ago, difference.inWholeMinutes),
                 modifier = modifier.clickable(onClick = {
                     scope.launch { tooltipState.show() }
                 }),
@@ -152,17 +167,17 @@ fun Timestamp(
                 color = color
             )
             LaunchedEffect(difference) {
-                delay(1000L * 60L - (difference % (1000L * 60L)))
-                difference = timeAgoInMs(timestamp)
+                delay((difference.inWholeMinutes + 1).minutes)
+                difference = Clock.System.now() - timestamp
             }
         }
 
         val showHours by remember { derivedStateOf {
-            60L * 60L * 1000L <= difference && difference < 60L * 60L * 24L * 1000L
+            1.hours <= difference && difference < 1.days
         } }
         if (showHours) {
             Text(
-                stringResource(Res.string.hours_ago, difference / (60L * 60L * 1000L)),
+                stringResource(Res.string.hours_ago, difference.inWholeHours),
                 modifier = modifier.clickable(onClick = {
                     scope.launch { tooltipState.show() }
                 }),
@@ -170,14 +185,14 @@ fun Timestamp(
                 color = color
             )
             LaunchedEffect(difference) {
-                delay(1000L * 60L * 60L - (difference % (1000L * 60L * 60L)))
-                difference = timeAgoInMs(timestamp)
+                delay((difference.inWholeHours + 1).hours)
+                difference = Clock.System.now() - timestamp
             }
         }
 
         if (!showSeconds && !showMinutes && !showHours) {
             Text(
-                dateFormatter.format(Date(timestamp)),
+                timestamp.printShort(),
                 modifier = modifier.clickable(onClick = {
                     scope.launch { tooltipState.show() }
                 }),
@@ -188,7 +203,27 @@ fun Timestamp(
     }
 }
 
-private val dateFormatter = SimpleDateFormat.getDateInstance()
-private val dateTimeFormatter = SimpleDateFormat.getDateTimeInstance()
-private fun timeAgoInMs(timestamp: Long) =
-    System.currentTimeMillis() - timestamp
+fun Instant.printShort() = this.format(DateTimeComponents.Format {
+    monthName(MonthNames.ENGLISH_ABBREVIATED)
+    char(' ')
+    day()
+    char(',')
+    char(' ')
+    year()
+})
+
+
+fun Instant.printLong() = this.format(DateTimeComponents.Format {
+    monthName(MonthNames.ENGLISH_FULL)
+    char(' ')
+    day()
+    char(',')
+    char(' ')
+    year()
+    char(' ')
+    hour()
+    char(':')
+    minute()
+    char(':')
+    second()
+})

@@ -68,10 +68,19 @@ fun InfoBottomSheet(
     modifier: Modifier = Modifier,
     viewModel: InfoBottomSheetsViewModel = koinViewModel()
 ) {
+    /*
     val track = arguments.track
     val album = arguments.album
     val artist = arguments.artist
     val albumArtist = arguments.albumArtist
+     */
+    val track = arguments.track?.track
+    val album = arguments.track?.album ?: arguments.album?.title
+    val artist = arguments.track?.artist ?: arguments.album?.artist ?: arguments.artist!!
+    val albumArtist = arguments.track?.albumArtist ?: arguments.album?.artist
+
+    val trackO = arguments.track
+    val albumO = arguments.track?._album ?: arguments.album
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
@@ -79,8 +88,8 @@ fun InfoBottomSheet(
     ) {
         Column {
             track?.let {
-                val trackPlays by remember { viewModel.trackPlays(artist, track, album) }.collectAsStateWithLifecycle()
-                val trackTimePlayed by remember { viewModel.trackTimePlayed(artist, track, album) }.collectAsStateWithLifecycle()
+                val trackPlays by remember { viewModel.trackPlays(trackO) }.collectAsStateWithLifecycle()
+                val trackTimePlayed by remember { viewModel.trackTimePlayed(trackO) }.collectAsStateWithLifecycle()
                 HistoryBottomSheetComponent(
                     icon = Icons.Filled.MusicNote,
                     iconDescription = stringResource(Res.string.track),
@@ -90,10 +99,10 @@ fun InfoBottomSheet(
                         Res.string.time_listened to trackTimePlayed
                     ),
                     onMainButton = {
-                        navigateToTrackHistory(TrackHistory(artist, track, album))
+                        navigateToTrackHistory(TrackHistory(trackO))
                     },
                     onMore = {
-                        navigateToTrack(TrackInfo(artist, album, track))
+                        navigateToTrack(TrackInfo(trackO))
                     }
                 )
                 BottomSheetSpacer()
@@ -115,9 +124,9 @@ fun InfoBottomSheet(
             )
 
             album?.let {
-                albumArtist!!
-                val albumPlays by remember { viewModel.albumPlays(albumArtist, album) }.collectAsStateWithLifecycle()
-                val albumTimePlayed by remember { viewModel.albumTimePlayed(albumArtist, album) }.collectAsStateWithLifecycle()
+                albumO!!
+                val albumPlays by remember { viewModel.albumPlays(albumO) }.collectAsStateWithLifecycle()
+                val albumTimePlayed by remember { viewModel.albumTimePlayed(albumO) }.collectAsStateWithLifecycle()
                 BottomSheetSpacer()
                 HistoryBottomSheetComponent(
                     icon = Icons.Filled.Album,
@@ -128,7 +137,7 @@ fun InfoBottomSheet(
                         Res.string.time_listened to albumTimePlayed
                     ),
                     onMore = {
-                        navigateToAlbum(AlbumInfo(albumArtist, album))
+                        navigateToAlbum(AlbumInfo(albumO))
                     }
                 )
             }

@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import com.reas.tracker2.android.DailyReportWorker
 import com.reas.tracker2.android.NotificationWrapper
 import com.reas.tracker2.ui.TrackerApp
-import com.reas.tracker2.util.EventProcessor
+import com.reas.tracker2.shared.EventProcessor
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 

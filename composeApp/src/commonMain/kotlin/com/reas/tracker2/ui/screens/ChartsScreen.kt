@@ -35,9 +35,9 @@ fun ChartsScreen(
 
     Column(modifier = modifier.padding(horizontal = 5.dp)) {
         Row {
-            ChartTypeSelectionChip(chartType, { navigateToCharts(arguments.copy(typeS = it.name)) })
+            ChartTypeSelectionChip(chartType, { navigateToCharts(arguments.copy(type = it)) })
             Spacer(Modifier.width(10.dp))
-            SortOrderSelectionChip(chartSort, { navigateToCharts(arguments.copy(sortS = it.name)) })
+            SortOrderSelectionChip(chartSort, { navigateToCharts(arguments.copy(sort = it)) })
         }
 
         ChartColumn(

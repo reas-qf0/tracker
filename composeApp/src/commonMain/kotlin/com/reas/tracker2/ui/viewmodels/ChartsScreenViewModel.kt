@@ -12,12 +12,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
+import com.reas.tracker2.shared.Album
+import com.reas.tracker2.shared.TimePeriod
+import com.reas.tracker2.shared.Track
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.navigation.ChartType
 import com.reas.tracker2.ui.navigation.Charts
 import com.reas.tracker2.util.DateTimeFormatter.timeMsToString
+import org.koin.core.time.inMs
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class ChartsScreenViewModel(
     private val repository: Repository,
@@ -33,103 +39,102 @@ class ChartsScreenViewModel(
             it.map { info -> transform(info) }
         }
 
-    private fun artists(start: Long, end: Long) = get(
-        { repository.getMostPlayedArtists(start, end) }
+    private fun artists(period: TimePeriod) = get(
+        { repository.getMostPlayedArtists(period) }
     ) { info ->
         ChartEntryUiState(
             label = info.artist,
             label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = timeMsToString(info.metric),
+            metric = info.timePlayed.inMs,
+            metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
             bottomSheetInfo = BottomSheetInfo(artist = info.artist),
             url = { getArtistImageUrl(info.artist) }
         )
     }
 
-    private fun albums(start: Long, end: Long) = get(
-        { repository.getMostPlayedAlbums(start, end) }
+    private fun albums(period: TimePeriod) = get(
+        { repository.getMostPlayedAlbums(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.album,
-            label2 = info.artist,
-            metric = info.metric.toDouble(),
-            metricAsString = timeMsToString(info.metric),
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album),
-            url = { getAlbumImageUrl(info.artist, info.album) }
+            label = info._album,
+            label2 = info._artist,
+            metric = info.timePlayed.inMs,
+            metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
+            bottomSheetInfo = BottomSheetInfo(album = info.album),
+            url = { getAlbumImageUrl(info.album) }
         )
     }
 
-    private fun tracks(start: Long, end: Long) = get(
-        { repository.getMostPlayedTracks(start, end) }
+    private fun tracks(period: TimePeriod) = get(
+        { repository.getMostPlayedTracks(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.track,
-            label2 = info.artist,
-            metric = info.metric.toDouble(),
-            metricAsString = timeMsToString(info.metric),
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track),
-            url = { getTrackImageUrl(info.artist, info.track) }
+            label = info._track,
+            label2 = info._artist,
+            metric = info.timePlayed.inMs,
+            metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
+            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum()),
+            url = { getTrackImageUrl(info.track) }
         )
     }
 
-    private fun artistsByPlayCount(start: Long, end: Long) = get(
-        { repository.getMostPlayedArtistsByPlayCount(start, end) }
+    private fun artistsByPlayCount(period: TimePeriod) = get(
+        { repository.getMostPlayedArtistsByPlayCount(period) }
     ) { info ->
         ChartEntryUiState(
             label = info.artist,
             label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = "${info.metric} plays",
+            metric = info.playCount.toDouble(),
+            metricAsString = "${info.playCount} plays",
             bottomSheetInfo = BottomSheetInfo(artist = info.artist),
             url = { getArtistImageUrl(info.artist) }
         )
     }
 
-    private fun albumsByPlayCount(start: Long, end: Long) = get(
-        { repository.getMostPlayedAlbumsByPlayCount(start, end) }
+    private fun albumsByPlayCount(period: TimePeriod) = get(
+        { repository.getMostPlayedAlbumsByPlayCount(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.album,
-            label2 = info.artist,
-            metric = info.metric.toDouble(),
-            metricAsString = "${info.metric} plays",
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album),
-            url = { getAlbumImageUrl(info.artist, info.album) }
+            label = info._album,
+            label2 = info._artist,
+            metric = info.playCount.toDouble(),
+            metricAsString = "${info.playCount} plays",
+            bottomSheetInfo = BottomSheetInfo(album = info.album),
+            url = { getAlbumImageUrl(info.album) }
         )
     }
 
-    private fun tracksByPlayCount(start: Long, end: Long) = get(
-        { repository.getMostPlayedTracksByPlayCount(start, end) }
+    private fun tracksByPlayCount(period: TimePeriod) = get(
+        { repository.getMostPlayedTracksByPlayCount(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.track,
-            label2 = info.artist,
-            metric = info.metric.toDouble(),
-            metricAsString = "${info.metric} plays",
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track),
-            url = { getTrackImageUrl(info.artist, info.track) }
+            label = info._track,
+            label2 = info._artist,
+            metric = info.playCount.toDouble(),
+            metricAsString = "${info.playCount} plays",
+            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum()),
+            url = { getTrackImageUrl(info.track) }
         )
     }
 
     fun getInfo(arguments: Charts): Flow<PagingData<ChartEntryUiState>> {
         val sort = arguments.sort
         val type = arguments.type
-        val start = 0L
-        val end = Long.MAX_VALUE
+        val period = TimePeriod.ALLTIME
 
         return when {
             (type == ChartType.ARTISTS && sort == ChartSort.TIME) ->
-                artists(start, end)
+                artists(period)
             (type == ChartType.ALBUMS && sort == ChartSort.TIME) ->
-                albums(start, end)
+                albums(period)
             (type == ChartType.TRACKS && sort == ChartSort.TIME) ->
-                tracks(start, end)
+                tracks(period)
             (type == ChartType.ARTISTS && sort == ChartSort.PLAYS) ->
-                artistsByPlayCount(start, end)
+                artistsByPlayCount(period)
             (type == ChartType.ALBUMS && sort == ChartSort.PLAYS) ->
-                albumsByPlayCount(start, end)
+                albumsByPlayCount(period)
             (type == ChartType.TRACKS && sort == ChartSort.PLAYS) ->
-                tracksByPlayCount(start, end)
+                tracksByPlayCount(period)
 
             else -> throw IllegalArgumentException("unreachable")
         }
@@ -137,9 +142,9 @@ class ChartsScreenViewModel(
 
     suspend fun getArtistImageUrl(artist: String) = null
 
-    suspend fun getAlbumImageUrl(artist: String, album: String): String? {
-        return networkRepository.getAlbumImageUrl(artist, album, "large")
+    suspend fun getAlbumImageUrl(album: Album): String? {
+        return networkRepository.getAlbumImageUrl(album, "large")
     }
 
-    suspend fun getTrackImageUrl(artist: String, track: String) = null
+    suspend fun getTrackImageUrl(track: Track) = null
 }

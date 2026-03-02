@@ -11,9 +11,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.util.DateTimeFormatter.timeMsToString
+import org.koin.core.time.inMs
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel() {
     private fun<T : Any> get(factory: () -> PagingSource<Int, T>, transform: (T) -> ChartEntryUiState) = Pager(
@@ -26,21 +31,21 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
             it.map { info -> transform(info) }
         }
 
-    fun plays(artist: String, start: Long, end: Long) = repository.getArtistPlays(artist, start, end)
+    fun plays(artist: String, period: TimePeriod) = repository.getArtistPlays(artist, period)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = -1
         )
 
-    fun timePlayed(artist: String, start: Long, end: Long) = repository.getArtistTimePlayed(artist, start, end)
+    fun timePlayed(artist: String, period: TimePeriod) = repository.getArtistTimePlayed(artist, period)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = -1L
+            initialValue = -Duration.INFINITE
         )
 
-    fun rank(time: Long, start: Long, end: Long) = repository.getArtistRank(time, start, end)
+    fun rank(time: Duration, period: TimePeriod) = repository.getArtistRank(time, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -48,7 +53,7 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
             initialValue = "..."
         )
 
-    fun playRank(count: Int, start: Long, end: Long) = repository.getArtistRankByPlayCount(count, start, end)
+    fun playRank(count: Int, period: TimePeriod) = repository.getArtistRankByPlayCount(count, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -56,51 +61,51 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
             initialValue = "..."
         )
 
-    fun topAlbums(artist: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedAlbumsFromArtist(artist, start, end) }
+    fun topAlbums(artist: String, period: TimePeriod) = get(
+        { repository.getMostPlayedAlbumsFromArtist(artist, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.album,
+            label = info._album,
             label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = timeMsToString(info.metric),
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album)
+            metric = info.timePlayed.inMs,
+            metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
+            bottomSheetInfo = BottomSheetInfo(album = info.album)
         )
     }
 
-    fun topAlbumsByPlayCount(artist: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedAlbumsFromArtistByPlayCount(artist, start, end) }
+    fun topAlbumsByPlayCount(artist: String, period: TimePeriod) = get(
+        { repository.getMostPlayedAlbumsFromArtistByPlayCount(artist, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.album,
+            label = info._album,
             label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = "${info.metric} plays",
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, albumArtist = info.artist, album = info.album)
+            metric = info.playCount.toDouble(),
+            metricAsString = "${info.playCount} plays",
+            bottomSheetInfo = BottomSheetInfo(album = info.album)
         )
     }
 
-    fun topTracks(artist: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedTracksFromArtist(artist, start, end) }
+    fun topTracks(artist: String, period: TimePeriod) = get(
+        { repository.getMostPlayedTracksFromArtist(artist, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.track,
+            label = info._track,
             label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = timeMsToString(info.metric),
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track)
+            metric = info.timePlayed.inMs,
+            metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
+            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum())
         )
     }
 
-    fun topTracksByPlayCount(artist: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedTracksFromArtistByPlayCount(artist, start, end) }
+    fun topTracksByPlayCount(artist: String, period: TimePeriod) = get(
+        { repository.getMostPlayedTracksFromArtistByPlayCount(artist, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.track,
+            label = info._track,
             label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = "${info.metric} plays",
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track)
+            metric = info.playCount.toDouble(),
+            metricAsString = "${info.playCount} plays",
+            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum())
         )
     }
 

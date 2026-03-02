@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
-import com.reas.tracker2.database.objects.Play
+import androidx.paging.map
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
+import com.reas.tracker2.shared.Play
+import kotlinx.coroutines.flow.map
 
 class HistoryScreenViewModel(
     private val repository: Repository,
@@ -18,10 +20,11 @@ class HistoryScreenViewModel(
         pagingSourceFactory = { repository.getRecentPlays() },
         config = PagingConfig(pageSize = 50, initialLoadSize = 50)
     ).flow.cachedIn(viewModelScope)
+        .map { pagingData -> pagingData.map { it.toObject() }}
 
     suspend fun getImageUrl(scrobble: Play): String? {
-        if (scrobble.album != null) {
-            return networkRepository.getAlbumImageUrl(scrobble.albumArtist, scrobble.album, "large")
+        scrobble.metadata.info._album?.let { album ->
+            return networkRepository.getAlbumImageUrl(album, "large")
         }
         return null
     }

@@ -7,6 +7,10 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation3.runtime.NavKey
+import com.reas.tracker2.shared.Album
+import com.reas.tracker2.shared.Track
+import com.reas.tracker2.shared.TrackWithOptionalAlbum
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.jetbrains.compose.resources.StringResource
@@ -17,6 +21,10 @@ import tracker2.composeapp.generated.resources.plays
 import tracker2.composeapp.generated.resources.time_played
 import tracker2.composeapp.generated.resources.tracks
 
+@Serializable
+sealed class Route : NavKey
+@Serializable
+sealed class DialogRoute : Route()
 
 @Serializable
 enum class ChartType {
@@ -64,65 +72,43 @@ enum class ChartSort {
 
 
 @Serializable
-object History
+object History : Route()
 
 @Serializable
 data class TrackHistory(
-    val artist: String,
-    val track: String,
-    val album: String? = null
-)
+    val track: TrackWithOptionalAlbum
+) : Route()
 
 @Serializable
 data class Charts(
-    val sortS: String = ChartSort.TIME.name,
-    val typeS: String = ChartType.ARTISTS.name
-) {
-    val sort: ChartSort
-        get() = ChartSort.valueOf(sortS)
-    val type: ChartType
-        get() = ChartType.valueOf(typeS)
-}
+    val sort: ChartSort = ChartSort.TIME,
+    val type: ChartType = ChartType.ARTISTS
+) : Route()
 
 @Serializable
-object Settings
+object Settings : Route()
 
 @Serializable
 data class ArtistInfo(
     val artist: String,
-    val sortS: String = ChartSort.TIME.name
-) {
-    val sort: ChartSort
-        get() = ChartSort.valueOf(sortS)
-}
+    val sort: ChartSort = ChartSort.TIME
+) : Route()
 
 @Serializable
 data class AlbumInfo(
-    val artist: String,
-    val album: String,
-    val sortS: String = ChartSort.TIME.name
-) {
-
-    val sort: ChartSort
-        get() = ChartSort.valueOf(sortS)
-}
+    val album: Album,
+    val sort: ChartSort = ChartSort.TIME
+) : Route()
 
 @Serializable
 data class TrackInfo(
-    val artist: String,
-    val album: String?,
-    val track: String,
-    val sortS: String = ChartSort.TIME.name
-) {
-
-    val sort: ChartSort
-        get() = ChartSort.valueOf(sortS)
-}
+    val track: TrackWithOptionalAlbum,
+    val sort: ChartSort = ChartSort.TIME
+) : Route()
 
 @Serializable
 data class BottomSheetInfo(
-    val artist: String,
-    val track: String? = null,
-    val album: String? = null,
-    val albumArtist: String? = null
-)
+    val artist: String? = null,
+    val album: Album? = null,
+    val track: TrackWithOptionalAlbum? = null
+) : DialogRoute()

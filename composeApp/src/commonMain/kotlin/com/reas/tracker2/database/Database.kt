@@ -6,18 +6,17 @@ import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import com.reas.tracker2.database.objects.Event
+import com.reas.tracker2.database.entities.EventEntity
 import com.reas.tracker2.database.daos.EventDao
-import com.reas.tracker2.database.objects.Play
+import com.reas.tracker2.database.entities.PlayEntity
 import com.reas.tracker2.database.daos.PlayDao
 import kotlinx.coroutines.Dispatchers
 
-@Suppress("KotlinNoActualForExpect")
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase
 }
 
-@Database(entities = [Event::class, Play::class], version = 1, exportSchema = false)
+@Database(entities = [EventEntity::class, PlayEntity::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -30,6 +29,7 @@ abstract class AppDatabase : RoomDatabase() {
             return builder
                 .setDriver(BundledSQLiteDriver())
                 .setQueryCoroutineContext(Dispatchers.IO)
+                .fallbackToDestructiveMigration(false)
                 .build()
         }
     }

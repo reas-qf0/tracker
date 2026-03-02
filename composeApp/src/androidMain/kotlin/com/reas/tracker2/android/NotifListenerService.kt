@@ -15,11 +15,18 @@ import androidx.core.content.getSystemService
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
-import com.reas.tracker2.database.objects.Event
+import com.reas.tracker2.database.entities.EventEntity
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.shared.Album
+import com.reas.tracker2.shared.Event
+import com.reas.tracker2.shared.Metadata
+import com.reas.tracker2.shared.Track
+import com.reas.tracker2.shared.TrackWithOptionalAlbum
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 
 private val MediaMetadata.title
     get() = this.getString(MediaMetadata.METADATA_KEY_TITLE)
@@ -105,13 +112,23 @@ private class MediaCallback(
             if (metadata.artist == "" || metadata.title == "") return@let
 
             val event = Event(
-                track = metadata.title,
-                artist = metadata.artist,
-                album = metadata.album,
-                albumArtist = metadata.albumArtist ?: metadata.artist,
-                timestamp = state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis(),
-                position = state.position,
-                duration = metadata.duration,
+                metadata = Metadata(
+                    info = TrackWithOptionalAlbum(
+                        _track = Track(
+                            title = metadata.title,
+                            artist = metadata.artist
+                        ),
+                        _album = if (metadata.album != null) Album(
+                            title = metadata.album,
+                            artist = metadata.albumArtist ?: metadata.artist
+                        ) else null,
+                    ),
+                    duration = metadata.duration.milliseconds
+                ),
+                timestamp = Instant.fromEpochMilliseconds(
+                    state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis()
+                ),
+                position = state.position.milliseconds,
                 isPlaying = state.state == PlaybackState.STATE_PLAYING,
                 sourceApp = appId
             )

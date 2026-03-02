@@ -1,34 +1,29 @@
-package com.reas.tracker2.util
+package com.reas.tracker2.shared
 
 import co.touchlab.kermit.Logger
-import com.reas.tracker2.database.objects.Event
-import com.reas.tracker2.database.Repository
-import com.reas.tracker2.database.objects.Play
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class EventProcessor(
-    private val repository: Repository
+    private val adapter: EventProcessorAdapter
 ) {
     companion object {
-        const val SKIP_MIN_DURATION = 2000L
+        val SKIP_MIN_DURATION = 2.seconds
         private const val TAG = "EventProcessor"
     }
 
     private suspend fun flush(event: Event, play: Play?): Play {
-        if (play != null)
-            repository.insertPlay(play)
+        if (play != null) {
+            if (play.lastPlaying)
+                play.associatedEvents.add(null)
+            adapter.insertPlay(play)
+        }
         return Play(
-            track = event.track,
-            artist = event.artist,
-            album = event.album,
-            albumArtist = event.albumArtist,
+            metadata = event.metadata,
             timestamp = event.timestamp,
-            duration = event.duration,
-            timePlayed = 0L,
-            lastPosition = event.position,
-            lastPlaying = event.isPlaying,
-            sourceDevice = "",
-            sourceApp = event.sourceApp,
-            associatedEvents = mutableListOf(event.timestamp)
+            timePlayed = Duration.ZERO,
+            source = Source.local(event.sourceApp),
+            associatedEvents = mutableListOf(Play.EventInfo.fromEvent(event))
         )
     }
 
@@ -37,7 +32,7 @@ class EventProcessor(
         if (events.isEmpty()) return null
 
         val app = events[0].sourceApp
-        var play = repository.getLastPlayFromSource("", app)
+        var play = adapter.getLastPlayFromSource(Source.local(app))
         val eventsSorted = events.sortedBy { it.timestamp }
         if (play != null && eventsSorted[0].timestamp < play.timestamp) {
             Logger.e(TAG) {
@@ -54,14 +49,13 @@ class EventProcessor(
                 return@forEach
             }
 
+            val eventInfo = Play.EventInfo.fromEvent(event)
             val shouldPlugHole = event.timestamp - play.lastTimestamp + play.lastPosition > play.duration
             if (play.lastPlaying && shouldPlugHole) {
-                play.lastPlaying = false
                 play.timePlayed += play.duration - play.lastPosition
-                play.associatedEvents.add(0L)
+                play.associatedEvents.add(null)
             }
-            if (play.associatedEvents.last() == 0L && !shouldPlugHole) {
-                play.lastPlaying = true
+            if (play.associatedEvents.last() == null && !shouldPlugHole) {
                 play.timePlayed -= play.duration - play.lastPosition
                 play.associatedEvents.removeAt(play.associatedEvents.size - 1)
             }
@@ -71,34 +65,26 @@ class EventProcessor(
 
             if (event.isPlaying) {
                 if (event.position <= SKIP_MIN_DURATION) {
-                    if (event.metadataEqual(play) && play.lastPosition <= SKIP_MIN_DURATION) {
-                        play.lastPlaying = event.isPlaying
-                        play.lastPosition = event.position
-                        play.associatedEvents.add(event.timestamp)
+                    if (event.metadata == play.metadata && play.lastPosition <= SKIP_MIN_DURATION) {
+                        play.associatedEvents.add(eventInfo)
                     } else {
-                        play.lastPlaying = false
                         play = flush(event, play)
                     }
                 } else {
-                    if (event.metadataEqual(play)) {
-                        play.lastPlaying = event.isPlaying
-                        play.lastPosition = event.position
-                        play.associatedEvents.add(event.timestamp)
+                    if (event.metadata == play.metadata) {
+                        play.associatedEvents.add(eventInfo)
                     } else {
-                        play.lastPlaying = false
                         play = flush(event, play)
                     }
                 }
             } else {
-                play.lastPlaying = event.isPlaying
-                play.lastPosition = event.position
-                play.associatedEvents.add(event.timestamp)
+                play.associatedEvents.add(eventInfo)
             }
         }
 
         if (play != null)
-            repository.insertPlay(play)
-        repository.clearQueue(app, eventsSorted.last().timestamp)
+            adapter.insertPlay(play)
+        adapter.clearQueue(app, eventsSorted.last().timestamp)
 
         if (play!!.lastPlaying)
             return play
@@ -106,7 +92,7 @@ class EventProcessor(
     }
 
     suspend fun processQueue() {
-        repository.getEvents().collect { snapshot ->
+        adapter.getEvents().collect { snapshot ->
             Logger.d(TAG) { "processing ${snapshot.size} events" }
             snapshot.groupBy { it.sourceApp }.forEach {
                 process(it.value)

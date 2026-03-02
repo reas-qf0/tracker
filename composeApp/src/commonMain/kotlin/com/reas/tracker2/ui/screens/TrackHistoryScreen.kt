@@ -26,12 +26,10 @@ fun TrackHistoryScreen(
     navigateToBottomSheet: (BottomSheetInfo) -> Unit,
     viewModel: TrackHistoryViewModel = koinViewModel()
 ) {
-    val artist = arguments.artist
     val track = arguments.track
-    val album = arguments.album
 
-    val trackPlays by remember { viewModel.trackPlays(artist, track, album) }.collectAsStateWithLifecycle()
-    val history = remember { viewModel.history(artist, track, album) }.collectAsLazyPagingItems()
+    val trackPlays by remember { viewModel.trackPlays(track) }.collectAsStateWithLifecycle()
+    val history = remember { viewModel.history(track) }.collectAsLazyPagingItems()
 
     LazyColumn(modifier = modifier) {
         item(key = "header") {
@@ -55,24 +53,9 @@ fun TrackHistoryScreen(
                     timestamp = scrobble.timestamp,
                     isNowPlaying = false,
 
-                    imageUrl = {
-                        scrobble.album?.let { viewModel.getAlbumImageUrl(scrobble.artist, it) }
-                    },
+                    imageUrl = { viewModel.getImageUrl(scrobble) },
                     onClick = {
-                        navigateToBottomSheet(
-                            if (scrobble.album != null)
-                                BottomSheetInfo(
-                                    artist = scrobble.artist,
-                                    track = scrobble.track,
-                                    album = scrobble.album,
-                                    albumArtist = scrobble.albumArtist
-                                )
-                            else
-                                BottomSheetInfo(
-                                    artist = scrobble.artist,
-                                    track = scrobble.track
-                                )
-                        )
+                        navigateToBottomSheet(BottomSheetInfo(track = scrobble.metadata.info))
                     },
                     onMore = {},
                     modifier = Modifier.padding(5.dp).height(84.dp)

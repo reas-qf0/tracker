@@ -1,6 +1,7 @@
 package com.reas.tracker2
 
 import com.reas.tracker2.database.AppDatabase
+import com.reas.tracker2.database.EventProcessorAdapterImpl
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.database.RoomRepository
 import com.reas.tracker2.network.NetworkRepository
@@ -13,7 +14,8 @@ import com.reas.tracker2.ui.viewmodels.InfoBottomSheetsViewModel
 import com.reas.tracker2.ui.viewmodels.SettingsScreenViewModel
 import com.reas.tracker2.ui.viewmodels.TrackHistoryViewModel
 import com.reas.tracker2.ui.viewmodels.TrackInfoScreenViewModel
-import com.reas.tracker2.util.EventProcessor
+import com.reas.tracker2.shared.EventProcessor
+import com.reas.tracker2.shared.EventProcessorAdapter
 import org.koin.core.KoinApplication
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.module.Module
@@ -31,6 +33,8 @@ val sharedModule = module {
     single {
         RetrofitNetworkRepository()
     } bind NetworkRepository::class
+
+    singleOf(::EventProcessorAdapterImpl) bind EventProcessorAdapter::class
     singleOf(::EventProcessor)
 
     viewModelOf(::HistoryScreenViewModel)

@@ -12,9 +12,15 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
+import com.reas.tracker2.shared.Album
+import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.util.DateTimeFormatter.timeMsToString
+import org.koin.core.time.inMs
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class AlbumInfoScreenViewModel(
     private val repository: Repository,
@@ -30,21 +36,21 @@ class AlbumInfoScreenViewModel(
             it.map { info -> transform(info) }
         }
 
-    fun plays(artist: String, album: String, start: Long, end: Long) = repository.getAlbumPlays(artist, album, start, end)
+    fun plays(album: Album, period: TimePeriod) = repository.getAlbumPlays(album, period)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = -1
         )
 
-    fun timePlayed(artist: String, album: String, start: Long, end: Long) = repository.getAlbumTimePlayed(artist, album, start, end)
+    fun timePlayed(album: Album, period: TimePeriod) = repository.getAlbumTimePlayed(album, period)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = -1L
+            initialValue = -Duration.INFINITE
         )
 
-    fun rank(time: Long, start: Long, end: Long) = repository.getAlbumRank(time, start, end)
+    fun rank(time: Duration, period: TimePeriod) = repository.getAlbumRank(time, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -52,7 +58,7 @@ class AlbumInfoScreenViewModel(
             initialValue = "..."
         )
 
-    fun playRank(count: Int, start: Long, end: Long) = repository.getAlbumRankByPlayCount(count, start, end)
+    fun playRank(count: Int, period: TimePeriod) = repository.getAlbumRankByPlayCount(count, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -60,32 +66,32 @@ class AlbumInfoScreenViewModel(
             initialValue = "..."
         )
 
-    fun topTracks(artist: String, album: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedTracksFromAlbum(artist, album, start, end) }
+    fun topTracks(album: Album, period: TimePeriod) = get(
+        { repository.getMostPlayedTracksFromAlbum(album, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.track,
+            label = info._track,
             label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = timeMsToString(info.metric),
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track)
+            metric = info.timePlayed.inMs,
+            metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
+            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum())
         )
     }
 
-    fun topTracksByPlayCount(artist: String, album: String, start: Long, end: Long) = get(
-        { repository.getMostPlayedTracksFromAlbumByPlayCount(artist, album, start, end) }
+    fun topTracksByPlayCount(album: Album, period: TimePeriod) = get(
+        { repository.getMostPlayedTracksFromAlbumByPlayCount(album, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.track,
+            label = info._track,
             label2 = null,
-            metric = info.metric.toDouble(),
-            metricAsString = "${info.metric} plays",
-            bottomSheetInfo = BottomSheetInfo(artist = info.artist, track = info.track)
+            metric = info.playCount.toDouble(),
+            metricAsString = "${info.playCount} plays",
+            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum())
         )
     }
 
-    suspend fun getAlbumImageUrl(artist: String, album: String) =
-        networkRepository.getAlbumImageUrl(artist, album, "large")
+    suspend fun getAlbumImageUrl(album: Album) =
+        networkRepository.getAlbumImageUrl(album, "large")
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L

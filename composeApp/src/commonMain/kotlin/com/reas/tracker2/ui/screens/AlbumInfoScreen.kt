@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.reas.tracker2.shared.TimePeriod
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.reas.tracker2.ui.components.AutosizingText
 import com.reas.tracker2.ui.components.ChartColumn
@@ -41,6 +42,8 @@ import tracker2.composeapp.generated.resources.in_charts_by_time
 import tracker2.composeapp.generated.resources.plays
 import tracker2.composeapp.generated.resources.time_played
 import tracker2.composeapp.generated.resources.top_tracks
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun AlbumInfoScreen(
@@ -50,28 +53,26 @@ fun AlbumInfoScreen(
     modifier: Modifier = Modifier,
     viewModel: AlbumInfoScreenViewModel = koinViewModel()
 ) {
-    val artist = arguments.artist
     val album = arguments.album
     val sort = arguments.sort
-    val start = 0L
-    val end = Long.MAX_VALUE
+    val period = TimePeriod.ALLTIME
 
-    val plays by remember { viewModel.plays(artist, album, start, end) }.collectAsStateWithLifecycle()
-    val timePlayed by remember { viewModel.timePlayed(artist, album, start, end) }.collectAsStateWithLifecycle()
+    val plays by remember { viewModel.plays(album, period) }.collectAsStateWithLifecycle()
+    val timePlayed by remember { viewModel.timePlayed(album, period) }.collectAsStateWithLifecycle()
     val playsAsString = if (plays == -1) "..." else plays.toString()
-    val timePlayedAsString = if (timePlayed == -1L) "..." else timeMsToString(timePlayed)
+    val timePlayedAsString = if (timePlayed.isNegative()) "..." else timePlayed.inWholeMinutes.minutes.toString()
     val rank by remember(plays, timePlayed) {
         when (sort) {
             ChartSort.PLAYS ->
-                if (plays == -1) MutableStateFlow("...") else viewModel.playRank(plays, start, end)
+                if (plays == -1) MutableStateFlow("...") else viewModel.playRank(plays, period)
             ChartSort.TIME ->
-                if (timePlayed == -1L) MutableStateFlow("...") else viewModel.rank(timePlayed, start, end)
+                if (timePlayed.isNegative()) MutableStateFlow("...") else viewModel.rank(timePlayed, period)
         }
     }.collectAsStateWithLifecycle()
     val tracks = remember {
         when (sort) {
-            ChartSort.TIME -> viewModel.topTracks(artist, album, start, end)
-            ChartSort.PLAYS -> viewModel.topTracksByPlayCount(artist, album, start, end)
+            ChartSort.TIME -> viewModel.topTracks(album, period)
+            ChartSort.PLAYS -> viewModel.topTracksByPlayCount(album, period)
         }
     }.collectAsLazyPagingItems()
 
@@ -79,7 +80,7 @@ fun AlbumInfoScreen(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        SortOrderSelectionChip(sort, { navigateToAlbum(arguments.copy(sortS = it.name)) })
+        SortOrderSelectionChip(sort, { navigateToAlbum(arguments.copy(sort = it)) })
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -87,14 +88,14 @@ fun AlbumInfoScreen(
             ListEntryWithImage(
                 modifier = Modifier.height(125.dp),
                 alignment = Alignment.CenterVertically,
-                url = { viewModel.getAlbumImageUrl(artist, album) }
+                url = { viewModel.getAlbumImageUrl(album) }
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.weight(1.0F)
                 ) {
-                    AutosizingText(album, style = MaterialTheme.typography.displaySmall)
-                    AutosizingText(artist, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.secondary)
+                    AutosizingText(album.title, style = MaterialTheme.typography.displaySmall)
+                    AutosizingText(album.artist, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.secondary)
                 }
             }
             Spacer(Modifier.height(5.dp))

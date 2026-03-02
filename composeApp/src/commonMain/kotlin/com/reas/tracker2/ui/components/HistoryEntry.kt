@@ -26,6 +26,8 @@ import com.reas.tracker2.ui.theme.Typography
 import org.jetbrains.compose.resources.stringResource
 import tracker2.composeapp.generated.resources.Res
 import tracker2.composeapp.generated.resources.now_playing
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +35,7 @@ fun HistoryEntry(
     title: String,
     artist: String,
     album: String?,
-    timestamp: Long,
+    timestamp: Instant,
     modifier: Modifier = Modifier,
     isNowPlaying: Boolean = false,
     imageUrl: suspend () -> Any? = { null },
@@ -126,7 +128,7 @@ private fun HistoryEntryPreview() {
                 title = "Really Long Track Name 00000000000000000000000",
                 artist = "Really Long Artist Name 00000000000000000000000",
                 album = "Really Long album Name 00000000000000000000000",
-                timestamp = System.currentTimeMillis(),
+                timestamp = Clock.System.now(),
                 isNowPlaying = false,
 
                 onClick = {},
@@ -147,7 +149,7 @@ private fun HistoryEntryPreviewDark() {
                 title = "Really Long Track Name 00000000000000000000000",
                 artist = "Really Long Artist Name 00000000000000000000000",
                 album = "Really Long album Name 00000000000000000000000",
-                timestamp = System.currentTimeMillis(),
+                timestamp = Clock.System.now(),
                 isNowPlaying = false,
 
                 onClick = {},
@@ -168,7 +170,7 @@ private fun HistoryEntryNoAlbumPreview() {
                 title = "Really Long Track Name 00000000000000000000000",
                 artist = "Really Long Artist Name 00000000000000000000000",
                 album = null,
-                timestamp = System.currentTimeMillis(),
+                timestamp = Clock.System.now(),
                 isNowPlaying = false,
 
                 onClick = {},
@@ -189,7 +191,7 @@ private fun HistoryEntryNoAlbumPreviewDark() {
                 title = "Really Long Track Name 00000000000000000000000",
                 artist = "Really Long Artist Name 00000000000000000000000",
                 album = null,
-                timestamp = System.currentTimeMillis(),
+                timestamp = Clock.System.now(),
                 isNowPlaying = false,
 
                 onClick = {},
@@ -210,7 +212,7 @@ private fun HistoryEntryNpPreview() {
                 title = "Really Long Track Name 00000000000000000000000",
                 artist = "Really Long Artist Name 00000000000000000000000",
                 album = "Really Long album Name 00000000000000000000000",
-                timestamp = System.currentTimeMillis(),
+                timestamp = Clock.System.now(),
                 isNowPlaying = true,
 
                 onClick = {},
@@ -231,7 +233,7 @@ private fun HistoryEntryNpPreviewDark() {
                 title = "Really Long Track Name 00000000000000000000000",
                 artist = "Really Long Artist Name 00000000000000000000000",
                 album = "Really Long album Name 00000000000000000000000",
-                timestamp = System.currentTimeMillis(),
+                timestamp = Clock.System.now(),
                 isNowPlaying = true,
 
                 onClick = {},

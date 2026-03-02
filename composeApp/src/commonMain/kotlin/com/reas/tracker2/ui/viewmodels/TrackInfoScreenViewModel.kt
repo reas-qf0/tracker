@@ -6,23 +6,26 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.shared.TimePeriod
+import com.reas.tracker2.shared.TrackWithOptionalAlbum
+import kotlin.time.Duration
 
 class TrackInfoScreenViewModel(private val repository: Repository): ViewModel() {
-    fun plays(artist: String, track: String, album: String?, start: Long, end: Long) = repository.getTrackPlays(artist, track, album, start, end)
+    fun plays(track: TrackWithOptionalAlbum, period: TimePeriod) = repository.getTrackPlays(track, period)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = -1
         )
 
-    fun timePlayed(artist: String, track: String, album: String?, start: Long, end: Long) = repository.getTrackTimePlayed(artist, track, album, start, end)
+    fun timePlayed(track: TrackWithOptionalAlbum, period: TimePeriod) = repository.getTrackTimePlayed(track, period)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = -1L
+            initialValue = -Duration.INFINITE
         )
 
-    fun rank(time: Long, start: Long, end: Long) = repository.getTrackRank(time, start, end)
+    fun rank(time: Duration, period: TimePeriod) = repository.getTrackRank(time, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -30,7 +33,7 @@ class TrackInfoScreenViewModel(private val repository: Repository): ViewModel() 
             initialValue = "..."
         )
 
-    fun playRank(count: Int, start: Long, end: Long) = repository.getTrackRankByPlayCount(count, start, end)
+    fun playRank(count: Int, period: TimePeriod) = repository.getTrackRankByPlayCount(count, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,

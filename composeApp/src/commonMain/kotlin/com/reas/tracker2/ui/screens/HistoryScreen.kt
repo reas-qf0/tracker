@@ -1,5 +1,6 @@
 package com.reas.tracker2.ui.screens
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,7 +24,9 @@ fun HistoryScreen(
 
     LazyColumn(modifier = modifier) {
         // add an empty item so that the list doesn't jump down when scrolled to the very top
-        item(key = "top") {}
+        item(key = "top") {
+            Spacer(Modifier.height(2.dp))
+        }
 
         items(
             history.itemCount,
@@ -40,20 +43,7 @@ fun HistoryScreen(
 
                     imageUrl = { viewModel.getImageUrl(scrobble) },
                     onClick = {
-                        navigateToBottomSheet(
-                            if (scrobble.album != null)
-                                BottomSheetInfo(
-                                    artist = scrobble.artist,
-                                    track = scrobble.track,
-                                    album = scrobble.album,
-                                    albumArtist = scrobble.albumArtist
-                                )
-                            else
-                                BottomSheetInfo(
-                                    artist = scrobble.artist,
-                                    track = scrobble.track
-                                )
-                        )
+                        navigateToBottomSheet(BottomSheetInfo(track = scrobble.metadata.info))
                     },
                     onMore = {},
                     modifier = Modifier.padding(5.dp).height(84.dp)

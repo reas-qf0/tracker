@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.reas.tracker2.shared.TimePeriod
 import kotlinx.coroutines.flow.MutableStateFlow
 import com.reas.tracker2.ui.components.AutosizingText
 import com.reas.tracker2.ui.components.InfoBox
@@ -35,6 +36,8 @@ import tracker2.composeapp.generated.resources.in_charts_by_plays
 import tracker2.composeapp.generated.resources.in_charts_by_time
 import tracker2.composeapp.generated.resources.plays
 import tracker2.composeapp.generated.resources.time_played
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun TrackInfoScreen(
@@ -44,23 +47,20 @@ fun TrackInfoScreen(
     modifier: Modifier = Modifier,
     viewModel: TrackInfoScreenViewModel = koinViewModel()
 ) {
-    val artist = arguments.artist
-    val album = arguments.album
     val track = arguments.track
     val sort = arguments.sort
-    val start = 0L
-    val end = Long.MAX_VALUE
+    val period = TimePeriod.ALLTIME
 
-    val plays by remember { viewModel.plays(artist, track, album, start, end) }.collectAsStateWithLifecycle()
-    val timePlayed by remember { viewModel.timePlayed(artist, track, album, start, end) }.collectAsStateWithLifecycle()
+    val plays by remember { viewModel.plays(track, period) }.collectAsStateWithLifecycle()
+    val timePlayed by remember { viewModel.timePlayed(track, period) }.collectAsStateWithLifecycle()
     val playsAsString = if (plays == -1) "..." else plays.toString()
-    val timePlayedAsString = if (timePlayed == -1L) "..." else timeMsToString(timePlayed)
+    val timePlayedAsString = if (timePlayed.isNegative()) "..." else timePlayed.inWholeMinutes.minutes.toString()
     val rank by remember(plays, timePlayed) {
         when (sort) {
             ChartSort.PLAYS ->
-                if (plays == -1) MutableStateFlow("...") else viewModel.playRank(plays, start, end)
+                if (plays == -1) MutableStateFlow("...") else viewModel.playRank(plays, period)
             ChartSort.TIME ->
-                if (timePlayed == -1L) MutableStateFlow("...") else viewModel.rank(timePlayed, start, end)
+                if (timePlayed.isNegative()) MutableStateFlow("...") else viewModel.rank(timePlayed, period)
         }
     }.collectAsStateWithLifecycle()
 
@@ -68,7 +68,7 @@ fun TrackInfoScreen(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        SortOrderSelectionChip(sort, { navigateToTrack(arguments.copy(sortS = it.name)) })
+        SortOrderSelectionChip(sort, { navigateToTrack(arguments.copy(sort = it)) })
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -81,15 +81,15 @@ fun TrackInfoScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.weight(1.0F)
                 ) {
-                    AutosizingText(track, style = MaterialTheme.typography.displaySmall)
+                    AutosizingText(track.track, style = MaterialTheme.typography.displaySmall)
                     AutosizingText(
-                        artist,
+                        track.artist,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.secondary
                     )
-                    album?.let {
+                    track.album?.let {
                         AutosizingText(
-                            album,
+                            track.album!!,
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.secondary
                         )

@@ -6,10 +6,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.shared.Album
+import com.reas.tracker2.shared.TimePeriod
+import com.reas.tracker2.shared.TrackWithOptionalAlbum
 import com.reas.tracker2.util.DateTimeFormatter.timeMsToString
+import kotlin.time.Duration.Companion.minutes
 
 class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel() {
-    fun artistPlays(artist: String) = repository.getArtistPlays(artist, 0L, Long.MAX_VALUE)
+    fun artistPlays(artist: String) = repository.getArtistPlays(artist, TimePeriod.ALLTIME)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
@@ -17,15 +21,15 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun artistTimePlayed(artist: String) = repository.getArtistTimePlayed(artist, 0L, Long.MAX_VALUE)
-        .map { timeMsToString(it) }
+    fun artistTimePlayed(artist: String) = repository.getArtistTimePlayed(artist, TimePeriod.ALLTIME)
+        .map { it.inWholeMinutes.minutes.toString() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = "..."
         )
 
-    fun trackPlays(artist: String, track: String, album: String?) = repository.getTrackPlays(artist, track, album, 0L, Long.MAX_VALUE)
+    fun trackPlays(track: TrackWithOptionalAlbum) = repository.getTrackPlays(track, TimePeriod.ALLTIME)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
@@ -33,15 +37,15 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun trackTimePlayed(artist: String, track: String, album: String?) = repository.getTrackTimePlayed(artist, track, album, 0L, Long.MAX_VALUE)
-        .map { timeMsToString(it) }
+    fun trackTimePlayed(track: TrackWithOptionalAlbum) = repository.getTrackTimePlayed(track, TimePeriod.ALLTIME)
+        .map { it.inWholeMinutes.minutes.toString() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = "..."
         )
 
-    fun albumPlays(artist: String, album: String) = repository.getAlbumPlays(artist, album, 0L, Long.MAX_VALUE)
+    fun albumPlays(album: Album) = repository.getAlbumPlays(album, TimePeriod.ALLTIME)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
@@ -49,8 +53,8 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun albumTimePlayed(artist: String, album: String) = repository.getAlbumTimePlayed(artist, album, 0L, Long.MAX_VALUE)
-        .map { timeMsToString(it) }
+    fun albumTimePlayed(album: Album) = repository.getAlbumTimePlayed(album, TimePeriod.ALLTIME)
+        .map { it.inWholeMinutes.minutes.toString() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),

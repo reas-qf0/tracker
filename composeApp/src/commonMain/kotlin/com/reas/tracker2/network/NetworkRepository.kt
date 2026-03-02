@@ -1,6 +1,7 @@
 package com.reas.tracker2.network
 
 import co.touchlab.kermit.Logger
+import com.reas.tracker2.shared.Album
 import com.reas.tracker2.util.Secrets
 import retrofit2.Response
 import retrofit2.Retrofit
@@ -10,7 +11,7 @@ import retrofit2.http.Headers
 import retrofit2.http.Query
 
 interface NetworkRepository {
-    suspend fun getAlbumImageUrl(artist: String, album: String, size: String): String?
+    suspend fun getAlbumImageUrl(album: Album, size: String): String?
 }
 
 class RetrofitNetworkRepository : NetworkRepository {
@@ -32,17 +33,17 @@ class RetrofitNetworkRepository : NetworkRepository {
         .build()
     private val lastFMService = lastFMRetrofit.create(LastFMService::class.java)
 
-    override suspend fun getAlbumImageUrl(artist: String, album: String, size: String): String? {
-        Logger.d(TAG) { "getAlbumImageUrl $artist $album $size" }
+    override suspend fun getAlbumImageUrl(album: Album, size: String): String? {
+        Logger.d(TAG) { "getAlbumImageUrl $album $size" }
         val response = lastFMService.getAlbumImages(
             "album.getinfo", Secrets.LASTFM_API_KEY, "json",
-            artist, album
+            album.artist, album.title
         )
         if (!response.isSuccessful) {
             val stream = response.errorBody()!!.charStream()
             val errorText = stream.readText()
             stream.close()
-            Logger.w(TAG) {"couldn't get album images for $artist - $album: " +
+            Logger.w(TAG) {"couldn't get album images for $album: " +
                     "${response.code()} $errorText" }
             return null
         }
