@@ -2,14 +2,7 @@ package com.reas.tracker2.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
-import androidx.paging.PagingSource
-import androidx.paging.cachedIn
-import androidx.paging.map
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import androidx.paging.*
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
 import com.reas.tracker2.shared.Album
@@ -20,10 +13,10 @@ import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.navigation.ChartType
 import com.reas.tracker2.ui.navigation.Charts
-import com.reas.tracker2.util.DateTimeFormatter.timeMsToString
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.koin.core.time.inMs
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 class ChartsScreenViewModel(
     private val repository: Repository,

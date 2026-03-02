@@ -10,8 +10,8 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.reas.tracker2.ui.components.HistoryEntry
-import com.reas.tracker2.ui.viewmodels.HistoryScreenViewModel
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
+import com.reas.tracker2.ui.viewmodels.HistoryScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable

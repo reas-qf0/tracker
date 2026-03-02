@@ -2,59 +2,27 @@ package com.reas.tracker2.ui.dialogs
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DividerDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.reas.tracker2.ui.navigation.AlbumInfo
-import com.reas.tracker2.ui.navigation.ArtistInfo
-import com.reas.tracker2.ui.navigation.BottomSheetInfo
-import com.reas.tracker2.ui.navigation.TrackHistory
-import com.reas.tracker2.ui.navigation.TrackInfo
+import com.reas.tracker2.ui.navigation.*
 import com.reas.tracker2.ui.viewmodels.InfoBottomSheetsViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import tracker2.composeapp.generated.resources.Res
-import tracker2.composeapp.generated.resources.album
-import tracker2.composeapp.generated.resources.album_plays
-import tracker2.composeapp.generated.resources.artist
-import tracker2.composeapp.generated.resources.artist_plays
-import tracker2.composeapp.generated.resources.time_listened
-import tracker2.composeapp.generated.resources.track
-import tracker2.composeapp.generated.resources.track_plays
+import tracker2.composeapp.generated.resources.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,12 +36,6 @@ fun InfoBottomSheet(
     modifier: Modifier = Modifier,
     viewModel: InfoBottomSheetsViewModel = koinViewModel()
 ) {
-    /*
-    val track = arguments.track
-    val album = arguments.album
-    val artist = arguments.artist
-    val albumArtist = arguments.albumArtist
-     */
     val track = arguments.track?.track
     val album = arguments.track?.album ?: arguments.album?.title
     val artist = arguments.track?.artist ?: arguments.album?.artist ?: arguments.artist!!

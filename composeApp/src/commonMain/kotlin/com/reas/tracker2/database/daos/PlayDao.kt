@@ -1,24 +1,10 @@
 package com.reas.tracker2.database.daos
 
 import androidx.paging.PagingSource
-import androidx.room.ColumnInfo
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
+import androidx.room.*
 import androidx.room.OnConflictStrategy.Companion.REPLACE
-import androidx.room.Query
-import androidx.room.Update
-import com.reas.tracker2.database.AlbumWithPlayCount
-import com.reas.tracker2.database.AlbumWithTimePlayed
-import com.reas.tracker2.database.ArtistWithPlayCount
-import com.reas.tracker2.database.ArtistWithTimePlayed
-import com.reas.tracker2.database.TrackWithPlayCount
-import com.reas.tracker2.database.TrackWithTimePlayed
+import com.reas.tracker2.database.*
 import com.reas.tracker2.database.entities.PlayEntity
-import com.reas.tracker2.shared.Album
-import com.reas.tracker2.shared.Play
-import com.reas.tracker2.shared.Track
-import com.reas.tracker2.shared.EventProcessor
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Duration
 import kotlin.time.Instant

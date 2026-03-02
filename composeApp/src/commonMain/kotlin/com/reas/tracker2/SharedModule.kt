@@ -6,16 +6,9 @@ import com.reas.tracker2.database.Repository
 import com.reas.tracker2.database.RoomRepository
 import com.reas.tracker2.network.NetworkRepository
 import com.reas.tracker2.network.RetrofitNetworkRepository
-import com.reas.tracker2.ui.viewmodels.AlbumInfoScreenViewModel
-import com.reas.tracker2.ui.viewmodels.ArtistInfoScreenViewModel
-import com.reas.tracker2.ui.viewmodels.ChartsScreenViewModel
-import com.reas.tracker2.ui.viewmodels.HistoryScreenViewModel
-import com.reas.tracker2.ui.viewmodels.InfoBottomSheetsViewModel
-import com.reas.tracker2.ui.viewmodels.SettingsScreenViewModel
-import com.reas.tracker2.ui.viewmodels.TrackHistoryViewModel
-import com.reas.tracker2.ui.viewmodels.TrackInfoScreenViewModel
 import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.EventProcessorAdapter
+import com.reas.tracker2.ui.viewmodels.*
 import org.koin.core.KoinApplication
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.module.Module

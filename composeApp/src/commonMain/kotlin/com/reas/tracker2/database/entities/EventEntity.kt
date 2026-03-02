@@ -1,11 +1,7 @@
 package com.reas.tracker2.database.entities
 
 import androidx.room.Entity
-import com.reas.tracker2.shared.Album
-import com.reas.tracker2.shared.Event
-import com.reas.tracker2.shared.Metadata
-import com.reas.tracker2.shared.Track
-import com.reas.tracker2.shared.TrackWithOptionalAlbum
+import com.reas.tracker2.shared.*
 import kotlin.time.DurationUnit
 import kotlin.time.Instant
 import kotlin.time.toDuration

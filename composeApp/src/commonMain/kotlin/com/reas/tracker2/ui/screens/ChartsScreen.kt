@@ -1,10 +1,6 @@
 package com.reas.tracker2.ui.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -14,8 +10,6 @@ import com.reas.tracker2.ui.components.ChartColumn
 import com.reas.tracker2.ui.components.ChartTypeSelectionChip
 import com.reas.tracker2.ui.components.SortOrderSelectionChip
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
-import com.reas.tracker2.ui.navigation.ChartSort
-import com.reas.tracker2.ui.navigation.ChartType
 import com.reas.tracker2.ui.navigation.Charts
 import com.reas.tracker2.ui.viewmodels.ChartsScreenViewModel
 import org.koin.compose.viewmodel.koinViewModel

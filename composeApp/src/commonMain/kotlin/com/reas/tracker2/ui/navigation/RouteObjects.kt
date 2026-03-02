@@ -1,25 +1,15 @@
 package com.reas.tracker2.ui.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Album
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import com.reas.tracker2.shared.Album
-import com.reas.tracker2.shared.Track
 import com.reas.tracker2.shared.TrackWithOptionalAlbum
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import org.jetbrains.compose.resources.StringResource
-import tracker2.composeapp.generated.resources.Res
-import tracker2.composeapp.generated.resources.albums
-import tracker2.composeapp.generated.resources.artists
-import tracker2.composeapp.generated.resources.plays
-import tracker2.composeapp.generated.resources.time_played
-import tracker2.composeapp.generated.resources.tracks
+import tracker2.composeapp.generated.resources.*
 
 @Serializable
 sealed class Route : NavKey

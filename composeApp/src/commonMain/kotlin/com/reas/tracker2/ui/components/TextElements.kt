@@ -5,24 +5,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PlainTooltip
-import androidx.compose.material3.Text
-import androidx.compose.material3.TooltipAnchorPosition
-import androidx.compose.material3.TooltipBox
-import androidx.compose.material3.TooltipDefaults
-import androidx.compose.material3.rememberTooltipState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,27 +18,21 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
-import kotlinx.datetime.format.DateTimeFormat
 import kotlinx.datetime.format.MonthNames
-import kotlinx.datetime.format.byUnicodePattern
 import kotlinx.datetime.format.char
 import org.jetbrains.compose.resources.stringResource
 import tracker2.composeapp.generated.resources.Res
 import tracker2.composeapp.generated.resources.hours_ago
 import tracker2.composeapp.generated.resources.minutes_ago
 import tracker2.composeapp.generated.resources.seconds_ago
-import java.text.SimpleDateFormat
-import java.util.Date
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
-import kotlin.time.toJavaInstant
 
 private fun Modifier.firstBaselineToTop(
     firstBaselineToTop: Dp,
@@ -149,7 +127,7 @@ fun Timestamp(
                 color = color
             )
             LaunchedEffect(difference) {
-                delay((difference.inWholeSeconds + 1).seconds)
+                delay((difference.inWholeSeconds + 1).seconds - difference)
                 difference = Clock.System.now() - timestamp
             }
         }
@@ -167,7 +145,7 @@ fun Timestamp(
                 color = color
             )
             LaunchedEffect(difference) {
-                delay((difference.inWholeMinutes + 1).minutes)
+                delay((difference.inWholeMinutes + 1).minutes - difference)
                 difference = Clock.System.now() - timestamp
             }
         }
@@ -185,7 +163,7 @@ fun Timestamp(
                 color = color
             )
             LaunchedEffect(difference) {
-                delay((difference.inWholeHours + 1).hours)
+                delay((difference.inWholeHours + 1).hours - difference)
                 difference = Clock.System.now() - timestamp
             }
         }

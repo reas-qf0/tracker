@@ -6,14 +6,14 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.cachedIn
 import androidx.paging.map
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
 import com.reas.tracker2.shared.Play
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.shared.TrackWithOptionalAlbum
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 class TrackHistoryViewModel(
     private val repository: Repository,

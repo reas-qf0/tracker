@@ -1,11 +1,6 @@
 package com.reas.tracker2.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DividerDefaults
@@ -22,28 +17,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.reas.tracker2.shared.TimePeriod
-import kotlinx.coroutines.flow.MutableStateFlow
-import com.reas.tracker2.ui.components.AutosizingText
-import com.reas.tracker2.ui.components.ChartColumn
-import com.reas.tracker2.ui.components.InfoBox
-import com.reas.tracker2.ui.components.InfoChartHeader
-import com.reas.tracker2.ui.components.ListEntryWithImage
-import com.reas.tracker2.ui.components.SortOrderSelectionChip
+import com.reas.tracker2.ui.components.*
 import com.reas.tracker2.ui.navigation.AlbumInfo
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.viewmodels.AlbumInfoScreenViewModel
-import com.reas.tracker2.util.DateTimeFormatter.timeMsToString
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import tracker2.composeapp.generated.resources.Res
-import tracker2.composeapp.generated.resources.in_charts_by_plays
-import tracker2.composeapp.generated.resources.in_charts_by_time
-import tracker2.composeapp.generated.resources.plays
-import tracker2.composeapp.generated.resources.time_played
-import tracker2.composeapp.generated.resources.top_tracks
+import tracker2.composeapp.generated.resources.*
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun AlbumInfoScreen(

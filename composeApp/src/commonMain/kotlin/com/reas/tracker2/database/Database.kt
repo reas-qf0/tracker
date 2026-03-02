@@ -1,15 +1,11 @@
 package com.reas.tracker2.database
 
-import androidx.room.ConstructedBy
-import androidx.room.Database
-import androidx.room.RoomDatabase
-import androidx.room.RoomDatabaseConstructor
-import androidx.room.TypeConverters
+import androidx.room.*
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import com.reas.tracker2.database.entities.EventEntity
 import com.reas.tracker2.database.daos.EventDao
-import com.reas.tracker2.database.entities.PlayEntity
 import com.reas.tracker2.database.daos.PlayDao
+import com.reas.tracker2.database.entities.EventEntity
+import com.reas.tracker2.database.entities.PlayEntity
 import kotlinx.coroutines.Dispatchers
 
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {

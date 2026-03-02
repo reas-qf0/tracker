@@ -2,12 +2,12 @@ package com.reas.tracker2.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.shared.TrackWithOptionalAlbum
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlin.time.Duration
 
 class TrackInfoScreenViewModel(private val repository: Repository): ViewModel() {
