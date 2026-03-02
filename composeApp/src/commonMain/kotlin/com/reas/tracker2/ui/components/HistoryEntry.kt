@@ -15,10 +15,13 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.reas.tracker2.ui.theme.TrackerTheme
 import com.reas.tracker2.ui.theme.Typography
 import org.jetbrains.compose.resources.stringResource
 import tracker2.composeapp.generated.resources.Res
@@ -109,6 +112,133 @@ fun HistoryEntry(
                     }
                 }
             }
+        }
+    }
+}
+
+
+@Preview(widthDp = 500, heightDp = 84)
+@Composable
+private fun HistoryEntryPreview() {
+    TrackerTheme {
+        Scaffold { innerPadding ->
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = "Really Long album Name 00000000000000000000000",
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = false,
+
+                onClick = {},
+                onMore = {},
+                imageUrl = {},
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 500, heightDp = 84)
+@Composable
+private fun HistoryEntryPreviewDark() {
+    TrackerTheme(darkTheme = true) {
+        Scaffold { innerPadding ->
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = "Really Long album Name 00000000000000000000000",
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = false,
+
+                onClick = {},
+                onMore = {},
+                imageUrl = {},
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 500, heightDp = 84)
+@Composable
+private fun HistoryEntryNoAlbumPreview() {
+    TrackerTheme {
+        Scaffold { innerPadding ->
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = null,
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = false,
+
+                onClick = {},
+                onMore = {},
+                imageUrl = {},
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 500, heightDp = 84)
+@Composable
+private fun HistoryEntryNoAlbumPreviewDark() {
+    TrackerTheme(darkTheme = true) {
+        Scaffold { innerPadding ->
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = null,
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = false,
+
+                onClick = {},
+                onMore = {},
+                imageUrl = {},
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 500, heightDp = 84)
+@Composable
+private fun HistoryEntryNpPreview() {
+    TrackerTheme {
+        Scaffold { innerPadding ->
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = "Really Long album Name 00000000000000000000000",
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = true,
+
+                onClick = {},
+                onMore = {},
+                imageUrl = {},
+                modifier = Modifier.padding(innerPadding)
+            )
+        }
+    }
+}
+
+@Preview(widthDp = 500, heightDp = 84)
+@Composable
+private fun HistoryEntryNpPreviewDark() {
+    TrackerTheme(darkTheme = true) {
+        Scaffold { innerPadding ->
+            HistoryEntry(
+                title = "Really Long Track Name 00000000000000000000000",
+                artist = "Really Long Artist Name 00000000000000000000000",
+                album = "Really Long album Name 00000000000000000000000",
+                timestamp = System.currentTimeMillis(),
+                isNowPlaying = true,
+
+                onClick = {},
+                onMore = {},
+                imageUrl = {},
+                modifier = Modifier.padding(innerPadding)
+            )
         }
     }
 }
