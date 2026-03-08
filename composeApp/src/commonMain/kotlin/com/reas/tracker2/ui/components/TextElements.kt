@@ -18,10 +18,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
+import kotlinx.datetime.offsetAt
 import org.jetbrains.compose.resources.stringResource
 import tracker2.composeapp.generated.resources.Res
 import tracker2.composeapp.generated.resources.hours_ago
@@ -188,7 +190,7 @@ fun Instant.printShort() = this.format(DateTimeComponents.Format {
     char(',')
     char(' ')
     year()
-})
+}, offset = TimeZone.currentSystemDefault().offsetAt(this))
 
 
 fun Instant.printLong() = this.format(DateTimeComponents.Format {
@@ -204,4 +206,4 @@ fun Instant.printLong() = this.format(DateTimeComponents.Format {
     minute()
     char(':')
     second()
-})
+}, offset = TimeZone.currentSystemDefault().offsetAt(this))

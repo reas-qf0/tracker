@@ -16,11 +16,7 @@ import co.touchlab.kermit.Logger
 import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
-import com.reas.tracker2.shared.Album
-import com.reas.tracker2.shared.Event
-import com.reas.tracker2.shared.Metadata
-import com.reas.tracker2.shared.Track
-import com.reas.tracker2.shared.TrackWithOptionalAlbum
+import com.reas.tracker2.shared.*
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -49,9 +45,11 @@ private class MediaCallback(
     private var notificationId = notificationManager.reserveId()
     private var notificationBuilder: NotificationBuilder? = null
     private var currentMetadata: MediaMetadata? = null
+    private var currentState: PlaybackState? = null
+    private var sentEvent: Boolean = false
 
     private fun updateNotification(event: Event) {
-        Logger.d(TAG) { "updateNotification" }
+        //Logger.d(TAG) { "updateNotification" }
         if (event.isPlaying) {
             notificationBuilder = { context ->
                 setContentTitle(event.track)
@@ -82,6 +80,45 @@ private class MediaCallback(
         showNotification()
     }
 
+    private fun addEvent() {
+        if (currentMetadata == null || currentState == null)
+            return
+        val metadata = currentMetadata!!
+        val state = currentState!!
+        if (metadata.artist == "" || metadata.title == "")
+            return
+
+        if (sentEvent) return
+        sentEvent = true
+
+        val event = Event(
+            metadata = Metadata(
+                info = TrackWithOptionalAlbum(
+                    _track = Track(
+                        title = metadata.title,
+                        artist = metadata.artist
+                    ),
+                    _album = if (metadata.album != null) Album(
+                        title = metadata.album,
+                        artist = metadata.albumArtist ?: metadata.artist
+                    ) else null,
+                ),
+                duration = metadata.duration.milliseconds
+            ),
+            timestamp = Instant.fromEpochMilliseconds(
+                state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis()
+            ),
+            position = state.position.milliseconds,
+            isPlaying = state.state == PlaybackState.STATE_PLAYING,
+            sourceApp = appId
+        )
+        runBlocking {
+            repository.insertEvent(event)
+            repository.insertEventInQueue(event)
+        }
+        updateNotification(event)
+    }
+
     private fun showNotification() {
         if (notificationBuilder != null) {
             notificationManager.show(
@@ -99,44 +136,16 @@ private class MediaCallback(
 
         if (metadata == null) return
         currentMetadata = metadata
+        addEvent()
     }
 
     override fun onPlaybackStateChanged(state: PlaybackState?) {
         Logger.d(TAG) { "onPlaybackStateChanged($appId) $state" }
 
         if (state == null) return
-
-        currentMetadata?.let {
-            val metadata = currentMetadata!!
-            if (metadata.artist == "" || metadata.title == "") return@let
-
-            val event = Event(
-                metadata = Metadata(
-                    info = TrackWithOptionalAlbum(
-                        _track = Track(
-                            title = metadata.title,
-                            artist = metadata.artist
-                        ),
-                        _album = if (metadata.album != null) Album(
-                            title = metadata.album,
-                            artist = metadata.albumArtist ?: metadata.artist
-                        ) else null,
-                    ),
-                    duration = metadata.duration.milliseconds
-                ),
-                timestamp = Instant.fromEpochMilliseconds(
-                    state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis()
-                ),
-                position = state.position.milliseconds,
-                isPlaying = state.state == PlaybackState.STATE_PLAYING,
-                sourceApp = appId
-            )
-            runBlocking {
-                repository.insertEvent(event)
-                repository.insertEventInQueue(event)
-            }
-            updateNotification(event)
-        }
+        currentState = state
+        sentEvent = false
+        addEvent()
     }
 
     override fun onSessionDestroyed() {

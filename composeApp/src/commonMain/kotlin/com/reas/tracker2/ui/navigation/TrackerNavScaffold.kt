@@ -78,8 +78,9 @@ class Navigator(val state: NavigationState) {
         state.backStack.add(route)
     }
 
-    fun goBack(){
-        state.backStack.removeLastOrNull()
+    fun goBack() {
+        if (state.backStack.size > 1)
+            state.backStack.removeLastOrNull()
     }
 
     fun canNavigateBack() =
