@@ -18,13 +18,14 @@ import com.github.ajalt.colormath.extensions.android.composecolor.toComposeColor
 import com.github.ajalt.colormath.transform.interpolate
 import com.kmpalette.palette.graphics.Target
 import com.reas.tracker2.ui.theme.LightColorScheme
-import com.skydoves.landscapist.coil3.CoilImage
 import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.crossfade.CrossfadePlugin
+import com.skydoves.landscapist.image.LandscapistImage
 import com.skydoves.landscapist.palette.PalettePlugin
 import com.skydoves.landscapist.palette.rememberPaletteState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 private const val DYNAMIC_COLOR_STRENGTH = 0.2F
 
@@ -72,8 +73,9 @@ fun ListEntryWithImage(
             .padding(5.dp),
         verticalAlignment = alignment
     ) {
-        CoilImage(
+        LandscapistImage(
             imageModel = { model },
+            landscapist = koinInject(),
             component = rememberImageComponent {
                 +PalettePlugin { palette = it }
                 +CrossfadePlugin(500)

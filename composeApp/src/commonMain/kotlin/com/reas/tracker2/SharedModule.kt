@@ -4,8 +4,10 @@ import com.reas.tracker2.database.AppDatabase
 import com.reas.tracker2.database.EventProcessorAdapterImpl
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.database.RoomRepository
+import com.reas.tracker2.network.KtorNetworkRepository
 import com.reas.tracker2.network.NetworkRepository
-import com.reas.tracker2.network.RetrofitNetworkRepository
+import com.reas.tracker2.network.httpClient
+import com.reas.tracker2.network.landscapistInstance
 import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.EventProcessorAdapter
 import com.reas.tracker2.ui.viewmodels.*
@@ -23,9 +25,9 @@ val sharedModule = module {
     single {
         RoomRepository(AppDatabase.getDatabase(get()))
     } bind Repository::class
-    single {
-        RetrofitNetworkRepository()
-    } bind NetworkRepository::class
+    singleOf(::KtorNetworkRepository) bind NetworkRepository::class
+    singleOf(::httpClient)
+    singleOf(::landscapistInstance)
 
     singleOf(::EventProcessorAdapterImpl) bind EventProcessorAdapter::class
     singleOf(::EventProcessor)

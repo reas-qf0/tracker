@@ -1,16 +1,20 @@
 package com.reas.tracker2.network
 
-import com.google.gson.annotations.SerializedName
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class LastFMAlbumInfoWrapper(
     val album: LastFMAlbumInfo
 )
 
+@Serializable
 data class LastFMAlbumInfo(
     val image: List<LastFMImageInfo>
 )
 
+@Serializable
 data class LastFMImageInfo(
     val size: String,
-    @SerializedName("#text") val url: String
+    @SerialName("#text") val url: String
 )

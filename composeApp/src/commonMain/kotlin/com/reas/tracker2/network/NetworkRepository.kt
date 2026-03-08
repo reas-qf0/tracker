@@ -3,56 +3,38 @@ package com.reas.tracker2.network
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.shared.Album
 import com.reas.tracker2.util.Secrets
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import retrofit2.http.Headers
-import retrofit2.http.Query
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 interface NetworkRepository {
     suspend fun getAlbumImageUrl(album: Album, size: String): String?
 }
 
-class RetrofitNetworkRepository : NetworkRepository {
-    internal interface LastFMService {
-        @Headers("Cache-Control: max-age=640000")
-        @GET("/2.0")
-        suspend fun getAlbumImages(
-            @Query("method") method: String,
-            @Query("api_key") apiKey: String,
-            @Query("format") format: String,
-            @Query("artist") artist: String,
-            @Query("album") album: String,
-        ): Response<LastFMAlbumInfoWrapper>
-    }
-
-    private val lastFMRetrofit = Retrofit.Builder()
-        .baseUrl("https://ws.audioscrobbler.com")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-    private val lastFMService = lastFMRetrofit.create(LastFMService::class.java)
+class KtorNetworkRepository : NetworkRepository, KoinComponent {
+    private val client: HttpClient by inject()
 
     override suspend fun getAlbumImageUrl(album: Album, size: String): String? {
-        Logger.d(TAG) { "getAlbumImageUrl $album $size" }
-        val response = lastFMService.getAlbumImages(
-            "album.getinfo", Secrets.LASTFM_API_KEY, "json",
-            album.artist, album.title
-        )
-        if (!response.isSuccessful) {
-            val stream = response.errorBody()!!.charStream()
-            val errorText = stream.readText()
-            stream.close()
-            Logger.w(TAG) {"couldn't get album images for $album: " +
-                    "${response.code()} $errorText" }
-            return null
+        val response = client.get {
+            url {
+                host = "ws.audioscrobbler.com"
+                path("2.0")
+                parameters.apply {
+                    append("method", "album.getinfo")
+                    append("api_key", Secrets.LASTFM_API_KEY)
+                    append("format", "json")
+                    append("artist", album.artist)
+                    append("album", album.title)
+                }
+            }
         }
-        Logger.d(TAG) { "response body ${response.body()}" }
-        return response.body()!!.album.image
-            .firstOrNull { it.size == size }?.url
-    }
-
-    companion object {
-        private const val TAG = "RetrofitNetworkRepository"
+        val body = response.bodyAsText()
+        Logger.d("Network") { response.request.url.toString() }
+        Logger.d("Network") { body }
+        return response.body<LastFMAlbumInfoWrapper>().album.image.firstOrNull { it.size == size }?.url
     }
 }
