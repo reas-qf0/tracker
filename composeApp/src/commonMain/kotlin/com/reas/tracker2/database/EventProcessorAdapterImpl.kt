@@ -8,7 +8,7 @@ import kotlin.time.Instant
 class EventProcessorAdapterImpl(
     private val repository: Repository
 ): EventProcessorAdapter {
-    override fun getEvents() = repository.getEvents()
+    override fun getEvents() = repository.getEventsInQueue()
 
     override suspend fun insertPlay(play: Play) = repository.insertPlay(play)
 

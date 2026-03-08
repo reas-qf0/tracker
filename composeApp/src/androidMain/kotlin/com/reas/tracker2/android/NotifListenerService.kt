@@ -15,7 +15,6 @@ import androidx.core.content.getSystemService
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
-import com.reas.tracker2.database.entities.EventEntity
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.shared.Album
 import com.reas.tracker2.shared.Event
@@ -134,6 +133,7 @@ private class MediaCallback(
             )
             runBlocking {
                 repository.insertEvent(event)
+                repository.insertEventInQueue(event)
             }
             updateNotification(event)
         }
