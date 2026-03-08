@@ -66,6 +66,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel.nav3)
             implementation(libs.landscapist.coil3)
             implementation(libs.landscapist.palette)
+            implementation(libs.landscapist.animation)
             implementation(libs.retrofit)
             implementation(libs.retrofit.converter.gson)
             implementation(project.dependencies.platform(libs.koin.bom))

@@ -16,14 +16,19 @@ import co.touchlab.kermit.Logger
 import com.github.ajalt.colormath.extensions.android.composecolor.toColormathColor
 import com.github.ajalt.colormath.extensions.android.composecolor.toComposeColor
 import com.github.ajalt.colormath.transform.interpolate
+import com.kmpalette.palette.graphics.Target
+import com.reas.tracker2.ui.theme.LightColorScheme
 import com.skydoves.landscapist.coil3.CoilImage
 import com.skydoves.landscapist.components.rememberImageComponent
+import com.skydoves.landscapist.crossfade.CrossfadePlugin
 import com.skydoves.landscapist.palette.PalettePlugin
 import com.skydoves.landscapist.palette.rememberPaletteState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 private const val DYNAMIC_COLOR_STRENGTH = 0.2F
+
+@Composable fun isLightTheme() = LightColorScheme.background == MaterialTheme.colorScheme.background
 
 @Composable
 fun ListEntryWithImage(
@@ -52,7 +57,10 @@ fun ListEntryWithImage(
             backgroundColor
         else {
             val background = backgroundColor.toColormathColor()
-            val cover = Color(palette!!.getDarkVibrantColor(backgroundColor.toArgb())).toColormathColor()
+            val cover = Color(palette!!.getColorForTarget(
+                 if (isLightTheme()) Target.LIGHT_MUTED else Target.DARK_MUTED,
+                backgroundColor.toArgb()
+            )).toColormathColor()
             val mixed = background.toHSL().interpolate(cover.toHSL(), DYNAMIC_COLOR_STRENGTH)
             mixed.toComposeColor()
         }
@@ -68,6 +76,7 @@ fun ListEntryWithImage(
             imageModel = { model },
             component = rememberImageComponent {
                 +PalettePlugin { palette = it }
+                +CrossfadePlugin(500)
             },
             modifier = Modifier
                 .fillMaxHeight()

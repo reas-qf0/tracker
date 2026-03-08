@@ -76,6 +76,7 @@ ktor-serverNetty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "kt
 ktor-serverTestHost = { module = "io.ktor:ktor-server-test-host-jvm", version.ref = "ktor" }
 landscapist-coil3 = { module = "com.github.skydoves:landscapist-coil3", version.ref = "landscapist" }
 landscapist-palette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
+landscapist-animation = { module = "com.github.skydoves:landscapist-animation", version.ref = "landscapist" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "retrofit" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin" }
