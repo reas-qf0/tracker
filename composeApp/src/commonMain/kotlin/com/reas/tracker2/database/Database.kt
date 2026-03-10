@@ -5,9 +5,11 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.reas.tracker2.database.daos.EventDao
 import com.reas.tracker2.database.daos.PlayDao
 import com.reas.tracker2.database.daos.ProcessingQueueDao
+import com.reas.tracker2.database.daos.SyncQueueDao
 import com.reas.tracker2.database.entities.EventEntity
 import com.reas.tracker2.database.entities.PlayEntity
 import com.reas.tracker2.database.entities.ProcessingQueueEntity
+import com.reas.tracker2.database.entities.SyncQueueEntity
 import kotlinx.coroutines.Dispatchers
 
 @Suppress("KotlinNoActualForExpect")
@@ -18,7 +20,8 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
 @Database(entities = [
     EventEntity::class,
     PlayEntity::class,
-    ProcessingQueueEntity::class
+    ProcessingQueueEntity::class,
+    SyncQueueEntity::class
 ], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -27,6 +30,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
     abstract fun playDao(): PlayDao
     abstract fun processingQueueDao(): ProcessingQueueDao
+    abstract fun syncQueueDao(): SyncQueueDao
 
     companion object {
         fun getDatabase(builder: Builder<AppDatabase>) : AppDatabase {

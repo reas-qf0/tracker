@@ -7,5 +7,5 @@ interface EventProcessorAdapter {
     fun getEvents(): Flow<List<Event>>
     suspend fun insertPlay(play: Play): Long
     suspend fun getLastPlayFromSource(source: Source): Play?
-    suspend fun clearQueue(app: String, timestamp: Instant)
+    suspend fun clearQueue(source: Source, timestamp: Instant)
 }

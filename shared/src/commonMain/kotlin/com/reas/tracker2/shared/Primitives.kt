@@ -71,7 +71,7 @@ data class Event(
     val timestamp: Instant,
     val position: Duration,
     val isPlaying: Boolean,
-    val sourceApp: String
+    val source: Source
 ) {
     val track: String
         inline get() = metadata.track
@@ -83,15 +83,23 @@ data class Event(
         inline get() = metadata.album
     val duration: Duration
         inline get() = metadata.duration
+    val sourceUser: String
+        inline get() = source.user
+    val sourceDevice: String
+        inline get() = source.device
+    val sourceApp: String
+        inline get() = source.app
 }
 
 @Serializable
 data class Source(
+    val user: String,
     val device: String,
     val app: String
 ) {
     companion object {
-        fun local(app: String) = Source("", app)
+        fun user(device: String, app: String) = Source("", device, app)
+        fun local(app: String) = Source("", "", app)
     }
 }
 
@@ -113,6 +121,8 @@ data class Play(
         inline get() = metadata.album
     val duration: Duration
         inline get() = metadata.duration
+    val sourceUser: String
+        inline get() = source.user
     val sourceDevice: String
         inline get() = source.device
     val sourceApp: String

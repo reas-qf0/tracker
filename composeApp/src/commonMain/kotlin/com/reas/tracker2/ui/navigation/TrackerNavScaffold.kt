@@ -225,7 +225,7 @@ fun TrackerNavScaffold(
                 }
 
                 entry<TrackInfo> { arguments ->
-                    title = "${arguments.track.artist} - ${arguments.track._track}"
+                    title = "${arguments.track.artist} - ${arguments.track.track}"
                     TrackInfoScreen(
                         arguments = arguments,
                         navigateToTrack = { controller.navigate(it) },

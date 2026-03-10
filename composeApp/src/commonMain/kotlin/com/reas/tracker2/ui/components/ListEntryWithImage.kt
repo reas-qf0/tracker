@@ -59,7 +59,7 @@ fun ListEntryWithImage(
         else {
             val background = backgroundColor.toColormathColor()
             val cover = Color(palette!!.getColorForTarget(
-                 if (isLightTheme()) Target.LIGHT_MUTED else Target.DARK_MUTED,
+                 if (isLightTheme()) Target.LIGHT_VIBRANT else Target.DARK_MUTED,
                 backgroundColor.toArgb()
             )).toColormathColor()
             val mixed = background.toHSL().interpolate(cover.toHSL(), DYNAMIC_COLOR_STRENGTH)

@@ -5,6 +5,7 @@ import com.reas.tracker2.database.entities.EventEntity.Companion.toEntity
 import com.reas.tracker2.database.entities.PlayEntity
 import com.reas.tracker2.database.entities.PlayEntity.Companion.toEntity
 import com.reas.tracker2.database.entities.ProcessingQueueEntity
+import com.reas.tracker2.database.entities.SyncQueueEntity
 import com.reas.tracker2.shared.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -21,6 +22,11 @@ interface Repository {
     suspend fun deleteEventInQueue(event: Event)
     fun getEventsInQueue(): Flow<List<Event>>
     suspend fun clearQueue(app: String, timestamp: Instant)
+    suspend fun insertEventInSync(event: Event): Long
+    suspend fun updateEventInSync(event: Event)
+    suspend fun deleteEventInSync(event: Event)
+    fun getEventsInSync(): Flow<List<Event>>
+    suspend fun clearSyncQueue()
 
     suspend fun insertPlay(play: Play): Long
     suspend fun updatePlay(play: Play)
@@ -63,12 +69,19 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override suspend fun insertEvent(event: Event) = db.eventDao().insert(event.toEntity())
     override suspend fun deleteEvent(event: Event) = db.eventDao().delete(event.toEntity())
     override suspend fun updateEvent(event: Event) = db.eventDao().update(event.toEntity())
+    override fun getEvents() = db.eventDao().getEvents().map { it.map { it.toObject() } }
+
     override suspend fun insertEventInQueue(event: Event) = db.processingQueueDao().insert(ProcessingQueueEntity(event.toEntity()))
     override suspend fun deleteEventInQueue(event: Event) = db.processingQueueDao().delete(ProcessingQueueEntity(event.toEntity()))
     override suspend fun updateEventInQueue(event: Event) = db.processingQueueDao().update(ProcessingQueueEntity(event.toEntity()))
-    override fun getEvents() = db.eventDao().getEvents().map { it.map { it.toObject() } }
     override fun getEventsInQueue() = db.processingQueueDao().getEvents().map { it.map { it.event.toObject()} }
     override suspend fun clearQueue(app: String, timestamp: Instant) = db.processingQueueDao().clearQueue(app, timestamp)
+
+    override suspend fun insertEventInSync(event: Event) = db.syncQueueDao().insert(SyncQueueEntity(event.toEntity()))
+    override suspend fun deleteEventInSync(event: Event) = db.syncQueueDao().delete(SyncQueueEntity(event.toEntity()))
+    override suspend fun updateEventInSync(event: Event) = db.syncQueueDao().update(SyncQueueEntity(event.toEntity()))
+    override fun getEventsInSync() = db.syncQueueDao().getEvents().map { it.map { it.event.toObject()} }
+    override suspend fun clearSyncQueue() = db.syncQueueDao().clearSyncQueue()
 
     override suspend fun insertPlay(play: Play) = db.playDao().insert(play.toEntity())
     override suspend fun deletePlay(play: Play) = db.playDao().delete(play.toEntity())

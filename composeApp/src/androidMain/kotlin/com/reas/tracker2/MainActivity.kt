@@ -9,8 +9,9 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.reas.tracker2.android.DailyReportWorker
 import com.reas.tracker2.android.NotificationWrapper
-import com.reas.tracker2.ui.TrackerApp
+import com.reas.tracker2.android.SyncWorker
 import com.reas.tracker2.shared.EventProcessor
+import com.reas.tracker2.ui.TrackerApp
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -25,6 +26,7 @@ class MainActivity : ComponentActivity() {
         notif.createChannels()
 
         DailyReportWorker.start(this)
+        SyncWorker.start(this)
 
         lifecycleScope.launch {
             eventProcessor.processQueue()

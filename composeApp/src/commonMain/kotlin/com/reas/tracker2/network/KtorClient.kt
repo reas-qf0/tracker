@@ -5,6 +5,8 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.cache.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.websocket.*
+import io.ktor.serialization.kotlinx.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
@@ -21,5 +23,8 @@ fun httpClient() = HttpClient(CIO) {
                 co.touchlab.kermit.Logger.v("KtorClient") { message }
             }
         }
+    }
+    install(WebSockets) {
+        contentConverter = KotlinxWebsocketSerializationConverter(Json)
     }
 }

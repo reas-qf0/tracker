@@ -23,7 +23,8 @@ class NotificationWrapper(
 ) {
     private val channelDescriptions = listOf(
         ChannelDescription("0", "Now Playing", 2),
-        ChannelDescription("1", "Daily Report", 1)
+        ChannelDescription("1", "Daily Report", 1),
+        ChannelDescription("2", "Sync Worker", 1)
     )
 
     private val channels = hashMapOf<String, String>()

@@ -37,7 +37,7 @@ data class PlayEntity(
         ),
         timestamp = Instant.fromEpochMilliseconds(timestamp),
         timePlayed = timePlayed.toDuration(DurationUnit.MILLISECONDS),
-        source = Source(app = sourceApp, device = sourceDevice),
+        source = Source.user(app = sourceApp, device = sourceDevice),
         associatedEvents = associatedEvents,
     )
 

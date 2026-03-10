@@ -22,21 +22,20 @@ class EventProcessor(
             metadata = event.metadata,
             timestamp = event.timestamp,
             timePlayed = Duration.ZERO,
-            source = Source.local(event.sourceApp),
+            source = event.source,
             associatedEvents = mutableListOf(Play.EventInfo.fromEvent(event))
         )
     }
 
     private suspend fun process(events: List<Event>): Play? {
-        // it is assumed that all events from the list have the same sourceApp
         if (events.isEmpty()) return null
 
-        val app = events[0].sourceApp
-        var play = adapter.getLastPlayFromSource(Source.local(app))
+        val source = events[0].source
+        var play = adapter.getLastPlayFromSource(source)
         val eventsSorted = events.sortedBy { it.timestamp }
         if (play != null && eventsSorted[0].timestamp < play.timestamp) {
             Logger.e(TAG) {
-                "ERROR: out-of-sync events app=$app " +
+                "ERROR: out-of-sync events source=$source " +
                 "eventTimestamp=${eventsSorted[0].timestamp} playTimestamp=${play!!.timestamp}"
             }
             return null
@@ -45,7 +44,7 @@ class EventProcessor(
         eventsSorted.forEach { event ->
             // check if need to plug hole
             if (play == null) {
-                play = flush(event, play)
+                if (event.isPlaying) play = flush(event, play)
                 return@forEach
             }
 
@@ -84,9 +83,9 @@ class EventProcessor(
 
         if (play != null)
             adapter.insertPlay(play)
-        adapter.clearQueue(app, eventsSorted.last().timestamp)
+        adapter.clearQueue(source, eventsSorted.last().timestamp)
 
-        if (play!!.lastPlaying)
+        if (play?.lastPlaying ?: false)
             return play
         return null
     }
@@ -94,7 +93,7 @@ class EventProcessor(
     suspend fun processQueue() {
         adapter.getEvents().collect { snapshot ->
             Logger.d(TAG) { "processing ${snapshot.size} events" }
-            snapshot.groupBy { it.sourceApp }.forEach {
+            snapshot.groupBy { it.source }.forEach {
                 process(it.value)
             }
         }

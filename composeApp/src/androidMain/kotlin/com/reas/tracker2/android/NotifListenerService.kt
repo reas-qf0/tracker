@@ -16,8 +16,9 @@ import co.touchlab.kermit.Logger
 import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.network.SyncManager
 import com.reas.tracker2.shared.*
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.milliseconds
@@ -37,10 +38,11 @@ private val MediaMetadata.duration
 private const val TAG = "NotificationListenerService"
 
 private class MediaCallback(
-    private val appId: String
+    private val appId: String, private val scope: CoroutineScope
 ): MediaController.Callback(), KoinComponent {
     private val repository: Repository by inject()
     private val notificationManager: NotificationWrapper by inject()
+    private val syncManager: SyncManager by inject()
 
     private var notificationId = notificationManager.reserveId()
     private var notificationBuilder: NotificationBuilder? = null
@@ -68,11 +70,11 @@ private class MediaCallback(
                     }
                 setContentIntent(resultPendingIntent)
 
-                val deleteIntent = Intent(context, NotifListenerService::class.java)
-                deleteIntent.putExtra("org.reas.tracker2.appId", appId)
-                val deletePendingIntent = PendingIntent.getService(context, 42, deleteIntent,
-                    PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
-                setDeleteIntent(deletePendingIntent)
+//                val deleteIntent = Intent(context, NotifListenerService::class.java)
+//                deleteIntent.putExtra("org.reas.tracker2.appId", appId)
+//                val deletePendingIntent = PendingIntent.getService(context, 42, deleteIntent,
+//                    PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE)
+//                setDeleteIntent(deletePendingIntent)
             }
         } else {
             notificationBuilder = null
@@ -85,7 +87,7 @@ private class MediaCallback(
             return
         val metadata = currentMetadata!!
         val state = currentState!!
-        if (metadata.artist == "" || metadata.title == "")
+        if (metadata.artist == "" || metadata.title == "" || state.state == PlaybackState.STATE_NONE)
             return
 
         if (sentEvent) return
@@ -110,11 +112,12 @@ private class MediaCallback(
             ),
             position = state.position.milliseconds,
             isPlaying = state.state == PlaybackState.STATE_PLAYING,
-            sourceApp = appId
+            source = Source.local(appId)
         )
-        runBlocking {
+        scope.launch {
             repository.insertEvent(event)
             repository.insertEventInQueue(event)
+            syncManager.addEvent(event)
         }
         updateNotification(event)
     }
@@ -152,13 +155,13 @@ private class MediaCallback(
         Logger.d(TAG) { "onSessionDestroyed($appId)" }
     }
 
-    fun onNotificationDismissed() {
-        notificationId = notificationManager.reserveId()
-        showNotification()
-    }
+//    fun onNotificationDismissed() {
+//        notificationId = notificationManager.reserveId()
+//        showNotification()
+//    }
 }
 
-private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListener {
+private class SessionListener(private val scope: CoroutineScope): MediaSessionManager.OnActiveSessionsChangedListener {
     private val controllers = mutableMapOf<String, MediaController>()
     private var callbacks = mutableMapOf<String, MediaCallback>()
 
@@ -191,7 +194,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
 
         // add callbacks for new session controllers
         newControllers.minus(oldControllers).forEach { appId ->
-            val callback = MediaCallback(appId)
+            val callback = MediaCallback(appId, scope)
             val controller = newControllerMap[appId]!!
             controller.registerCallback(callback)
             controller.metadata?.let { callback.onMetadataChanged(it) }
@@ -202,19 +205,21 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
         }
     }
 
-    fun onNotificationDismissed(appId: String) {
-        Logger.d(TAG) { "onNotificationDismissed($appId)" }
-        callbacks[appId]?.onNotificationDismissed()
-    }
+//    fun onNotificationDismissed(appId: String) {
+//        Logger.d(TAG) { "onNotificationDismissed($appId)" }
+//        callbacks[appId]?.onNotificationDismissed()
+//    }
 }
 
-class NotifListenerService: NotificationListenerService() {
+class NotifListenerService: NotificationListenerService(), KoinComponent {
+    private val syncManager: SyncManager by inject()
     private var initialized = false
     private var listener: SessionListener? = null
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (startId == 42)
-            listener!!.onNotificationDismissed(intent!!.getStringExtra("org.reas.tracker2.appId")!!)
+//        if (startId == 42)
+//            listener!!.onNotificationDismissed(intent!!.getStringExtra("org.reas.tracker2.appId")!!)
         return START_STICKY
     }
 
@@ -222,8 +227,9 @@ class NotifListenerService: NotificationListenerService() {
         if (listener != null) return
         val sessManager = getSystemService<MediaSessionManager>()!!
         val component = ComponentName(this, this::class.java)
-        listener = SessionListener()
+        listener = SessionListener(scope)
 
+        scope.launch { syncManager.establishConnection() }
         sessManager.addOnActiveSessionsChangedListener(listener!!, component)
         listener!!.onActiveSessionsChanged(sessManager.getActiveSessions(component))
     }
@@ -233,6 +239,7 @@ class NotifListenerService: NotificationListenerService() {
         sessManager.removeOnActiveSessionsChangedListener(listener!!)
         listener = null
         initialized = false
+        scope.cancel()
     }
 
     override fun onListenerConnected() {

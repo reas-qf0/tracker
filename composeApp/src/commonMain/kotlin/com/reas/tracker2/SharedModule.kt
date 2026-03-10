@@ -4,10 +4,7 @@ import com.reas.tracker2.database.AppDatabase
 import com.reas.tracker2.database.EventProcessorAdapterImpl
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.database.RoomRepository
-import com.reas.tracker2.network.KtorNetworkRepository
-import com.reas.tracker2.network.NetworkRepository
-import com.reas.tracker2.network.httpClient
-import com.reas.tracker2.network.landscapistInstance
+import com.reas.tracker2.network.*
 import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.EventProcessorAdapter
 import com.reas.tracker2.ui.viewmodels.*
@@ -31,6 +28,7 @@ val sharedModule = module {
 
     singleOf(::EventProcessorAdapterImpl) bind EventProcessorAdapter::class
     singleOf(::EventProcessor)
+    singleOf(::SyncManager)
 
     viewModelOf(::HistoryScreenViewModel)
     viewModelOf(::ChartsScreenViewModel)

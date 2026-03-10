@@ -2,10 +2,12 @@ package com.reas.tracker2.database.entities
 
 import androidx.room.Entity
 import com.reas.tracker2.shared.*
+import kotlinx.serialization.Serializable
 import kotlin.time.DurationUnit
 import kotlin.time.Instant
 import kotlin.time.toDuration
 
+@Serializable
 @Entity(tableName = "events", primaryKeys = ["sourceApp", "timestamp"])
 data class EventEntity(
     val track: String,
@@ -35,7 +37,7 @@ data class EventEntity(
         timestamp = Instant.fromEpochMilliseconds(timestamp),
         isPlaying = isPlaying,
         position = position.toDuration(DurationUnit.MILLISECONDS),
-        sourceApp = sourceApp
+        source = Source.local(sourceApp)
     )
 
     companion object {
