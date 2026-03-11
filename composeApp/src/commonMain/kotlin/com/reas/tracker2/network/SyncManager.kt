@@ -55,8 +55,14 @@ class SyncManager(
                     mutex.unlock()
                     //Logger.d(TAG) { "mutex.unlock" }
 
-                    val scope = this
-                    val job1 = launch {
+                    val sendJob = launch {
+                        outgoingEvents.collect { event ->
+                            Logger.d(TAG) { "sending event" }
+                            sendSerialized(event)
+                        }
+                    }
+
+                    val receiveJob = launch {
                         submitFromQueue()
                         while (true) {
                             val play = receiveDeserialized<Play>()
@@ -65,22 +71,15 @@ class SyncManager(
                         }
                     }
 
-                    val job2 = launch {
-                        outgoingEvents.collect { event ->
-                            Logger.d(TAG) { "sending event" }
-                            sendSerialized(event)
-                        }
-                    }
-
                     outgoing.invokeOnClose {
                         connection = null
                         Logger.d(TAG) { "connection closed" }
-                        job1.cancel()
-                        job2.cancel()
+                        receiveJob.cancel()
+                        sendJob.cancel()
                     }
 
-                    job1.join()
-                    job2.join()
+                    receiveJob.join()
+                    sendJob.join()
                 }
                 Logger.d(TAG) { "waiting 15 seconds before reconnecting" }
                 delay(15.seconds)

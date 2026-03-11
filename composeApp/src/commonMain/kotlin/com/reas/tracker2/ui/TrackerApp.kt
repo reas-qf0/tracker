@@ -1,6 +1,5 @@
 package com.reas.tracker2.ui
 
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -12,9 +11,9 @@ import com.reas.tracker2.ui.theme.TrackerTheme
 fun TrackerApp(
     modifier: Modifier = Modifier,
 ) {
+    TrackerBackgroundProcesses()
+
     TrackerTheme {
-        TrackerNavScaffold(
-            modifier = Modifier.fillMaxSize()
-        )
+        TrackerNavScaffold(modifier)
     }
 }
