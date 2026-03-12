@@ -19,7 +19,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.*
 import com.reas.tracker2.ui.navigation.AlbumInfo
-import com.reas.tracker2.ui.navigation.BottomSheetInfo
+import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.viewmodels.AlbumInfoScreenViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,8 +31,7 @@ import kotlin.time.Duration.Companion.minutes
 @Composable
 fun AlbumInfoScreen(
     arguments: AlbumInfo,
-    navigateToAlbum: (AlbumInfo) -> Unit,
-    navigateToBottomSheet: (BottomSheetInfo) -> Unit,
+    applicationState: ApplicationState,
     modifier: Modifier = Modifier,
     viewModel: AlbumInfoScreenViewModel = koinViewModel()
 ) {
@@ -59,11 +58,12 @@ fun AlbumInfoScreen(
         }
     }.collectAsLazyPagingItems()
 
+    applicationState.setTitle("${album.artist} - ${album.title}")
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        SortOrderSelectionChip(sort, { navigateToAlbum(arguments.copy(sort = it)) })
+        SortOrderSelectionChip(sort, { applicationState.navigate(arguments.copy(sort = it)) })
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -117,7 +117,7 @@ fun AlbumInfoScreen(
             )
             ChartColumn(
                 tracks, limit = 5,
-                onClick = { entry -> navigateToBottomSheet(entry.bottomSheetInfo) },
+                onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
             )
 
             Spacer(Modifier.height(5.dp))

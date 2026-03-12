@@ -18,7 +18,7 @@ import com.reas.tracker2.ui.components.AutosizingText
 import com.reas.tracker2.ui.components.InfoBox
 import com.reas.tracker2.ui.components.ListEntryWithImage
 import com.reas.tracker2.ui.components.SortOrderSelectionChip
-import com.reas.tracker2.ui.navigation.BottomSheetInfo
+import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.navigation.TrackInfo
 import com.reas.tracker2.ui.viewmodels.TrackInfoScreenViewModel
@@ -31,8 +31,7 @@ import kotlin.time.Duration.Companion.minutes
 @Composable
 fun TrackInfoScreen(
     arguments: TrackInfo,
-    navigateToTrack: (TrackInfo) -> Unit,
-    navigateToBottomSheet: (BottomSheetInfo) -> Unit,
+    applicationState: ApplicationState,
     modifier: Modifier = Modifier,
     viewModel: TrackInfoScreenViewModel = koinViewModel()
 ) {
@@ -53,11 +52,12 @@ fun TrackInfoScreen(
         }
     }.collectAsStateWithLifecycle()
 
+    applicationState.setTitle("${arguments.track.artist} - ${arguments.track.track}")
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        SortOrderSelectionChip(sort, { navigateToTrack(arguments.copy(sort = it)) })
+        SortOrderSelectionChip(sort, { applicationState.navigate(arguments.copy(sort = it)) })
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.verticalScroll(rememberScrollState()),

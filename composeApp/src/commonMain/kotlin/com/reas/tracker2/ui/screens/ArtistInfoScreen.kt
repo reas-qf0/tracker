@@ -16,9 +16,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.*
+import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.ArtistInfo
-import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
+import com.reas.tracker2.ui.navigation.PreviewApplicationState
 import com.reas.tracker2.ui.theme.TrackerTheme
 import com.reas.tracker2.ui.viewmodels.ArtistInfoScreenViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,8 +31,7 @@ import kotlin.time.Duration.Companion.minutes
 @Composable
 fun ArtistInfoScreen(
     arguments: ArtistInfo,
-    navigateToArtist: (ArtistInfo) -> Unit,
-    navigateToBottomSheet: (BottomSheetInfo) -> Unit,
+    applicationState: ApplicationState,
     modifier: Modifier = Modifier,
     viewModel: ArtistInfoScreenViewModel = koinViewModel()
 ) {
@@ -64,11 +64,12 @@ fun ArtistInfoScreen(
         }
     }.collectAsLazyPagingItems()
 
+    applicationState.setTitle(artist)
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        SortOrderSelectionChip(sort, { navigateToArtist(arguments.copy(sort = it)) })
+        SortOrderSelectionChip(sort, { applicationState.navigate(arguments.copy(sort = it)) })
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -119,7 +120,7 @@ fun ArtistInfoScreen(
             )
             ChartColumn(
                 albums, limit = 5,
-                onClick = { entry -> navigateToBottomSheet(entry.bottomSheetInfo) },
+                onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
             )
 
             Spacer(Modifier.height(5.dp))
@@ -132,7 +133,7 @@ fun ArtistInfoScreen(
             )
             ChartColumn(
                 tracks, limit = 5,
-                onClick = { entry -> navigateToBottomSheet(entry.bottomSheetInfo) },
+                onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
             )
 
             Spacer(Modifier.height(5.dp))
@@ -147,9 +148,8 @@ fun ArtistInfoScreenPreview() {
     TrackerTheme {
         Scaffold { innerPadding ->
             ArtistInfoScreen(
-                ArtistInfo("Artist"),
-                navigateToArtist = {},
-                navigateToBottomSheet = {},
+                arguments = ArtistInfo("Artist"),
+                applicationState = PreviewApplicationState(),
                 modifier = Modifier.padding(innerPadding)
             )
         }
@@ -163,9 +163,8 @@ fun ArtistInfoScreenPreviewDark() {
     TrackerTheme(darkTheme = true) {
         Scaffold { innerPadding ->
             ArtistInfoScreen(
-                ArtistInfo("Artist"),
-                navigateToArtist = {},
-                navigateToBottomSheet = {},
+                arguments = ArtistInfo("Artist"),
+                applicationState = PreviewApplicationState(),
                 modifier = Modifier.padding(innerPadding)
             )
         }

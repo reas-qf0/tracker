@@ -3,6 +3,7 @@ package com.reas.tracker2.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.*
@@ -71,7 +72,7 @@ fun ConstrainedText(
             style = style,
             color = color,
             maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.firstBaselineToTop(baselineHeight)
+            modifier = Modifier.paddingFromBaseline(baselineHeight)
         )
     }
 }
@@ -90,7 +91,6 @@ fun AutosizingText(
         color = color,
         autoSize = TextAutoSize.StepBased(maxFontSize = style.fontSize),
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
         modifier = modifier
     )
 }

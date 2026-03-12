@@ -29,11 +29,7 @@ import tracker2.composeapp.generated.resources.*
 @Composable
 fun InfoBottomSheet(
     arguments: BottomSheetInfo,
-    onDismiss: () -> Unit,
-    navigateToArtist: (ArtistInfo) -> Unit,
-    navigateToAlbum: (AlbumInfo) -> Unit,
-    navigateToTrack: (TrackInfo) -> Unit,
-    navigateToTrackHistory: (TrackHistory) -> Unit,
+    applicationState: ApplicationState,
     modifier: Modifier = Modifier,
     viewModel: InfoBottomSheetsViewModel = koinViewModel()
 ) {
@@ -46,7 +42,7 @@ fun InfoBottomSheet(
     val albumO = arguments.track?._album ?: arguments.album
 
     ModalBottomSheet(
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = { applicationState.goBack() },
         modifier = modifier
     ) {
         Column(modifier = Modifier.padding(horizontal = if (IS_DESKTOP) 8.dp else 0.dp)) {
@@ -62,10 +58,10 @@ fun InfoBottomSheet(
                         Res.string.time_listened to trackTimePlayed
                     ),
                     onMainButton = {
-                        navigateToTrackHistory(TrackHistory(trackO))
+                        applicationState.navigate(TrackHistory(trackO))
                     },
                     onMore = {
-                        navigateToTrack(TrackInfo(trackO))
+                        applicationState.navigate(TrackInfo(trackO))
                     }
                 )
                 BottomSheetSpacer()
@@ -82,7 +78,7 @@ fun InfoBottomSheet(
                     Res.string.time_listened to artistTimePlayed
                 ),
                 onMore = {
-                    navigateToArtist(ArtistInfo(artist))
+                    applicationState.navigate(ArtistInfo(artist))
                 }
             )
 
@@ -100,7 +96,7 @@ fun InfoBottomSheet(
                         Res.string.time_listened to albumTimePlayed
                     ),
                     onMore = {
-                        navigateToAlbum(AlbumInfo(albumO))
+                        applicationState.navigate(AlbumInfo(albumO))
                     }
                 )
             }

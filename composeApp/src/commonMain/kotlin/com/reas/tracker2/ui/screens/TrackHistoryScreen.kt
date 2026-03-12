@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.reas.tracker2.ui.components.HistoryEntry
+import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.TrackHistory
 import com.reas.tracker2.ui.viewmodels.TrackHistoryViewModel
@@ -22,8 +23,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun TrackHistoryScreen(
     arguments: TrackHistory,
+    applicationState: ApplicationState,
     modifier: Modifier = Modifier,
-    navigateToBottomSheet: (BottomSheetInfo) -> Unit,
     viewModel: TrackHistoryViewModel = koinViewModel()
 ) {
     val track = arguments.track
@@ -31,6 +32,7 @@ fun TrackHistoryScreen(
     val trackPlays by remember { viewModel.trackPlays(track) }.collectAsStateWithLifecycle()
     val history = remember { viewModel.history(track) }.collectAsLazyPagingItems()
 
+    applicationState.setTitle("${track.artist} - ${track._track}")
     LazyColumn(modifier = modifier) {
         item(key = "header") {
             Text(
@@ -55,7 +57,7 @@ fun TrackHistoryScreen(
 
                     imageUrl = { viewModel.getImageUrl(scrobble) },
                     onClick = {
-                        navigateToBottomSheet(BottomSheetInfo(track = scrobble.metadata.info))
+                        applicationState.navigate(BottomSheetInfo(track = scrobble.metadata.info))
                     },
                     onMore = {},
                     modifier = Modifier.padding(5.dp).height(84.dp)

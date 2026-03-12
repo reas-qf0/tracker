@@ -5,127 +5,74 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Album
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSerializable
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.*
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.ui.NavDisplay
-import com.reas.tracker2.ui.dialogs.InfoBottomSheet
-import com.reas.tracker2.ui.screens.*
-import kotlinx.serialization.serializer
-import org.jetbrains.compose.resources.stringResource
-import tracker2.composeapp.generated.resources.Res
-import tracker2.composeapp.generated.resources.charts
-import tracker2.composeapp.generated.resources.history
-import tracker2.composeapp.generated.resources.settings
 
-class NavigationState(
-    val startRoute: Route,
-    val backStack: NavBackStack<Route>
-) {
-    init {
-        backStack.add(startRoute)
-    }
+class CustomNavEntryDecorator<T : Any>(appState: ApplicationState): NavEntryDecorator<T>(
+    decorate = { entry ->
+        if (!entry.metadata.containsKey("dialog"))
+            appState.floatingActionButton(visibleIf = false) {}
+        entry.Content()
+    },
+    onPop = {  }
+)
 
-    @Composable
-    fun toEntries(
-        entryProvider: (NavKey) -> NavEntry<NavKey>
-    ): SnapshotStateList<NavEntry<NavKey>> {
-        val decorators = listOf(
-            rememberSaveableStateHolderNavEntryDecorator<NavKey>(),
-        )
-        val decoratedEntries = rememberDecoratedNavEntries(
-            backStack = backStack,
-            entryDecorators = decorators,
-            entryProvider = entryProvider
-        )
-        return decoratedEntries.toMutableStateList()
-    }
-}
+inline fun<reified T : NavKey> EntryProviderScope<NavKey>.dialog(noinline content: @Composable (T) -> Unit) =
+    entry<T>(metadata = DialogSceneStrategy.dialog(), content = content)
 
-@Composable
-fun rememberNavigationState(
-    startRoute: Route
-): NavigationState {
-    val backStack = rememberSerializable(serializer = serializer()) { NavBackStack<Route>() }
 
-    return remember(startRoute) {
-        NavigationState(
-            startRoute = startRoute,
-            backStack = backStack
-        )
-    }
-}
-
-class Navigator(val state: NavigationState) {
-    fun navigate(route: Route) {
-        if (state.backStack.last() is DialogRoute) {
-            state.backStack.removeLastOrNull()
-        }
-        state.backStack.add(route)
-    }
-
-    fun goBack() {
-        if (state.backStack.size > 1)
-            state.backStack.removeLastOrNull()
-    }
-
-    fun canNavigateBack() =
-        state.backStack.filter { it !is DialogRoute }.size > 1
-
-    fun currentTab(): Int =
-        when (state.backStack.last { it !is DialogRoute }) {
-            History -> 0
-            is TrackHistory -> 0
-            is AlbumInfo -> 1
-            is ArtistInfo -> 1
-            is Charts -> 1
-            is TrackInfo -> 1
-            Settings -> 2
-            else -> -1
-        }
-}
+data class TrackerNavItem(
+    val title: String,
+    val icon: ImageVector,
+    val destination: Route
+)
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrackerNavScaffold(
-    modifier: Modifier = Modifier
+    applicationState: TrackerApplicationState,
+    modifier: Modifier = Modifier,
+    navigationItems: List<TrackerNavItem>,
+    entries: EntryProviderScope<NavKey>.() -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-
-    val navigationState = rememberNavigationState(startRoute = History)
-    val controller = remember { Navigator(navigationState) }
-    val canNavigateBack by remember { derivedStateOf { controller.canNavigateBack() } }
-    val currentTab by remember { derivedStateOf { controller.currentTab() } }
+    val canNavigateBack by remember { derivedStateOf { applicationState.canNavigateBack() } }
+    val currentTab by remember { derivedStateOf { applicationState.currentTab() } }
 
     val navLayoutType = NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfo())
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = applicationState.snackbarHostState())
+        },
+        floatingActionButton = {
+            if (navLayoutType == NavigationSuiteType.WideNavigationRailCollapsed)
+                applicationState.showActionButton()
+        },
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        title,
+                        applicationState.getTitle(),
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1, overflow = TextOverflow.Ellipsis
                     ) },
                 navigationIcon = {
                     IconButton(
-                        onClick = { controller.goBack() },
+                        onClick = { applicationState.goBack() },
                         enabled = canNavigateBack
                     ) {
                         Icon(
@@ -141,113 +88,40 @@ fun TrackerNavScaffold(
     ) { innerPadding ->
         NavigationSuiteScaffold(
             navigationItems = {
-                NavigationSuiteItem(
-                    selected = currentTab == 0,
-                    onClick = {
-                        controller.navigate(History)
-                    },
-                    icon = { Icon(Icons.Filled.History,
-                        stringResource(Res.string.history)
-                    ) },
-                    label = { Text(stringResource(Res.string.history)) }
-                )
-                NavigationSuiteItem(
-                    selected = currentTab == 1,
-                    onClick = {
-                        controller.navigate(Charts())
-                    },
-                    icon = { Icon(Icons.Filled.Album,
-                        stringResource(Res.string.charts)
-                    ) },
-                    label = { Text(stringResource(Res.string.charts)) }
-                )
-                NavigationSuiteItem(
-                    selected = currentTab == 2,
-                    onClick = {
-                        controller.navigate(Settings)
-                    },
-                    icon = { Icon(Icons.Filled.Settings,
-                        stringResource(Res.string.settings)
-                    ) },
-                    label = { Text(stringResource(Res.string.settings)) }
-                )
+                navigationItems.forEachIndexed { index, navigationItem ->
+                    NavigationSuiteItem(
+                        selected = currentTab == index,
+                        onClick = {
+                            applicationState.navigate(navigationItem.destination)
+                        },
+                        icon = {
+                            Icon(navigationItem.icon, navigationItem.title)
+                        },
+                        label = { Text(navigationItem.title) },
+                    )
+                }
             },
             navigationSuiteType = navLayoutType,
             navigationItemVerticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            val entryProvider = entryProvider<NavKey> {
-                entry<History> {
-                    title = stringResource(Res.string.history)
-                    HistoryScreen(
-                        navigateToBottomSheet = { controller.navigate(it) },
-                    )
-                }
-
-                entry<TrackHistory> { arguments ->
-                    title = "${arguments.track.artist} - ${arguments.track._track}"
-                    TrackHistoryScreen(
-                        arguments = arguments,
-                        navigateToBottomSheet = { controller.navigate(it) },
-                    )
-                }
-
-                entry<Charts> { arguments ->
-                    title = stringResource(Res.string.charts)
-                    ChartsScreen(
-                        arguments = arguments,
-                        navigateToBottomSheet = { controller.navigate(it) },
-                        navigateToCharts = { controller.navigate(it) }
-                    )
-                }
-
-                entry<Settings> {
-                    title = stringResource(Res.string.settings)
-                    SettingsScreen()
-                }
-
-                entry<ArtistInfo> { arguments ->
-                    title = arguments.artist
-                    ArtistInfoScreen(
-                        arguments = arguments,
-                        navigateToArtist = { controller.navigate(it) },
-                        navigateToBottomSheet = { controller.navigate(it) }
-                    )
-                }
-
-                entry<AlbumInfo> { arguments ->
-                    title = "${arguments.album.artist} - ${arguments.album.title}"
-                    AlbumInfoScreen(
-                        arguments = arguments,
-                        navigateToAlbum = { controller.navigate(it) },
-                        navigateToBottomSheet = { controller.navigate(it) }
-                    )
-                }
-
-                entry<TrackInfo> { arguments ->
-                    title = "${arguments.track.artist} - ${arguments.track.track}"
-                    TrackInfoScreen(
-                        arguments = arguments,
-                        navigateToTrack = { controller.navigate(it) },
-                        navigateToBottomSheet = { controller.navigate(it) }
-                    )
-                }
-
-                entry<BottomSheetInfo>(metadata = DialogSceneStrategy.dialog()) { arguments ->
-                    InfoBottomSheet(
-                        arguments = arguments,
-                        onDismiss = { controller.goBack() },
-                        navigateToArtist = { controller.navigate(it) },
-                        navigateToAlbum = { controller.navigate(it) },
-                        navigateToTrack = { controller.navigate(it) },
-                        navigateToTrackHistory = { controller.navigate(it) }
-                    )
-                }
+            modifier = Modifier.padding(innerPadding),
+            primaryActionContent = {
+                if (navLayoutType == NavigationSuiteType.ShortNavigationBarCompact || navLayoutType == NavigationSuiteType.ShortNavigationBarMedium)
+                    applicationState.showActionButton()
             }
-
+        ) {
+            val entryProvider = entryProvider(builder = entries)
+            val decorators = listOf(
+                rememberSaveableStateHolderNavEntryDecorator<NavKey>(),
+                remember { CustomNavEntryDecorator<NavKey>(applicationState) },
+            )
+            val decoratedEntries = rememberDecoratedNavEntries(
+                backStack = applicationState.state.backStack,
+                entryDecorators = decorators,
+                entryProvider = entryProvider
+            )
             NavDisplay(
-                entries = navigationState.toEntries(entryProvider),
-                onBack = { controller.goBack() },
+                entries = decoratedEntries.toMutableStateList(),
+                onBack = { applicationState.goBack() },
                 sceneStrategy = remember { DialogSceneStrategy() }
             )
         }
