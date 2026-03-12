@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.reas.tracker2.platform.IS_DESKTOP
 import com.reas.tracker2.ui.navigation.*
 import com.reas.tracker2.ui.viewmodels.InfoBottomSheetsViewModel
 import org.jetbrains.compose.resources.StringResource
@@ -48,7 +49,7 @@ fun InfoBottomSheet(
         onDismissRequest = { onDismiss() },
         modifier = modifier
     ) {
-        Column {
+        Column(modifier = Modifier.padding(horizontal = if (IS_DESKTOP) 8.dp else 0.dp)) {
             track?.let {
                 val trackPlays by remember { viewModel.trackPlays(trackO) }.collectAsStateWithLifecycle()
                 val trackTimePlayed by remember { viewModel.trackTimePlayed(trackO) }.collectAsStateWithLifecycle()
