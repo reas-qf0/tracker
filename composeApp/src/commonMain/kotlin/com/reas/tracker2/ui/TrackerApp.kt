@@ -22,12 +22,13 @@ import tracker2.composeapp.generated.resources.settings
 fun TrackerApp(
     modifier: Modifier = Modifier,
 ) {
-    val applicationState = rememberApplicationState(startRoute = History)
+    val backStack = rememberBackStack(startRoute = History)
+    val applicationState = rememberApplicationState(backStack)
 
     TrackerBackgroundProcesses()
     TrackerTheme {
         TrackerNavScaffold(
-            applicationState, modifier,
+            applicationState,
             navigationItems = listOf(
                 TrackerNavItem(
                     title = stringResource(Res.string.history),
@@ -44,7 +45,8 @@ fun TrackerApp(
                     icon = Icons.Filled.Settings,
                     destination = Settings
                 )
-            )
+            ),
+            modifier = modifier
         ) {
             entry<History> {
                 HistoryScreen(applicationState)

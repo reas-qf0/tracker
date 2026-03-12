@@ -1,7 +1,8 @@
 package com.reas.tracker2.ui.navigation
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -15,6 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.*
@@ -53,6 +56,10 @@ fun TrackerNavScaffold(
     val currentTab by remember { derivedStateOf { applicationState.currentTab() } }
 
     val navLayoutType = NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfo())
+    val scrollBehavior = if (navLayoutType == NavigationSuiteType.ShortNavigationBarMedium)
+        TopAppBarDefaults.enterAlwaysScrollBehavior()
+    else
+        TopAppBarDefaults.pinnedScrollBehavior()
 
     Scaffold(
         snackbarHost = {
@@ -80,11 +87,11 @@ fun TrackerNavScaffold(
                             contentDescription = "Localized description"
                         )
                     }
-                }
+                },
+                scrollBehavior = scrollBehavior,
             )
         },
-        contentWindowInsets = WindowInsets(),
-        modifier = modifier
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { innerPadding ->
         NavigationSuiteScaffold(
             navigationItems = {
@@ -103,7 +110,11 @@ fun TrackerNavScaffold(
             },
             navigationSuiteType = navLayoutType,
             navigationItemVerticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier.padding(
+                top = innerPadding.calculateTopPadding(),
+                start = innerPadding.calculateStartPadding(LocalLayoutDirection.current),
+                end = innerPadding.calculateEndPadding(LocalLayoutDirection.current),
+            ),
             primaryActionContent = {
                 if (navLayoutType == NavigationSuiteType.ShortNavigationBarCompact || navLayoutType == NavigationSuiteType.ShortNavigationBarMedium)
                     applicationState.showActionButton()
@@ -112,7 +123,7 @@ fun TrackerNavScaffold(
             val entryProvider = entryProvider(builder = entries)
             val decorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator<NavKey>(),
-                remember { CustomNavEntryDecorator<NavKey>(applicationState) },
+                remember { CustomNavEntryDecorator(applicationState) },
             )
             val decoratedEntries = rememberDecoratedNavEntries(
                 backStack = applicationState.state.backStack,

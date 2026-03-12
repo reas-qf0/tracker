@@ -16,18 +16,13 @@ import androidx.navigation3.runtime.NavBackStack
 import kotlinx.serialization.serializer
 
 class ApplicationStateData(
-    val startRoute: Route,
     val backStack: NavBackStack<Route>,
     val title: MutableState<String>,
     val snackbarHostState: SnackbarHostState,
     val isFloatingButtonVisible: MutableState<Boolean>,
     val floatingButtonContents: MutableState<(@Composable () -> Unit)>,
     val floatingButtonOnClick: MutableState<() -> Unit>,
-) {
-    init {
-        backStack.add(startRoute)
-    }
-}
+)
 
 interface ApplicationState {
     fun navigate(route: Route)
@@ -157,21 +152,22 @@ class PreviewApplicationState : ApplicationState {
     ) {}
 }
 
+@Composable
+fun rememberBackStack(startRoute: Route) =
+    rememberSerializable(serializer = serializer()) { NavBackStack(startRoute) }
 
 @Composable
 fun rememberApplicationState(
-    startRoute: Route,
+    backStack: NavBackStack<Route>,
 ): TrackerApplicationState {
-    val backStack = rememberSerializable(serializer = serializer()) { NavBackStack<Route>() }
     val title = remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
     val isFloatingButtonVisible = remember { mutableStateOf(false) }
     val floatingButtonContents = remember { mutableStateOf(@Composable {}) }
     val floatingButtonOnClick = remember { mutableStateOf({}) }
 
-    return remember(startRoute) {
+    return remember {
         TrackerApplicationState(ApplicationStateData(
-            startRoute = startRoute,
             backStack = backStack,
             title = title,
             snackbarHostState = snackbarHostState,
