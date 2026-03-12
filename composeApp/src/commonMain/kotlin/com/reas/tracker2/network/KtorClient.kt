@@ -9,6 +9,7 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.serialization.kotlinx.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.seconds
 
 fun httpClient() = HttpClient(CIO) {
     install(HttpCache)
@@ -25,6 +26,7 @@ fun httpClient() = HttpClient(CIO) {
         }
     }
     install(WebSockets) {
+        pingInterval = 15.seconds
         contentConverter = KotlinxWebsocketSerializationConverter(Json)
     }
 }

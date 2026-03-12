@@ -90,6 +90,7 @@ fun AutosizingText(
         color = color,
         autoSize = TextAutoSize.StepBased(maxFontSize = style.fontSize),
         maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
         modifier = modifier
     )
 }
@@ -117,68 +118,48 @@ fun Timestamp(
         state = tooltipState
     ) {
         var difference by remember { mutableStateOf(Clock.System.now() - timestamp) }
-
-        val showSeconds by remember { derivedStateOf { difference < 1.minutes } }
-        if (showSeconds) {
-            Text(
-                stringResource(Res.string.seconds_ago, difference.inWholeSeconds),
-                modifier = modifier.clickable(onClick = {
-                    scope.launch { tooltipState.show() }
-                }),
-                style = style,
-                color = color
-            )
-            LaunchedEffect(difference) {
-                delay((difference.inWholeSeconds + 1).seconds - difference)
-                difference = Clock.System.now() - timestamp
-            }
-        }
-
+        val showSeconds by remember { derivedStateOf {
+            difference < 1.minutes
+        } }
         val showMinutes by remember { derivedStateOf {
             1.minutes <= difference && difference < 1.hours
         } }
-        if (showMinutes) {
-            Text(
-                stringResource(Res.string.minutes_ago, difference.inWholeMinutes),
-                modifier = modifier.clickable(onClick = {
-                    scope.launch { tooltipState.show() }
-                }),
-                style = style,
-                color = color
-            )
-            LaunchedEffect(difference) {
-                delay((difference.inWholeMinutes + 1).minutes - difference)
-                difference = Clock.System.now() - timestamp
-            }
-        }
-
         val showHours by remember { derivedStateOf {
             1.hours <= difference && difference < 1.days
         } }
-        if (showHours) {
-            Text(
-                stringResource(Res.string.hours_ago, difference.inWholeHours),
-                modifier = modifier.clickable(onClick = {
-                    scope.launch { tooltipState.show() }
-                }),
-                style = style,
-                color = color
-            )
+        val showDate by remember { derivedStateOf {
+            difference >= 1.days
+        }}
+
+        val text: String
+        if (showSeconds) {
+            text = stringResource(Res.string.seconds_ago, difference.inWholeSeconds)
+        } else if (showMinutes) {
+            text = stringResource(Res.string.minutes_ago, difference.inWholeMinutes)
+        } else if (showHours) {
+            text = stringResource(Res.string.hours_ago, difference.inWholeHours)
+        } else {
+            text = timestamp.printShort()
+        }
+        Text(
+            text,
+            modifier = modifier.clickable(onClick = {
+                scope.launch { tooltipState.show() }
+            }),
+            style = style,
+            color = color
+        )
+
+        if (!showDate) {
             LaunchedEffect(difference) {
-                delay((difference.inWholeHours + 1).hours - difference)
+                if (showSeconds)
+                    delay((difference.inWholeSeconds + 1).seconds - difference)
+                if (showMinutes)
+                    delay((difference.inWholeMinutes + 1).minutes - difference)
+                if (showHours)
+                    delay((difference.inWholeHours + 1).hours - difference)
                 difference = Clock.System.now() - timestamp
             }
-        }
-
-        if (!showSeconds && !showMinutes && !showHours) {
-            Text(
-                timestamp.printShort(),
-                modifier = modifier.clickable(onClick = {
-                    scope.launch { tooltipState.show() }
-                }),
-                style = style,
-                color = color
-            )
         }
     }
 }

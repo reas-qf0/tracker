@@ -17,6 +17,10 @@ import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.SyncManager
+import com.reas.tracker2.settings.Settings
+import com.reas.tracker2.settings.collect
+import com.reas.tracker2.settings.get
+import com.reas.tracker2.settings.isScrobblingEnabled
 import com.reas.tracker2.shared.*
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
@@ -37,12 +41,11 @@ private val MediaMetadata.duration
 
 private const val TAG = "NotificationListenerService"
 
-private class MediaCallback(
-    private val appId: String, private val scope: CoroutineScope
-): MediaController.Callback(), KoinComponent {
+private class MediaCallback(private val appId: String): MediaController.Callback(), KoinComponent {
     private val repository: Repository by inject()
     private val notificationManager: NotificationWrapper by inject()
     private val syncManager: SyncManager by inject()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var notificationId = notificationManager.reserveId()
     private var notificationBuilder: NotificationBuilder? = null
@@ -117,7 +120,7 @@ private class MediaCallback(
         scope.launch {
             repository.insertEvent(event)
             repository.insertEventInQueue(event)
-            syncManager.addEvent(event)
+            syncManager.submitEvent(event)
         }
         updateNotification(event)
     }
@@ -132,6 +135,12 @@ private class MediaCallback(
         } else {
             notificationManager.hide(notificationId)
         }
+    }
+
+
+    fun onConnect(controller: MediaController) {
+        controller.metadata?.let { onMetadataChanged(it) }
+        controller.playbackState?.let { onPlaybackStateChanged(it) }
     }
 
     override fun onMetadataChanged(metadata: MediaMetadata?) {
@@ -151,8 +160,17 @@ private class MediaCallback(
         addEvent()
     }
 
-    override fun onSessionDestroyed() {
-        Logger.d(TAG) { "onSessionDestroyed($appId)" }
+    fun onDisconnect() {
+        Logger.d(TAG) { "onDisconnect($appId)" }
+        currentState = currentState?.let {
+            PlaybackState.Builder(it).setState(
+                PlaybackState.STATE_STOPPED,
+                it.position + SystemClock.elapsedRealtime() - it.lastPositionUpdateTime,
+                1.0f
+            ).build()
+        }
+        sentEvent = false
+        addEvent()
     }
 
 //    fun onNotificationDismissed() {
@@ -161,9 +179,38 @@ private class MediaCallback(
 //    }
 }
 
-private class SessionListener(private val scope: CoroutineScope): MediaSessionManager.OnActiveSessionsChangedListener {
+private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListener, KoinComponent {
+    private val settings: Settings by inject()
     private val controllers = mutableMapOf<String, MediaController>()
     private var callbacks = mutableMapOf<String, MediaCallback>()
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    init {
+        scope.launch {
+            settings.collect(isScrobblingEnabled) { value ->
+                if (value) {
+                    Logger.d(TAG) { "scrobbling enabled via settings" }
+                    callbacks.forEach { (appId, callback) ->
+                        val controller = controllers[appId]!!
+                        withContext(Dispatchers.Main) {
+                            controller.registerCallback(callback)
+                            callback.onConnect(controller)
+                        }
+                    }
+                } else {
+                    Logger.d(TAG) { "scrobbling disabled via settings" }
+                    callbacks.forEach { (appId, callback) ->
+                        val controller = controllers[appId]!!
+                        withContext(Dispatchers.Main) {
+                            callback.onDisconnect()
+                            controller.unregisterCallback(callback)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     override fun onActiveSessionsChanged(ctrl: List<MediaController>?) {
         Logger.d(TAG) { "onActiveSessionsChanged $ctrl" }
@@ -173,13 +220,17 @@ private class SessionListener(private val scope: CoroutineScope): MediaSessionMa
         val newControllerMap = ctrl.associateBy { it.packageName }
         val newControllers = newControllerMap.keys
 
+        val isScrobbling = settings.get(isScrobblingEnabled)
+
         // rewire callbacks for any refreshed controllers with the same package name
         // (happens e.g. if the service gets restarted)
         oldControllers.intersect(newControllers).forEach { appId ->
             if (controllers[appId] != newControllerMap[appId]) {
                 val callback = callbacks[appId]!!
-                controllers[appId]!!.unregisterCallback(callback)
-                newControllerMap[appId]!!.registerCallback(callback)
+                if (isScrobbling) {
+                    controllers[appId]!!.unregisterCallback(callback)
+                    newControllerMap[appId]!!.registerCallback(callback)
+                }
                 controllers[appId] = newControllerMap[appId]!!
             }
         }
@@ -187,19 +238,22 @@ private class SessionListener(private val scope: CoroutineScope): MediaSessionMa
         // remove callbacks for disconnected session controllers
         oldControllers.minus(newControllers).forEach { appId ->
             val callback = callbacks[appId]!!
-            controllers[appId]!!.unregisterCallback(callback)
+            if (isScrobbling) {
+                callback.onDisconnect()
+                controllers[appId]!!.unregisterCallback(callback)
+            }
             callbacks.remove(appId)
             controllers.remove(appId)
         }
 
         // add callbacks for new session controllers
         newControllers.minus(oldControllers).forEach { appId ->
-            val callback = MediaCallback(appId, scope)
+            val callback = MediaCallback(appId)
             val controller = newControllerMap[appId]!!
-            controller.registerCallback(callback)
-            controller.metadata?.let { callback.onMetadataChanged(it) }
-            controller.playbackState?.let { callback.onPlaybackStateChanged(it) }
-            controller.extras?.let { callback.onExtrasChanged(it) }
+            if (isScrobbling) {
+                controller.registerCallback(callback)
+                callback.onConnect(controller)
+            }
             callbacks[appId] = callback
             controllers[appId] = controller
         }
@@ -212,10 +266,8 @@ private class SessionListener(private val scope: CoroutineScope): MediaSessionMa
 }
 
 class NotifListenerService: NotificationListenerService(), KoinComponent {
-    private val syncManager: SyncManager by inject()
     private var initialized = false
     private var listener: SessionListener? = null
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 //        if (startId == 42)
@@ -227,9 +279,8 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
         if (listener != null) return
         val sessManager = getSystemService<MediaSessionManager>()!!
         val component = ComponentName(this, this::class.java)
-        listener = SessionListener(scope)
+        listener = SessionListener()
 
-        scope.launch { syncManager.establishConnection() }
         sessManager.addOnActiveSessionsChangedListener(listener!!, component)
         listener!!.onActiveSessionsChanged(sessManager.getActiveSessions(component))
     }
@@ -239,7 +290,6 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
         sessManager.removeOnActiveSessionsChangedListener(listener!!)
         listener = null
         initialized = false
-        scope.cancel()
     }
 
     override fun onListenerConnected() {

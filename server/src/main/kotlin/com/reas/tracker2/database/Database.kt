@@ -20,7 +20,7 @@ fun createInMemoryDatabase(): Database {
 
 fun createSQLiteDatabase(): Database {
     val database = Database.connect(
-        url = "jdbc:sqlite:data.db",
+        url = "jdbc:sqlite:server.db",
         driver = "org.sqlite.JDBC"
     )
     transaction(database) {

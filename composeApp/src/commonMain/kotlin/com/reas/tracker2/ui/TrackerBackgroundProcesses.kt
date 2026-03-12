@@ -13,8 +13,8 @@ fun TrackerBackgroundProcesses() {
 
     LaunchedEffect(Unit) {
         while (true) {
-            syncManager.establishConnection()
-            delay(15.seconds)
+            if (!syncManager.establishConnection())
+                delay(15.seconds)
         }
     }
 }

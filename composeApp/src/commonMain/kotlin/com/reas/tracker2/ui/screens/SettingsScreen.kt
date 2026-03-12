@@ -1,19 +1,22 @@
 package com.reas.tracker2.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.reas.tracker2.ui.viewmodels.SettingsScreenViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import tracker2.composeapp.generated.resources.Res
 import tracker2.composeapp.generated.resources.current_version
+import tracker2.composeapp.generated.resources.enable_tracking
 
 @Composable
 fun SettingsScreen(
@@ -24,20 +27,17 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(10.dp),
         modifier = modifier.padding(horizontal = 10.dp)
     ) {
-        // TODO: implement settings storage
-        /*
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val scrobblingEnabled by remember { viewModel.isScrobblingEnabled() }.collectAsStateWithLifecycle()
-            Text(stringResource(R.string.enable_tracking))
+            val scrobblingEnabled by viewModel.scrobblingEnabledFlow.collectAsStateWithLifecycle()
+            Text(stringResource(Res.string.enable_tracking))
             Spacer(Modifier.weight(1.0F))
             Switch(
                 checked = scrobblingEnabled,
                 onCheckedChange = { viewModel.setScrobblingEnabled(it) }
             )
         }
-         */
 
         HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
 

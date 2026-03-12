@@ -27,7 +27,7 @@
     <string name="in_charts_by_plays">in charts\nby plays</string>
     <string name="top_tracks">Top tracks</string>
     <string name="top_albums">Top albums</string>
-    <string name="enable_tracking">Enable Tracking</string>
+    <string name="enable_tracking">Enable Scrobbling</string>
     <string name="restart_service">Restart Service</string>
     <string name="current_version">Current version: %1$s</string>
     <string name="check_for_updates">Check for updates</string>

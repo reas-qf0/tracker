@@ -20,10 +20,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import kotlin.time.Duration.Companion.seconds
 
 fun main() {
     embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::main)
@@ -39,6 +41,7 @@ fun Application.main() {
         json()
     }
     install(WebSockets) {
+        pingPeriod = 15.seconds
         contentConverter = KotlinxWebsocketSerializationConverter(Json)
     }
 
@@ -58,28 +61,30 @@ fun Application.main() {
         get("/plays") {
             call.respond(repository.getPlays())
         }
-        post("/addEvent") {
-            val event = call.receive<Event>()
-            repository.insertEvent(event)
-            adapter.addEvent(event)
+        post("/scrobble") {
+            val deviceId = call.parameters["device-id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+            val body = call.receiveText()
+            val events = try {
+                listOf(Json.decodeFromString<Event>(body))
+            } catch (e: SerializationException) {
+                Json.decodeFromString<List<Event>>(body)
+            } catch (e: SerializationException) {
+                return@post call.respond(HttpStatusCode.BadRequest)
+            }
+            events.forEach { event ->
+                val event_ = event.copy(source = event.source.copy(device = deviceId))
+                repository.insertEvent(event_)
+                adapter.addEvent(event_)
+            }
             call.respond(HttpStatusCode.OK)
         }
         webSocket("/sync") {
             val deviceId = call.request.queryParameters["device-id"] ?:
                 return@webSocket close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Device ID not specified"))
             log.info(deviceId)
-            launch {
-                adapter.onPlay {
-                    if (it.sourceDevice == deviceId) return@onPlay
-                    sendSerialized(it)
-                }
-            }
-            while (true) {
-                val event = receiveDeserialized<Event>().let {
-                    it.copy(source = it.source.copy(device = deviceId))
-                }
-                repository.insertEvent(event)
-                adapter.addEvent(event)
+            adapter.onPlay {
+                if (it.sourceDevice == deviceId) return@onPlay
+                sendSerialized(it)
             }
         }
     }

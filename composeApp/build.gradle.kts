@@ -26,15 +26,11 @@ kotlin {
     
     sourceSets {
         androidMain.dependencies {
-            implementation(libs.androidx.core.ktx)
-            implementation(libs.androidx.lifecycle.runtime.ktx)
+            implementation(libs.androidx.core)
+            implementation(libs.androidx.lifecycle.runtime)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.activity)
-            implementation(libs.androidx.datastore)
-            implementation(libs.androidx.datastore.core)
-            implementation(libs.androidx.datastore.preferences)
-            implementation(libs.androidx.datastore.preferences.core)
-            implementation(libs.androidx.work.runtime.ktx)
+            implementation(libs.androidx.work.runtime)
             implementation(libs.koin.android)
             //testImplementation(libs.junit)
             //androidTestImplementation(libs.androidx.espresso.core)
@@ -55,6 +51,8 @@ kotlin {
             implementation(libs.compose.adaptive)
             implementation(libs.compose.material3.adaptive.navigation.suite)
             implementation(libs.compose.material.icons.extended)
+            implementation(libs.androidx.datastore.core)
+            implementation(libs.androidx.datastore.preferences.core)
             implementation(libs.androidx.paging.compose)
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
