@@ -8,7 +8,7 @@ import co.touchlab.kermit.Logger
 fun getDatabaseBuilder(context: Context): RoomDatabase.Builder<AppDatabase> {
     val appContext = context.applicationContext
     val dbFile = appContext.getDatabasePath("database")
-    Logger.d("Database") { "Database file: $dbFile" }
+    Logger.d(tag = "Database") { "Database file: $dbFile" }
     return Room.databaseBuilder<AppDatabase>(
         context = appContext,
         name = dbFile.absolutePath

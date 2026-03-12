@@ -46,7 +46,7 @@ fun ListEntryWithImage(
             model = try {
                 url()
             } catch (e: Throwable) {
-                Logger.w("ListEntryWithImage", e) { "Couldn't retrieve image url" }
+                Logger.w(throwable = e, tag = "ListEntryWithImage") { "Couldn't retrieve image url" }
                 null
             }
         }

@@ -3,20 +3,15 @@ package com.reas.tracker2.android
 import android.app.Notification
 import android.content.Context
 import android.text.Html
-import android.util.Log
 import androidx.paging.PagingSource
-import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkerParameters
+import androidx.work.*
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.shared.TimePeriod
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
@@ -90,7 +85,7 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
                 calendar.add(Calendar.DATE, 1)
             }
             val diff = calendar.getTimeInMillis() - nowMillis
-            Logger.d("DailyReportWorker") { "Work will run in $diff milliseconds" }
+            Logger.d(tag = "DailyReportWorker") { "Work will run in $diff milliseconds" }
 
             val request = PeriodicWorkRequestBuilder<DailyReportWorker>(1, TimeUnit.DAYS)
                 .setInitialDelay(diff,TimeUnit.MILLISECONDS)

@@ -27,9 +27,9 @@ class EventProcessor(
         var play = adapter.getLastPlayFromSource(source)
         val eventsSorted = events.sortedBy { it.timestamp }
         if (play != null && eventsSorted[0].timestamp < play.timestamp) {
-            Logger.e(TAG) {
+            Logger.e(tag = TAG) {
                 "ERROR: out-of-sync events source=$source " +
-                "eventTimestamp=${eventsSorted[0].timestamp} playTimestamp=${play!!.timestamp}"
+                "eventTimestamp=${eventsSorted[0].timestamp} playTimestamp=${play.timestamp}"
             }
             return null
         }
@@ -85,7 +85,7 @@ class EventProcessor(
 
     suspend fun processQueue() {
         adapter.getEvents().collect { snapshot ->
-            Logger.d(TAG) { "processing ${snapshot.size} events" }
+            Logger.d(tag = TAG) { "processing ${snapshot.size} events" }
             snapshot.groupBy { it.source }.forEach {
                 process(it.value)
             }

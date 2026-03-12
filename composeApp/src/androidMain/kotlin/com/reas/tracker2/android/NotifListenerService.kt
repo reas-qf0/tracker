@@ -10,7 +10,6 @@ import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.SystemClock
 import android.service.notification.NotificationListenerService
-import android.util.Log
 import androidx.core.content.getSystemService
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.MainActivity
@@ -133,7 +132,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     }
 
     override fun onMetadataChanged(metadata: MediaMetadata?) {
-        Logger.d(TAG) { "onMetadataChanged($appId) $metadata" }
+        Logger.d(tag = TAG) { "onMetadataChanged($appId) $metadata" }
 
         if (metadata == null) return
         currentMetadata = metadata
@@ -141,7 +140,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     }
 
     override fun onPlaybackStateChanged(state: PlaybackState?) {
-        Logger.d(TAG) { "onPlaybackStateChanged($appId) $state" }
+        Logger.d(tag = TAG) { "onPlaybackStateChanged($appId) $state" }
 
         if (state == null) return
         currentState = state
@@ -150,7 +149,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     }
 
     fun onDisconnect() {
-        Logger.d(TAG) { "onDisconnect($appId)" }
+        Logger.d(tag = TAG) { "onDisconnect($appId)" }
         currentState = currentState?.let {
             PlaybackState.Builder(it).setState(
                 PlaybackState.STATE_STOPPED,
@@ -179,7 +178,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
         scope.launch {
             settings.collect(isScrobblingEnabled) { value ->
                 if (value) {
-                    Logger.d(TAG) { "scrobbling enabled via settings" }
+                    Logger.d(tag = TAG) { "scrobbling enabled via settings" }
                     callbacks.forEach { (appId, callback) ->
                         val controller = controllers[appId]!!
                         withContext(Dispatchers.Main) {
@@ -188,7 +187,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
                         }
                     }
                 } else {
-                    Logger.d(TAG) { "scrobbling disabled via settings" }
+                    Logger.d(tag = TAG) { "scrobbling disabled via settings" }
                     callbacks.forEach { (appId, callback) ->
                         val controller = controllers[appId]!!
                         withContext(Dispatchers.Main) {
@@ -202,7 +201,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
     }
 
     override fun onActiveSessionsChanged(ctrl: List<MediaController>?) {
-        Logger.d(TAG) { "onActiveSessionsChanged $ctrl" }
+        Logger.d(tag = TAG) { "onActiveSessionsChanged $ctrl" }
         if (ctrl == null) return
 
         val oldControllers = controllers.keys
@@ -283,7 +282,7 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        Logger.d(TAG) { "onListenerConnected" }
+        Logger.d(tag = TAG) { "onListenerConnected" }
         if (!initialized) {
             synchronized(this) {
                 if (!initialized) {
@@ -296,7 +295,7 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        Log.d(TAG, "onListenerDisconnected")
+        Logger.d(tag = TAG) { "onListenerDisconnected" }
         destroy()
     }
 }

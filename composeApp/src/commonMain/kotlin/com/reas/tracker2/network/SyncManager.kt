@@ -28,7 +28,7 @@ class SyncManager(
 
     suspend fun establishConnection(): Boolean {
         try {
-            Logger.d(TAG) { "connecting to server" }
+            Logger.d(tag = TAG) { "connecting to server" }
             client.webSocket(
                 request = {
                     url {
@@ -39,18 +39,18 @@ class SyncManager(
                     }
                 }
             ) {
-                Logger.d(TAG) { "connected to server" }
+                Logger.d(tag = TAG) { "connected to server" }
 
                 val receiveJob = launch {
                     while (true) {
                         val play = receiveDeserialized<Play>()
-                        Logger.d(TAG) { "received play from server" }
+                        Logger.d(tag = TAG) { "received play from server" }
                         repository.insertPlay(play)
                     }
                 }
 
                 outgoing.invokeOnClose {
-                    Logger.d(TAG) { "connection closed" }
+                    Logger.d(tag = TAG) { "connection closed" }
                     receiveJob.cancel()
                 }
 
@@ -58,7 +58,7 @@ class SyncManager(
             }
             return true
         } catch (e: Exception) {
-            Logger.w(TAG, e) { "connection error" }
+            Logger.w(throwable = e, tag = TAG) { "connection error" }
             return false
         }
     }
@@ -76,13 +76,13 @@ class SyncManager(
                 setBody(event)
             }
             if (!r.status.isSuccess()) {
-                Logger.d(TAG) { "submit failed with code ${r.status.value}; storing event" }
+                Logger.d(tag = TAG) { "submit failed with code ${r.status.value}; storing event" }
                 repository.insertEventInSync(event)
             }
-            Logger.d(TAG) { "submitted event" }
+            Logger.d(tag = TAG) { "submitted event" }
             submitFromQueue()
         } catch (e: Exception) {
-            Logger.w(TAG, e) { "submit failed; storing event" }
+            Logger.w(throwable = e, tag = TAG) { "submit failed; storing event" }
             repository.insertEventInSync(event)
         }
     }
@@ -91,7 +91,7 @@ class SyncManager(
         val events = repository.getEventsInSync().first()
         if (events.isEmpty()) return
         events.chunked(500).forEach { batch ->
-            Logger.d(TAG) { "submitting ${batch.size} events from queue" }
+            Logger.d(tag = TAG) { "submitting ${batch.size} events from queue" }
             try {
                 val r = client.post {
                     url {
@@ -104,13 +104,13 @@ class SyncManager(
                     setBody(batch.map { it.event })
                 }
                 if (!r.status.isSuccess()) {
-                    Logger.d(TAG) { "submit failed with code ${r.status.value}; storing events" }
+                    Logger.d(tag = TAG) { "submit failed with code ${r.status.value}; storing events" }
                 } else {
-                    Logger.d(TAG) { "submit successful" }
+                    Logger.d(tag = TAG) { "submit successful" }
                     repository.deleteFromSync(batch.map { it.id })
                 }
             } catch (e: Exception) {
-                Logger.w(TAG, e) { "submit failed; storing event" }
+                Logger.w(throwable = e, tag = TAG) { "submit failed; storing event" }
             }
         }
     }
