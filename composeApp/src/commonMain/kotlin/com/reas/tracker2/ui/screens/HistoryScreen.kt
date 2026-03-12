@@ -29,7 +29,6 @@ fun HistoryScreen(
     modifier: Modifier = Modifier,
     viewModel: HistoryScreenViewModel = koinViewModel()
 ) {
-    val history = viewModel.history.collectAsLazyPagingItems()
     val columnState = rememberLazyListState()
     val showButton by remember { derivedStateOf { columnState.firstVisibleItemIndex > 0 } }
     val scope = rememberCoroutineScope()
@@ -45,6 +44,8 @@ fun HistoryScreen(
     ) {
         Icon(imageVector = Icons.Filled.ArrowUpward, contentDescription = "Scroll to top")
     }
+
+    val history = viewModel.history.collectAsLazyPagingItems()
     LazyColumn(state = columnState, modifier = modifier) {
         // add an empty item so that the list doesn't jump down when scrolled to the very top
         item(key = "top") {
@@ -66,7 +67,7 @@ fun HistoryScreen(
 
                     imageUrl = { viewModel.getImageUrl(scrobble) },
                     onClick = {
-                        applicationState.navigate(BottomSheetInfo(track = scrobble.metadata.info))
+                        applicationState.navigate(BottomSheetInfo(track = scrobble.asTrackWithAlbum))
                     },
                     onMore = {},
                     modifier = Modifier.padding(5.dp).height(84.dp)

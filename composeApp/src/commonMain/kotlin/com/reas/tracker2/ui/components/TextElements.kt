@@ -37,24 +37,6 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
-private fun Modifier.firstBaselineToTop(
-    firstBaselineToTop: Dp,
-) = layout { measurable, constraints ->
-    // Measure the composable
-    val placeable = measurable.measure(constraints)
-
-    // Check the composable has a first baseline
-    check(placeable[FirstBaseline] != AlignmentLine.Unspecified)
-    val firstBaseline = placeable[FirstBaseline]
-
-    // Height of the composable with padding - first baseline
-    val placeableY = firstBaselineToTop.roundToPx() - firstBaseline
-    layout(placeable.width, placeable.height) {
-        // Where the composable gets placed
-        placeable.placeRelative(0, placeableY)
-    }
-}
-
 @Composable
 fun ConstrainedText(
     text: String,

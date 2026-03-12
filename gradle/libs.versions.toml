@@ -36,7 +36,7 @@ sqlite = "2.6.2"
 koin = "4.1.1"
 koin-plugin = "0.3.0"
 material-icons = "1.7.3"
-buildConfig = "6.0.9"
+build-config = "6.0.9"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -118,4 +118,4 @@ kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", vers
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 androidx-room = { id = "androidx.room", version.ref = "room" }
 koin-compiler = { id = "io.insert-koin.compiler.plugin", version.ref = "koin-plugin" }
-build-config = { id = "com.github.gmazzo.buildconfig", version.ref = "buildConfig" }
+build-config = { id = "com.github.gmazzo.buildconfig", version.ref = "build-config" }

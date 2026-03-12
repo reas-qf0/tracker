@@ -164,7 +164,6 @@ buildConfig {
 
     buildConfigField("IS_DEBUG", true)
 
-    buildConfigField("PLATFORM", expect(""))
     buildConfigField("IS_ANDROID", expect(false))
     buildConfigField("IS_DESKTOP", expect(false))
     buildConfigField("IS_WINDOWS", expect(false))

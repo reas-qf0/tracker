@@ -1,4 +1,4 @@
-package com.reas.tracker2.network
+ package com.reas.tracker2.network
 
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.database.Repository

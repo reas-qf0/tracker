@@ -1,7 +1,6 @@
 package com.reas.tracker2.shared
 
 import co.touchlab.kermit.Logger
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class EventProcessor(
@@ -18,13 +17,7 @@ class EventProcessor(
                 play.associatedEvents.add(null)
             adapter.insertPlay(play)
         }
-        return Play(
-            metadata = event.metadata,
-            timestamp = event.timestamp,
-            timePlayed = Duration.ZERO,
-            source = event.source,
-            associatedEvents = mutableListOf(Play.EventInfo.fromEvent(event))
-        )
+        return Play.fromEvent(event)
     }
 
     private suspend fun process(events: List<Event>): Play? {

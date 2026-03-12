@@ -1,10 +1,8 @@
 package com.reas.tracker2.database.entities
 
 import androidx.room.Entity
-import com.reas.tracker2.shared.*
-import kotlin.time.DurationUnit
-import kotlin.time.Instant
-import kotlin.time.toDuration
+import com.reas.tracker2.shared.Play
+import com.reas.tracker2.shared.Source
 
 @Entity(tableName = "plays", primaryKeys = ["sourceDevice", "sourceApp", "timestamp"])
 data class PlayEntity(
@@ -21,24 +19,16 @@ data class PlayEntity(
     val sourceApp: String,
     val associatedEvents: MutableList<Play.EventInfo?>
 ) {
-    fun toObject() = Play(
-        metadata = Metadata(
-            info = TrackWithOptionalAlbum(
-                _track = Track(
-                    title = track,
-                    artist = artist
-                ),
-                _album = if (album != null) Album(
-                    title = album,
-                    artist = albumArtist
-                ) else null
-            ),
-            duration = duration.toDuration(DurationUnit.MILLISECONDS),
-        ),
-        timestamp = Instant.fromEpochMilliseconds(timestamp),
-        timePlayed = timePlayed.toDuration(DurationUnit.MILLISECONDS),
+    fun toObject() = Play.create(
+        track = track,
+        artist = artist,
+        album = album,
+        albumArtist = albumArtist,
+        timestamp = timestamp,
+        duration = duration,
+        timePlayed = timePlayed,
         source = Source.user(app = sourceApp, device = sourceDevice),
-        associatedEvents = associatedEvents,
+        associatedEvents = associatedEvents
     )
 
     companion object {

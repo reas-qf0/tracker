@@ -43,9 +43,9 @@ interface Repository {
     fun getArtistRank(time: Duration, period: TimePeriod): Flow<Int>
     fun getArtistRankByPlayCount(count: Int, period: TimePeriod) : Flow<Int>
 
-    fun getTrackPlays(track: TrackWithOptionalAlbum, period: TimePeriod): Flow<Int>
-    fun getTrackTimePlayed(track: TrackWithOptionalAlbum, period: TimePeriod): Flow<Duration>
-    fun getTrackHistory(track: TrackWithOptionalAlbum): PagingSource<Int, PlayEntity>
+    fun getTrackPlays(track: TrackWithAlbum, period: TimePeriod): Flow<Int>
+    fun getTrackTimePlayed(track: TrackWithAlbum, period: TimePeriod): Flow<Duration>
+    fun getTrackHistory(track: TrackWithAlbum): PagingSource<Int, PlayEntity>
     fun getMostPlayedTracks(period: TimePeriod): PagingSource<Int, TrackWithTimePlayed>
     fun getMostPlayedTracksByPlayCount(period: TimePeriod): PagingSource<Int, TrackWithPlayCount>
     fun getMostPlayedTracksFromArtist(artist: String, period: TimePeriod): PagingSource<Int, TrackWithTimePlayed>
@@ -107,9 +107,9 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override fun getAlbumRank(time: Duration, period: TimePeriod) = db.playDao().getAlbumRank(time, period.start, period.end)
     override fun getAlbumRankByPlayCount(count: Int, period: TimePeriod) = db.playDao().getAlbumRankByPlayCount(count, period.start, period.end)
 
-    override fun getTrackPlays(track: TrackWithOptionalAlbum, period: TimePeriod) = db.playDao().getTrackPlays(track.artist, track.track, track.album, track.albumArtist, period.start, period.end)
-    override fun getTrackTimePlayed(track: TrackWithOptionalAlbum, period: TimePeriod) = db.playDao().getTrackTimePlayed(track.artist, track.track, track.album, track.albumArtist, period.start, period.end)
-    override fun getTrackHistory(track: TrackWithOptionalAlbum) = db.playDao().getTrackHistory(track.artist, track.track, track.album, track.albumArtist)
+    override fun getTrackPlays(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackPlays(track.artist, track.track, track.album, track.albumArtist, period.start, period.end)
+    override fun getTrackTimePlayed(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackTimePlayed(track.artist, track.track, track.album, track.albumArtist, period.start, period.end)
+    override fun getTrackHistory(track: TrackWithAlbum) = db.playDao().getTrackHistory(track.artist, track.track, track.album, track.albumArtist)
     override fun getMostPlayedTracks(period: TimePeriod) = db.playDao().getMostPlayedTracks(period.start, period.end)
     override fun getMostPlayedTracksByPlayCount(period: TimePeriod) = db.playDao().getMostPlayedTracksByPlayCount(period.start, period.end)
     override fun getMostPlayedTracksFromArtist(artist: String, period: TimePeriod) = db.playDao().getMostPlayedTracksFromArtist(artist, period.start, period.end)

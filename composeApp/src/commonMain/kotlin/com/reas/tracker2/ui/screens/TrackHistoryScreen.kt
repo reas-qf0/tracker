@@ -32,7 +32,7 @@ fun TrackHistoryScreen(
     val trackPlays by remember { viewModel.trackPlays(track) }.collectAsStateWithLifecycle()
     val history = remember { viewModel.history(track) }.collectAsLazyPagingItems()
 
-    applicationState.setTitle("${track.artist} - ${track._track}")
+    applicationState.setTitle("${track.artist} - ${track.track}")
     LazyColumn(modifier = modifier) {
         item(key = "header") {
             Text(
@@ -57,7 +57,7 @@ fun TrackHistoryScreen(
 
                     imageUrl = { viewModel.getImageUrl(scrobble) },
                     onClick = {
-                        applicationState.navigate(BottomSheetInfo(track = scrobble.metadata.info))
+                        applicationState.navigate(BottomSheetInfo(track = scrobble.asTrackWithAlbum))
                     },
                     onMore = {},
                     modifier = Modifier.padding(5.dp).height(84.dp)

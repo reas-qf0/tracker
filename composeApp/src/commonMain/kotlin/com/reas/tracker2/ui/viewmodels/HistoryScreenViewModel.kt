@@ -23,7 +23,7 @@ class HistoryScreenViewModel(
         .map { pagingData -> pagingData.map { it.toObject() }}
 
     suspend fun getImageUrl(scrobble: Play): String? {
-        scrobble.metadata.info._album?.let { album ->
+        scrobble.asAlbumOrNull?.let { album ->
             return networkRepository.getAlbumImageUrl(album, "large")
         }
         return null

@@ -10,7 +10,7 @@ import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
 import com.reas.tracker2.shared.Play
 import com.reas.tracker2.shared.TimePeriod
-import com.reas.tracker2.shared.TrackWithOptionalAlbum
+import com.reas.tracker2.shared.TrackWithAlbum
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -19,14 +19,14 @@ class TrackHistoryViewModel(
     private val repository: Repository,
     private val networkRepository: NetworkRepository
 ): ViewModel() {
-    fun history(track: TrackWithOptionalAlbum) = Pager(
+    fun history(track: TrackWithAlbum) = Pager(
         initialKey = 0,
         pagingSourceFactory = { repository.getTrackHistory(track) },
         config = PagingConfig(pageSize = 50, initialLoadSize = 50)
     ).flow.cachedIn(viewModelScope)
         .map { pagingData -> pagingData.map { it.toObject() }}
 
-    fun trackPlays(track: TrackWithOptionalAlbum) = repository.getTrackPlays(track, TimePeriod.ALLTIME)
+    fun trackPlays(track: TrackWithAlbum) = repository.getTrackPlays(track, TimePeriod.ALLTIME)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
@@ -35,7 +35,7 @@ class TrackHistoryViewModel(
         )
 
     suspend fun getImageUrl(scrobble: Play): String? {
-        scrobble.metadata.info._album?.let { album ->
+        scrobble.asAlbumOrNull?.let { album ->
             return networkRepository.getAlbumImageUrl(album, "large")
         }
         return null

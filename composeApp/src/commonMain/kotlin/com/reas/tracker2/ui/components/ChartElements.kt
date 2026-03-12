@@ -17,6 +17,7 @@ import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.theme.TrackerTheme
 import kotlin.math.min
 
+// TODO kill it with fire
 data class ChartEntryUiState(
     val label: String,
     val label2: String?,

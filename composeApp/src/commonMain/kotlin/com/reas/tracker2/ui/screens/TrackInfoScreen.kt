@@ -52,7 +52,7 @@ fun TrackInfoScreen(
         }
     }.collectAsStateWithLifecycle()
 
-    applicationState.setTitle("${arguments.track.artist} - ${arguments.track.track}")
+    applicationState.setTitle("${track.artist} - ${track.track}")
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)

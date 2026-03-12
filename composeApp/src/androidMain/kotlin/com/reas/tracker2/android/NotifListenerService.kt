@@ -21,12 +21,11 @@ import com.reas.tracker2.settings.Settings
 import com.reas.tracker2.settings.collect
 import com.reas.tracker2.settings.get
 import com.reas.tracker2.settings.isScrobblingEnabled
-import com.reas.tracker2.shared.*
+import com.reas.tracker2.shared.Event
+import com.reas.tracker2.shared.Source
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Instant
 
 private val MediaMetadata.title
     get() = this.getString(MediaMetadata.METADATA_KEY_TITLE)
@@ -96,24 +95,14 @@ private class MediaCallback(private val appId: String): MediaController.Callback
         if (sentEvent) return
         sentEvent = true
 
-        val event = Event(
-            metadata = Metadata(
-                info = TrackWithOptionalAlbum(
-                    _track = Track(
-                        title = metadata.title,
-                        artist = metadata.artist
-                    ),
-                    _album = if (metadata.album != null) Album(
-                        title = metadata.album,
-                        artist = metadata.albumArtist ?: metadata.artist
-                    ) else null,
-                ),
-                duration = metadata.duration.milliseconds
-            ),
-            timestamp = Instant.fromEpochMilliseconds(
-                state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis()
-            ),
-            position = state.position.milliseconds,
+        val event = Event.create(
+            track = metadata.title,
+            artist = metadata.artist,
+            album = metadata.album,
+            albumArtist = metadata.albumArtist,
+            duration = metadata.duration,
+            timestamp = state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis(),
+            position = state.position,
             isPlaying = state.state == PlaybackState.STATE_PLAYING,
             source = Source.local(appId)
         )

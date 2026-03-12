@@ -1,11 +1,9 @@
 package com.reas.tracker2.database.entities
 
 import androidx.room.Entity
-import com.reas.tracker2.shared.*
+import com.reas.tracker2.shared.Event
+import com.reas.tracker2.shared.Source
 import kotlinx.serialization.Serializable
-import kotlin.time.DurationUnit
-import kotlin.time.Instant
-import kotlin.time.toDuration
 
 @Serializable
 @Entity(tableName = "events", primaryKeys = ["sourceApp", "timestamp"])
@@ -20,24 +18,16 @@ data class EventEntity(
     val isPlaying: Boolean,
     val sourceApp: String
 ) {
-    fun toObject() = Event(
-        metadata = Metadata(
-            info = TrackWithOptionalAlbum(
-                _track = Track(
-                    title = track,
-                    artist = artist
-                ),
-                _album = if (album != null) Album(
-                    title = album,
-                    artist = albumArtist
-                ) else null,
-            ),
-            duration = duration.toDuration(DurationUnit.MILLISECONDS),
-        ),
-        timestamp = Instant.fromEpochMilliseconds(timestamp),
+    fun toObject() = Event.create(
+        track = track,
+        artist = artist,
+        album = album,
+        albumArtist = albumArtist,
+        timestamp = timestamp,
+        position = position,
+        duration = duration,
         isPlaying = isPlaying,
-        position = position.toDuration(DurationUnit.MILLISECONDS),
-        source = Source.local(sourceApp)
+        source = Source.local(sourceApp),
     )
 
     companion object {
@@ -48,7 +38,7 @@ data class EventEntity(
             albumArtist = albumArtist ?: artist,
             duration = duration.inWholeMilliseconds,
             isPlaying = isPlaying,
-            sourceApp = sourceApp,
+            sourceApp = app,
             timestamp = timestamp.toEpochMilliseconds(),
             position = position.inWholeMilliseconds
         )

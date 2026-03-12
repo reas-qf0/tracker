@@ -39,7 +39,7 @@ fun InfoBottomSheet(
     val albumArtist = arguments.track?.albumArtist ?: arguments.album?.artist
 
     val trackO = arguments.track
-    val albumO = arguments.track?._album ?: arguments.album
+    val albumO = arguments.track?.asAlbumOrNull ?: arguments.album
 
     ModalBottomSheet(
         onDismissRequest = { applicationState.goBack() },

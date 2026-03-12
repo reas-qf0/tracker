@@ -1,6 +1,8 @@
 package com.reas.tracker2.database
 
-import com.reas.tracker2.shared.*
+import com.reas.tracker2.shared.Event
+import com.reas.tracker2.shared.Play
+import com.reas.tracker2.shared.Source
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -10,8 +12,6 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.upsert
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Instant
 
 interface Repository {
     fun insertEvent(event: Event)
@@ -33,9 +33,9 @@ class DatabaseRepository(private val database: Database) : Repository {
                 it[EventTable.position] = event.position.inWholeMilliseconds
                 it[EventTable.duration] = event.duration.inWholeMilliseconds
                 it[EventTable.isPlaying] = event.isPlaying
-                it[EventTable.sourceUser] = event.sourceUser
-                it[EventTable.sourceDevice] = event.sourceDevice
-                it[EventTable.sourceApp] = event.sourceApp
+                it[EventTable.sourceUser] = event.user
+                it[EventTable.sourceDevice] = event.device
+                it[EventTable.sourceApp] = event.app
             }
         }
     }
@@ -85,22 +85,14 @@ class DatabaseRepository(private val database: Database) : Repository {
     }
 
     private fun ResultRow.toEvent(): Event =
-        Event(
-            metadata = Metadata(
-                duration = this[EventTable.duration].milliseconds,
-                info = TrackWithOptionalAlbum(
-                    _track = Track(
-                        title = this[EventTable.track],
-                        artist = this[EventTable.artist],
-                    ),
-                    _album = if (this[EventTable.album] != null) Album(
-                        title = this[EventTable.album]!!,
-                        artist = this[EventTable.albumArtist]!!
-                    ) else null
-                )
-            ),
-            timestamp = Instant.fromEpochMilliseconds(this[EventTable.timestamp]),
-            position = this[EventTable.position].milliseconds,
+        Event.create(
+            track = this[EventTable.track],
+            artist = this[EventTable.artist],
+            album = this[EventTable.album],
+            albumArtist = this[EventTable.albumArtist],
+            timestamp = this[EventTable.timestamp],
+            position = this[EventTable.position],
+            duration = this[EventTable.duration],
             isPlaying = this[EventTable.isPlaying],
             source = Source(
                 user = this[EventTable.sourceUser],
@@ -110,22 +102,14 @@ class DatabaseRepository(private val database: Database) : Repository {
         )
 
     private fun ResultRow.toPlay(): Play =
-        Play(
-            metadata = Metadata(
-                duration = this[PlayTable.duration].milliseconds,
-                info = TrackWithOptionalAlbum(
-                    _track = Track(
-                        title = this[PlayTable.track],
-                        artist = this[PlayTable.artist],
-                    ),
-                    _album = if (this[PlayTable.album] != null) Album(
-                        title = this[PlayTable.album]!!,
-                        artist = this[PlayTable.albumArtist]!!
-                    ) else null
-                )
-            ),
-            timestamp = Instant.fromEpochMilliseconds(this[PlayTable.timestamp]),
-            timePlayed = this[PlayTable.timePlayed].milliseconds,
+        Play.create(
+            track = this[PlayTable.track],
+            artist = this[PlayTable.artist],
+            album = this[PlayTable.album],
+            albumArtist = this[PlayTable.albumArtist],
+            timestamp = this[PlayTable.timestamp],
+            duration = this[PlayTable.duration],
+            timePlayed = this[PlayTable.timePlayed],
             source = Source(
                 user = this[PlayTable.sourceUser],
                 device = this[PlayTable.sourceDevice],
