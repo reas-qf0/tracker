@@ -62,7 +62,6 @@ kotlin {
             implementation(libs.androidx.room.paging)
             implementation(libs.androidx.sqlite.bundled)
             implementation(libs.androidx.navigation3.ui)
-            implementation(libs.androidx.lifecycle.viewmodel.nav3)
             implementation(libs.landscapist.image)
             implementation(libs.landscapist.palette)
             implementation(libs.landscapist.animation)

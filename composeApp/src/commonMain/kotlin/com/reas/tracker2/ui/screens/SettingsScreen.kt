@@ -1,17 +1,16 @@
 package com.reas.tracker2.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.DividerDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.reas.tracker2.ui.navigation.ApplicationState
+import com.reas.tracker2.ui.navigation.Login
 import com.reas.tracker2.ui.viewmodels.SettingsScreenViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -34,13 +33,17 @@ fun SettingsScreen(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val scrobblingEnabled by viewModel.scrobblingEnabledFlow.collectAsStateWithLifecycle()
+            val scrobblingEnabled by remember { viewModel.scrobblingEnabledFlow }.collectAsStateWithLifecycle()
             Text(stringResource(Res.string.enable_tracking))
             Spacer(Modifier.weight(1.0F))
             Switch(
                 checked = scrobblingEnabled,
                 onCheckedChange = { viewModel.setScrobblingEnabled(it) }
             )
+        }
+
+        Button(onClick = { applicationState.navigate(Login) }) {
+            Text("Connect to a server instance")
         }
 
         HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)

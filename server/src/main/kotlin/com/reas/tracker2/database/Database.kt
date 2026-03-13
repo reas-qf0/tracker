@@ -1,5 +1,8 @@
 package com.reas.tracker2.database
 
+import com.reas.tracker2.database.tables.ApiKeyTable
+import com.reas.tracker2.database.tables.EventTable
+import com.reas.tracker2.database.tables.PlayTable
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -12,8 +15,7 @@ fun createInMemoryDatabase(): Database {
         password = "",
     )
     transaction(database) {
-        SchemaUtils.create(EventTable)
-        SchemaUtils.create(PlayTable)
+        SchemaUtils.create(EventTable, PlayTable, ApiKeyTable)
     }
     return database
 }
@@ -24,8 +26,7 @@ fun createSQLiteDatabase(): Database {
         driver = "org.sqlite.JDBC"
     )
     transaction(database) {
-        SchemaUtils.create(EventTable)
-        SchemaUtils.create(PlayTable)
+        SchemaUtils.create(EventTable, PlayTable, ApiKeyTable)
     }
     return database
 }

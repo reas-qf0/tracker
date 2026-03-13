@@ -2,6 +2,7 @@ package com.reas.tracker2.settings
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -40,6 +41,15 @@ suspend fun<T> Settings.setAsync(setting: Setting<T>, value: T) =
             preferences[setting.key] = value
         }
     }
+
+suspend fun Settings.update(block: MutablePreferences.() -> Unit) =
+    updateData {
+        it.toMutablePreferences().also(block)
+    }
+
+fun<T> MutablePreferences.set(setting: Setting<T>, value: T) {
+    this[setting.key] = value
+}
 
 suspend fun<T> Settings.resetAsync(setting: Setting<T>) = setAsync(setting, setting.defaultValue)
 

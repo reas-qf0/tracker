@@ -7,35 +7,64 @@ import com.reas.tracker2.shared.Play
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
-data class SyncEvent(
+ data class SyncEvent(
     val id: Long,
     val event: Event,
 )
 
-class SyncManager(
+class TrackerInstanceClient(
     private val repository: Repository,
     private val client: HttpClient,
 ) {
-    // TODO: replace with actual device identification
-    @OptIn(ExperimentalUuidApi::class)
-    private val deviceId = Uuid.random().toHexString()
+    private var host_ = ""
+    private var port_ = 0
+    private var apiKey = ""
 
-    suspend fun establishConnection(): Boolean {
+    suspend fun tryLogin(hostname: String, port: Int, username: String): String? {
+        host_ = hostname
+        port_ = port
+        repository.getKey(hostname, port, username)?.let {
+            apiKey = it
+            return null
+        }
+        try {
+            val r = client.post {
+                url { request ->
+                    request.host = host_
+                    request.port = port_
+                    path("login")
+                    parameters.append("user", username)
+                }
+            }
+            if (!r.status.isSuccess()) {
+                Logger.w(tag = TAG) { "Error while trying to login: ${r.status}" }
+                return r.status.description
+            }
+            apiKey = r.bodyAsText()
+            repository.addKey(hostname, port, username, apiKey)
+            return null
+        } catch (e: Exception) {
+            Logger.w(tag = TAG, throwable = e) { "Error while trying to login" }
+            return "${e.javaClass.name}${if (e.message != null) ": " + e.message else ""}"
+        }
+    }
+
+    suspend fun tryEstablishConnection(): Boolean {
         try {
             Logger.d(tag = TAG) { "connecting to server" }
             client.webSocket(
                 request = {
                     url {
-                        host = "192.168.0.4"
-                        port = 8080
+                        //protocol = URLProtocol.WS
+                        host = host_
+                        port = port_
                         url("sync")
-                        parameters.append("device-id", deviceId)
+                        parameters.append("api_key", apiKey)
                     }
                 }
             ) {
@@ -67,10 +96,11 @@ class SyncManager(
         try {
             val r = client.post {
                 url {
-                    host = "192.168.0.4"
-                    port = 8080
+                    //protocol = URLProtocol.HTTP
+                    host = host_
+                    port = port_
                     path("scrobble")
-                    parameters.append("device-id", deviceId)
+                    parameters.append("api_key", apiKey)
                 }
                 contentType(ContentType.Application.Json)
                 setBody(event)
@@ -95,10 +125,11 @@ class SyncManager(
             try {
                 val r = client.post {
                     url {
-                        host = "192.168.0.4"
-                        port = 8080
+                        //protocol = URLProtocol.HTTP
+                        host = host_
+                        port = port_
                         path("scrobble")
-                        parameters.append("device-id", deviceId)
+                        parameters.append("api_key", apiKey)
                     }
                     contentType(ContentType.Application.Json)
                     setBody(batch.map { it.event })
@@ -106,7 +137,7 @@ class SyncManager(
                 if (!r.status.isSuccess()) {
                     Logger.d(tag = TAG) { "submit failed with code ${r.status.value}; storing events" }
                 } else {
-                    Logger.d(tag = TAG) { "submit successful" }
+                    Logger.d(tag = TAG) { "batch event submit successful" }
                     repository.deleteFromSync(batch.map { it.id })
                 }
             } catch (e: Exception) {
@@ -116,6 +147,6 @@ class SyncManager(
     }
 
     companion object {
-        private const val TAG = "SyncManager"
+        private const val TAG = "TrackerInstanceClient"
     }
 }

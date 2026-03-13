@@ -2,6 +2,7 @@ package com.reas.tracker2
 
 import com.reas.tracker2.database.EventProcessorAdapterImpl
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.database.authorization
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.EventProcessor
 import io.ktor.http.*
@@ -15,7 +16,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import io.ktor.websocket.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -61,30 +61,34 @@ fun Application.main() {
         get("/plays") {
             call.respond(repository.getPlays())
         }
+        post("/login") {
+            val user = call.request.queryParameters["user"] ?: return@post call.respond(HttpStatusCode.BadRequest)
+            call.respondText(repository.registerUser(user))
+        }
         post("/scrobble") {
-            val deviceId = call.parameters["device-id"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-            val body = call.receiveText()
-            val events = try {
-                listOf(Json.decodeFromString<Event>(body))
-            } catch (e: SerializationException) {
-                Json.decodeFromString<List<Event>>(body)
-            } catch (e: SerializationException) {
-                return@post call.respond(HttpStatusCode.BadRequest)
+            authorization { user ->
+                val body = call.receiveText()
+                val events = try {
+                    listOf(Json.decodeFromString<Event>(body))
+                } catch (e: SerializationException) {
+                    Json.decodeFromString<List<Event>>(body)
+                } catch (e: SerializationException) {
+                    return@authorization call.respond(HttpStatusCode.BadRequest)
+                }
+                events.forEach { event ->
+                    val event_ = event.copy(source = event.source.copy(user = user.name, device = user.device))
+                    repository.insertEvent(event_)
+                    adapter.addEvent(event_)
+                }
+                call.respond(HttpStatusCode.OK)
             }
-            events.forEach { event ->
-                val event_ = event.copy(source = event.source.copy(device = deviceId))
-                repository.insertEvent(event_)
-                adapter.addEvent(event_)
-            }
-            call.respond(HttpStatusCode.OK)
         }
         webSocket("/sync") {
-            val deviceId = call.request.queryParameters["device-id"] ?:
-                return@webSocket close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Device ID not specified"))
-            log.info(deviceId)
-            adapter.onPlay {
-                if (it.sourceDevice == deviceId) return@onPlay
-                sendSerialized(it)
+            authorization { user ->
+                adapter.onPlay {
+                    if (it.sourceUser != user.name || it.sourceDevice == user.device) return@onPlay
+                    sendSerialized(it)
+                }
             }
         }
     }

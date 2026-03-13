@@ -1,6 +1,7 @@
 package com.reas.tracker2.database
 
 import androidx.paging.PagingSource
+import com.reas.tracker2.database.entities.ApiKeyEntity
 import com.reas.tracker2.database.entities.EventEntity.Companion.toEntity
 import com.reas.tracker2.database.entities.PlayEntity
 import com.reas.tracker2.database.entities.PlayEntity.Companion.toEntity
@@ -63,6 +64,9 @@ interface Repository {
     fun getMostPlayedAlbumsFromArtistByPlayCount(artist: String, period: TimePeriod): PagingSource<Int, AlbumWithPlayCount>
     fun getTrackRank(time: Duration, period: TimePeriod): Flow<Int>
     fun getTrackRankByPlayCount(count: Int, period: TimePeriod) : Flow<Int>
+
+    suspend fun addKey(hostname: String, port: Int, username: String, key: String)
+    suspend fun getKey(hostname: String, port: Int, username: String): String?
 }
 
 
@@ -118,4 +122,7 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override fun getMostPlayedTracksFromAlbumByPlayCount(album: Album, period: TimePeriod) = db.playDao().getMostPlayedTracksFromAlbumByPlayCount(album.artist, album.title, period.start, period.end)
     override fun getTrackRank(time: Duration, period: TimePeriod) = db.playDao().getTrackRank(time, period.start, period.end)
     override fun getTrackRankByPlayCount(count: Int, period: TimePeriod) = db.playDao().getTrackRankByPlayCount(count, period.start, period.end)
+
+    override suspend fun addKey(hostname: String, port: Int, username: String, key: String) = db.apiKeyDao().insert(ApiKeyEntity(hostname, port, username, key))
+    override suspend fun getKey(hostname: String, port: Int, username: String) = db.apiKeyDao().getKey(hostname, port, username)
 }

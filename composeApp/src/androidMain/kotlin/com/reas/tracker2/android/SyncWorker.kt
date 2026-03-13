@@ -3,7 +3,7 @@ package com.reas.tracker2.android
 import android.content.Context
 import androidx.work.*
 import com.reas.tracker2.R
-import com.reas.tracker2.network.SyncManager
+import com.reas.tracker2.network.TrackerInstanceClient
 import org.jetbrains.compose.resources.getString
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 class SyncWorker(context: Context, params: WorkerParameters):
     CoroutineWorker(context, params), KoinComponent {
     private val notif: NotificationWrapper by inject()
-    private val sync: SyncManager by inject()
+    private val sync: TrackerInstanceClient by inject()
 
     override suspend fun doWork(): Result {
         val s = getString(Res.string.backup_in_progress)

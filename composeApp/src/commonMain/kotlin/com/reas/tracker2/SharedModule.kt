@@ -28,7 +28,7 @@ val sharedModule = module {
 
     singleOf(::EventProcessorAdapterImpl) bind EventProcessorAdapter::class
     singleOf(::EventProcessor)
-    singleOf(::SyncManager)
+    singleOf(::TrackerInstanceClient)
 
     viewModelOf(::HistoryScreenViewModel)
     viewModelOf(::ChartsScreenViewModel)
@@ -38,6 +38,7 @@ val sharedModule = module {
     viewModelOf(::AlbumInfoScreenViewModel)
     viewModelOf(::TrackInfoScreenViewModel)
     viewModelOf(::SettingsScreenViewModel)
+    viewModelOf(::LoginDialogViewModel)
 }
 
 expect val platformModule: Module

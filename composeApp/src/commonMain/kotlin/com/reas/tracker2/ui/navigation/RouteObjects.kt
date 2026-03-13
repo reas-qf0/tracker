@@ -102,3 +102,11 @@ data class BottomSheetInfo(
     val album: Album? = null,
     val track: TrackWithAlbum? = null
 ) : DialogRoute()
+
+@Serializable
+object Login : DialogRoute()
+
+@Serializable
+data class Error(
+    val message: String
+) : DialogRoute()

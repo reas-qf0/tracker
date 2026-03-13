@@ -1,5 +1,8 @@
 package com.reas.tracker2.ui.navigation
 
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
@@ -133,7 +136,13 @@ fun TrackerNavScaffold(
             NavDisplay(
                 entries = decoratedEntries.toMutableStateList(),
                 onBack = { applicationState.goBack() },
-                sceneStrategy = remember { DialogSceneStrategy() }
+                sceneStrategy = remember { DialogSceneStrategy() },
+                predictivePopTransitionSpec = {
+                    ContentTransform(
+                        fadeIn(),
+                        fadeOut()
+                    )
+                }
             )
         }
     }

@@ -2,14 +2,8 @@ package com.reas.tracker2.database
 
 import androidx.room.*
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
-import com.reas.tracker2.database.daos.EventDao
-import com.reas.tracker2.database.daos.PlayDao
-import com.reas.tracker2.database.daos.ProcessingQueueDao
-import com.reas.tracker2.database.daos.SyncQueueDao
-import com.reas.tracker2.database.entities.EventEntity
-import com.reas.tracker2.database.entities.PlayEntity
-import com.reas.tracker2.database.entities.ProcessingQueueEntity
-import com.reas.tracker2.database.entities.SyncQueueEntity
+import com.reas.tracker2.database.daos.*
+import com.reas.tracker2.database.entities.*
 import kotlinx.coroutines.Dispatchers
 
 @Suppress("KotlinNoActualForExpect")
@@ -21,7 +15,8 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     EventEntity::class,
     PlayEntity::class,
     ProcessingQueueEntity::class,
-    SyncQueueEntity::class
+    SyncQueueEntity::class,
+    ApiKeyEntity::class,
 ], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -31,6 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun playDao(): PlayDao
     abstract fun processingQueueDao(): ProcessingQueueDao
     abstract fun syncQueueDao(): SyncQueueDao
+    abstract fun apiKeyDao(): ApiKeyDao
 
     companion object {
         fun getDatabase(builder: Builder<AppDatabase>) : AppDatabase {

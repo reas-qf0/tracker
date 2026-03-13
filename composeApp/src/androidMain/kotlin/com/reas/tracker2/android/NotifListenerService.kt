@@ -15,7 +15,7 @@ import co.touchlab.kermit.Logger
 import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
-import com.reas.tracker2.network.SyncManager
+import com.reas.tracker2.network.TrackerInstanceClient
 import com.reas.tracker2.settings.Settings
 import com.reas.tracker2.settings.collect
 import com.reas.tracker2.settings.get
@@ -42,7 +42,7 @@ private const val TAG = "NotificationListenerService"
 private class MediaCallback(private val appId: String): MediaController.Callback(), KoinComponent {
     private val repository: Repository by inject()
     private val notificationManager: NotificationWrapper by inject()
-    private val syncManager: SyncManager by inject()
+    private val syncManager: TrackerInstanceClient by inject()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var notificationId = notificationManager.reserveId()

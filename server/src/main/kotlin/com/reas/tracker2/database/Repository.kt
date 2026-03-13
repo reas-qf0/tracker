@@ -1,5 +1,8 @@
 package com.reas.tracker2.database
 
+import com.reas.tracker2.database.tables.ApiKeyTable
+import com.reas.tracker2.database.tables.EventTable
+import com.reas.tracker2.database.tables.PlayTable
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.Play
 import com.reas.tracker2.shared.Source
@@ -9,9 +12,12 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.upsert
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 interface Repository {
     fun insertEvent(event: Event)
@@ -19,6 +25,9 @@ interface Repository {
     fun getEvents(): List<Event>
     fun getPlays(): List<Play>
     fun getLastPlayFromSource(source: Source): Play?
+
+    fun registerUser(user: String): String
+    fun getUser(key: String): String?
 }
 
 class DatabaseRepository(private val database: Database) : Repository {
@@ -82,6 +91,22 @@ class DatabaseRepository(private val database: Database) : Repository {
             .orderBy(PlayTable.timestamp, SortOrder.DESC)
             .limit(1)
             .firstOrNull()?.toPlay()
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
+    override fun registerUser(user: String) = transaction(database) {
+        val key = Uuid.random().toHexString()
+        ApiKeyTable.insert {
+            it[ApiKeyTable.user] = user
+            it[ApiKeyTable.key] = key
+        }
+        return@transaction key
+    }
+
+    override fun getUser(key: String) = transaction(database) {
+        ApiKeyTable.selectAll()
+            .where { ApiKeyTable.key eq key }
+            .limit(1).firstOrNull()?.get(ApiKeyTable.user)
     }
 
     private fun ResultRow.toEvent(): Event =

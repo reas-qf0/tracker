@@ -7,7 +7,9 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.reas.tracker2.ui.dialogs.ErrorDialog
 import com.reas.tracker2.ui.dialogs.InfoBottomSheet
+import com.reas.tracker2.ui.dialogs.LoginDialog
 import com.reas.tracker2.ui.navigation.*
 import com.reas.tracker2.ui.screens.*
 import com.reas.tracker2.ui.theme.TrackerTheme
@@ -25,7 +27,7 @@ fun TrackerApp(
     val backStack = rememberBackStack(startRoute = History)
     val applicationState = rememberApplicationState(backStack)
 
-    TrackerBackgroundProcesses()
+    TrackerBackgroundProcesses(applicationState)
     TrackerTheme {
         TrackerNavScaffold(
             applicationState,
@@ -78,6 +80,14 @@ fun TrackerApp(
 
             dialog<BottomSheetInfo> { arguments ->
                 InfoBottomSheet(arguments, applicationState)
+            }
+
+            dialog<Login> {
+                LoginDialog(applicationState)
+            }
+
+            dialog<Error> { arguments ->
+                ErrorDialog(arguments, applicationState)
             }
         }
     }
