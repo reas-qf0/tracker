@@ -24,6 +24,9 @@ interface PlayDao {
     @Insert(onConflict = REPLACE)
     suspend fun insert(play: PlayEntity): Long
 
+    @Insert(onConflict = REPLACE)
+    suspend fun insertBatch(plays: List<PlayEntity>)
+
     @Update
     suspend fun update(play: PlayEntity)
 

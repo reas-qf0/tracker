@@ -53,8 +53,8 @@ fun Application.main() {
         eventProcessor.processQueue()
     }
     scope.launch {
-        eventProcessor.collectPlays { play ->
-            repository.insertPlay(play)
+        eventProcessor.collectPlays { plays ->
+            repository.insertPlays(plays)
         }
     }
 
@@ -92,9 +92,11 @@ fun Application.main() {
         }
         webSocket("/sync") {
             authorization { user ->
-                eventProcessor.collectPlays {
-                    if (it.sourceUser != user.name || it.sourceDevice == user.device) return@collectPlays
-                    sendSerialized(it)
+                eventProcessor.collectPlays { plays ->
+                    plays.forEach { play ->
+                        if (play.sourceUser != user.name || play.sourceDevice == user.device) return@collectPlays
+                        sendSerialized(play)
+                    }
                 }
             }
         }

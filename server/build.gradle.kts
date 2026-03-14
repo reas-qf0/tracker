@@ -34,6 +34,8 @@ dependencies {
 }
 
 tasks.register<Exec>("buildWebApp") {
+    inputs.dir(rootProject.relativePath("webApp"))
+    outputs.dir(rootProject.relativePath("webApp/dist"))
     workingDir(rootProject.file("server/webApp"))
     commandLine("npx", "vite", "build")
 }

@@ -31,6 +31,7 @@ interface Repository {
     suspend fun deleteFromSync(ids: List<Long>)
 
     suspend fun insertPlay(play: Play): Long
+    suspend fun insertPlays(plays: List<Play>)
     suspend fun updatePlay(play: Play)
     suspend fun deletePlay(play: Play)
     suspend fun getLastPlayFromSource(source: Source): Play?
@@ -95,6 +96,7 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override suspend fun deleteFromSync(ids: List<Long>)  = db.syncQueueDao().deleteByIds(ids)
 
     override suspend fun insertPlay(play: Play) = db.playDao().insert(play.toEntity())
+    override suspend fun insertPlays(plays: List<Play>) = db.playDao().insertBatch(plays.map { it.toEntity() })
     override suspend fun deletePlay(play: Play) = db.playDao().delete(play.toEntity())
     override suspend fun updatePlay(play: Play) = db.playDao().update(play.toEntity())
     override suspend fun getLastPlayFromSource(source: Source) = db.playDao().getLastPlayFromSource(source.device, source.app)?.toObject()

@@ -11,17 +11,15 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.upsert
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 interface Repository {
     fun insertEvent(event: Event)
     fun insertPlay(play: Play)
+    fun insertPlays(plays: List<Play>)
     fun getEvents(): List<Event>
     fun getPlays(): List<Play>
     fun getLastPlayFromSource(source: Source): Play?
@@ -65,6 +63,26 @@ class DatabaseRepository(private val database: Database) : Repository {
                 it[PlayTable.sourceDevice] = play.sourceDevice
                 it[PlayTable.sourceApp] = play.sourceApp
                 it[PlayTable.associatedEvents] = Json.encodeToString(play.associatedEvents)
+            }
+        }
+    }
+
+    override fun insertPlays(plays: List<Play>) {
+        transaction(database) {
+            PlayTable.batchUpsert(plays, shouldReturnGeneratedValues = false) { play ->
+                this[PlayTable.track] = play.track
+                this[PlayTable.artist] = play.artist
+                this[PlayTable.album] = play.album
+                this[PlayTable.albumArtist] = play.albumArtist
+                this[PlayTable.timestamp] = play.timestamp.toEpochMilliseconds()
+                this[PlayTable.timePlayed] = play.timePlayed.inWholeMilliseconds
+                this[PlayTable.duration] = play.duration.inWholeMilliseconds
+                this[PlayTable.lastPosition] = play.lastPosition.inWholeMilliseconds
+                this[PlayTable.lastPlaying] = play.lastPlaying
+                this[PlayTable.sourceUser] = play.sourceUser
+                this[PlayTable.sourceDevice] = play.sourceDevice
+                this[PlayTable.sourceApp] = play.sourceApp
+                this[PlayTable.associatedEvents] = Json.encodeToString(play.associatedEvents)
             }
         }
     }

@@ -13,27 +13,17 @@ class EventProcessor(
     }
 
     private val eventFlow = MutableSharedFlow<List<Event>>()
-    private val playFlow = MutableSharedFlow<Play>()
+    private val playFlow = MutableSharedFlow<List<Play>>()
 
     suspend fun addEvents(events: List<Event>) {
         eventFlow.emit(events)
     }
-    suspend fun collectPlays(block: suspend (Play) -> Unit) {
+    suspend fun collectPlays(block: suspend (List<Play>) -> Unit) {
         playFlow.collect { block(it) }
     }
 
-    private suspend fun flush(event: Event, play: Play?): Play {
-        if (play != null) {
-            if (play.lastPlaying)
-                play.associatedEvents.add(null)
-            Logger.d(tag = TAG) { "playFlow.emit" }
-            playFlow.emit(play)
-        }
-        return Play.fromEvent(event)
-    }
-
-    private suspend fun process(events: List<Event>): Play? {
-        if (events.isEmpty()) return null
+    private suspend fun process(events: List<Event>) {
+        if (events.isEmpty()) return
 
         val source = events[0].source
         var play = adapter.getLastPlayFromSource(source)
@@ -43,7 +33,17 @@ class EventProcessor(
                 "ERROR: out-of-sync events source=$source " +
                 "eventTimestamp=${eventsSorted[0].timestamp} playTimestamp=${play.timestamp}"
             }
-            return null
+            return
+        }
+
+        val resultPlays = mutableListOf<Play>()
+        fun flush(event: Event, play: Play?): Play {
+            if (play != null) {
+                if (play.lastPlaying)
+                    play.associatedEvents.add(null)
+                resultPlays.add(play)
+            }
+            return Play.fromEvent(event)
         }
 
         eventsSorted.forEach { event ->
@@ -86,15 +86,10 @@ class EventProcessor(
             }
         }
 
-        if (play != null) {
-            Logger.d(tag = TAG) { "playFlow.emit" }
-            playFlow.emit(play)
-        }
+        if (play != null)
+            resultPlays.add(play)
         adapter.clearQueue(source, eventsSorted.last().timestamp)
-
-        if (play?.lastPlaying ?: false)
-            return play
-        return null
+        playFlow.emit(resultPlays)
     }
 
     suspend fun processQueue() {

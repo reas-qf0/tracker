@@ -34,8 +34,8 @@ fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
         }
     }
     LaunchedEffect(Unit) {
-        eventProcessor.collectPlays { play ->
-            repository.insertPlay(play)
+        eventProcessor.collectPlays { plays ->
+            repository.insertPlays(plays)
         }
     }
 
