@@ -19,3 +19,12 @@ captures
 node_modules/
 server/webApp/node_modules
 server/webApp/dist
+composeApp/client.db*
+composeApp/tracker2.preferences_pb
+**/Secrets.kt
+composeApp/release
+server/webApp/package-lock.json
+keystore-release.jks
+release-signing.properties
+server.db
+gradle/gradle-daemon-jvm.properties
