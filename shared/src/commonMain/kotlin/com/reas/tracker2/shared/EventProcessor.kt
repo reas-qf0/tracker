@@ -1,6 +1,7 @@
 package com.reas.tracker2.shared
 
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlin.time.Duration.Companion.seconds
 
 class EventProcessor(
@@ -11,11 +12,22 @@ class EventProcessor(
         private const val TAG = "EventProcessor"
     }
 
+    private val eventFlow = MutableSharedFlow<List<Event>>()
+    private val playFlow = MutableSharedFlow<Play>()
+
+    suspend fun addEvents(events: List<Event>) {
+        eventFlow.emit(events)
+    }
+    suspend fun collectPlays(block: suspend (Play) -> Unit) {
+        playFlow.collect { block(it) }
+    }
+
     private suspend fun flush(event: Event, play: Play?): Play {
         if (play != null) {
             if (play.lastPlaying)
                 play.associatedEvents.add(null)
-            adapter.insertPlay(play)
+            Logger.d(tag = TAG) { "playFlow.emit" }
+            playFlow.emit(play)
         }
         return Play.fromEvent(event)
     }
@@ -35,14 +47,14 @@ class EventProcessor(
         }
 
         eventsSorted.forEach { event ->
-            // check if need to plug hole
             if (play == null) {
                 if (event.isPlaying) play = flush(event, play)
                 return@forEach
             }
 
+            // check if need to plug hole
             val eventInfo = Play.EventInfo.fromEvent(event)
-            val shouldPlugHole = event.timestamp - play.lastTimestamp + play.lastPosition > play.duration
+            val shouldPlugHole = event.timestamp > play.endTimestamp
             if (play.lastPlaying && shouldPlugHole) {
                 play.timePlayed += play.duration - play.lastPosition
                 play.associatedEvents.add(null)
@@ -74,8 +86,10 @@ class EventProcessor(
             }
         }
 
-        if (play != null)
-            adapter.insertPlay(play)
+        if (play != null) {
+            Logger.d(tag = TAG) { "playFlow.emit" }
+            playFlow.emit(play)
+        }
         adapter.clearQueue(source, eventsSorted.last().timestamp)
 
         if (play?.lastPlaying ?: false)
@@ -84,7 +98,7 @@ class EventProcessor(
     }
 
     suspend fun processQueue() {
-        adapter.getEvents().collect { snapshot ->
+        eventFlow.collect { snapshot ->
             Logger.d(tag = TAG) { "processing ${snapshot.size} events" }
             snapshot.groupBy { it.source }.forEach {
                 process(it.value)

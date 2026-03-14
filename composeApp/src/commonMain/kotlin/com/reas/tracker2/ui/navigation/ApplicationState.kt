@@ -74,6 +74,7 @@ class TrackerApplicationState(val state: ApplicationStateData) : ApplicationStat
             is Charts -> 1
             is TrackInfo -> 1
             Settings -> 2
+            Debug -> 3
             else -> -1
         }
 

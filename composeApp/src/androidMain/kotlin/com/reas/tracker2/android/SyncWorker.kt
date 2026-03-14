@@ -22,7 +22,7 @@ class SyncWorker(context: Context, params: WorkerParameters):
             setContentTitle(s)
             setSmallIcon(R.drawable.ic_stat_name)
         }
-        sync.submitFromQueue()
+        sync.submitEvents()
         notif.hide(id)
         return Result.success()
     }

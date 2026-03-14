@@ -25,6 +25,7 @@ import com.reas.tracker2.shared.Source
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.milliseconds
 
 private val MediaMetadata.title
     get() = this.getString(MediaMetadata.METADATA_KEY_TITLE)
@@ -49,6 +50,10 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     private var notificationBuilder: NotificationBuilder? = null
     private var currentMetadata: MediaMetadata? = null
     private var currentState: PlaybackState? = null
+    private var lastEvent: Event? = null
+    private var lastPlaybackRate = 0f
+
+    // TODO: this doesn't work, rethink
     private var sentEvent: Boolean = false
 
     private fun updateNotification(event: Event) {
@@ -105,6 +110,24 @@ private class MediaCallback(private val appId: String): MediaController.Callback
             isPlaying = state.state == PlaybackState.STATE_PLAYING,
             source = Source.local(appId)
         )
+
+        // optimization to store less events
+        if (lastEvent == null && !event.isPlaying)
+            return
+        if (lastEvent != null) {
+            val l = lastEvent!!
+            if (!l.isPlaying && !event.isPlaying)
+                return
+            if (l.isPlaying && event.isPlaying
+                && l.metadata == event.metadata
+                && state.playbackSpeed == lastPlaybackRate
+                && ((event.timestamp - l.timestamp) * lastPlaybackRate.toDouble() - (event.position - l.position)).absoluteValue < 50.milliseconds) {
+                return
+            }
+        }
+        lastEvent = event
+        lastPlaybackRate = state.playbackSpeed
+
         scope.launch {
             repository.insertEvent(event)
             repository.insertEventInQueue(event)

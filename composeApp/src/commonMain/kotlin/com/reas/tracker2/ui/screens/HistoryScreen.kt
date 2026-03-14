@@ -1,15 +1,16 @@
 package com.reas.tracker2.ui.screens
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
@@ -71,6 +72,20 @@ fun HistoryScreen(
                     },
                     onMore = {},
                     modifier = Modifier.padding(5.dp).height(84.dp)
+                )
+            }
+        }
+
+        // empty space at the bottom so that the button doesn't overlap with the entry
+        if (showButton) {
+            item(key = "bottom") {
+                Box(
+                    modifier = Modifier.height(75.dp).fillMaxWidth().background(
+                        brush = Brush.verticalGradient(colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.surfaceContainerHighest
+                        ))
+                    )
                 )
             }
         }

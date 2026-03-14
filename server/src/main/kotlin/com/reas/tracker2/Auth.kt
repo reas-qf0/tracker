@@ -1,5 +1,6 @@
-package com.reas.tracker2.database
+package com.reas.tracker2
 
+import com.reas.tracker2.database.Repository
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*

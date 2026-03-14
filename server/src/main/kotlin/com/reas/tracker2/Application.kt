@@ -1,8 +1,6 @@
 package com.reas.tracker2
 
-import com.reas.tracker2.database.EventProcessorAdapterImpl
 import com.reas.tracker2.database.Repository
-import com.reas.tracker2.database.authorization
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.EventProcessor
 import io.ktor.http.*
@@ -46,12 +44,16 @@ fun Application.main() {
     }
 
     val repository: Repository by inject()
-    val adapter: EventProcessorAdapterImpl by inject()
     val eventProcessor: EventProcessor by inject()
 
     val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     scope.launch {
         eventProcessor.processQueue()
+    }
+    scope.launch {
+        eventProcessor.collectPlays { play ->
+            repository.insertPlay(play)
+        }
     }
 
     routing {
@@ -75,18 +77,20 @@ fun Application.main() {
                 } catch (e: SerializationException) {
                     return@authorization call.respond(HttpStatusCode.BadRequest)
                 }
-                events.forEach { event ->
-                    val event_ = event.copy(source = event.source.copy(user = user.name, device = user.device))
-                    repository.insertEvent(event_)
-                    adapter.addEvent(event_)
+                val eventsWithUserData = events.map { event ->
+                    event.copy(source = event.source.copy(user = user.name, device = user.device))
+                }
+                eventProcessor.addEvents(eventsWithUserData)
+                eventsWithUserData.forEach { event ->
+                    repository.insertEvent(event)
                 }
                 call.respond(HttpStatusCode.OK)
             }
         }
         webSocket("/sync") {
             authorization { user ->
-                adapter.onPlay {
-                    if (it.sourceUser != user.name || it.sourceDevice == user.device) return@onPlay
+                eventProcessor.collectPlays {
+                    if (it.sourceUser != user.name || it.sourceDevice == user.device) return@collectPlays
                     sendSerialized(it)
                 }
             }

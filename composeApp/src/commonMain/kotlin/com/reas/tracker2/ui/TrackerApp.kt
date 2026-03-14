@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.reas.tracker2.platform.IS_DEBUG
 import com.reas.tracker2.ui.dialogs.ErrorDialog
 import com.reas.tracker2.ui.dialogs.InfoBottomSheet
 import com.reas.tracker2.ui.dialogs.LoginDialog
@@ -14,10 +15,8 @@ import com.reas.tracker2.ui.navigation.*
 import com.reas.tracker2.ui.screens.*
 import com.reas.tracker2.ui.theme.TrackerTheme
 import org.jetbrains.compose.resources.stringResource
-import tracker2.composeapp.generated.resources.Res
-import tracker2.composeapp.generated.resources.charts
-import tracker2.composeapp.generated.resources.history
-import tracker2.composeapp.generated.resources.settings
+import org.jetbrains.compose.resources.vectorResource
+import tracker2.composeapp.generated.resources.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +46,15 @@ fun TrackerApp(
                     icon = Icons.Filled.Settings,
                     destination = Settings
                 )
-            ),
+            ).let {
+                if (IS_DEBUG) {
+                    it + TrackerNavItem(
+                        title = "Debug",
+                        icon = vectorResource(Res.drawable.wrench),
+                        destination = Debug
+                    )
+                } else it
+            },
             modifier = modifier
         ) {
             entry<History> {
@@ -64,6 +71,10 @@ fun TrackerApp(
 
             entry<Settings> {
                 SettingsScreen(applicationState)
+            }
+
+            entry<Debug> {
+                DebugScreen(applicationState)
             }
 
             entry<ArtistInfo> { arguments ->

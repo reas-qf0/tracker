@@ -67,6 +67,12 @@ interface Repository {
 
     suspend fun addKey(hostname: String, port: Int, username: String, key: String)
     suspend fun getKey(hostname: String, port: Int, username: String): String?
+
+    // functions for debug info
+    fun getEventCount(): Flow<Int>
+    fun getUnprocessedEventCount(): Flow<Int>
+    fun getUnsyncedEventCount(): Flow<Int>
+    fun getPlayCount(): Flow<Int>
 }
 
 
@@ -125,4 +131,9 @@ class RoomRepository(private val db: AppDatabase) : Repository {
 
     override suspend fun addKey(hostname: String, port: Int, username: String, key: String) = db.apiKeyDao().insert(ApiKeyEntity(hostname, port, username, key))
     override suspend fun getKey(hostname: String, port: Int, username: String) = db.apiKeyDao().getKey(hostname, port, username)
+
+    override fun getEventCount() = db.eventDao().getEventsCount()
+    override fun getUnprocessedEventCount() = db.processingQueueDao().getEventCount()
+    override fun getUnsyncedEventCount() = db.syncQueueDao().getEventCount()
+    override fun getPlayCount() = db.playDao().getPlayCount()
 }

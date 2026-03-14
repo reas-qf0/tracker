@@ -21,4 +21,7 @@ interface SyncQueueDao {
 
     @Query("DELETE FROM sync_queue WHERE id IN (:ids)")
     suspend fun deleteByIds(ids: List<Long>)
+
+    @Query("SELECT COUNT(*) FROM sync_queue")
+    fun getEventCount(): Flow<Int>
 }

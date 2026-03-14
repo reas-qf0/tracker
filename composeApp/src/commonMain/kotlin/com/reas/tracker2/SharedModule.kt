@@ -39,6 +39,7 @@ val sharedModule = module {
     viewModelOf(::TrackInfoScreenViewModel)
     viewModelOf(::SettingsScreenViewModel)
     viewModelOf(::LoginDialogViewModel)
+    viewModelOf(::DebugScreenViewModel)
 }
 
 expect val platformModule: Module

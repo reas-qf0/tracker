@@ -6,18 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.lifecycleScope
 import com.reas.tracker2.android.DailyReportWorker
 import com.reas.tracker2.android.NotificationWrapper
 import com.reas.tracker2.android.SyncWorker
-import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.ui.TrackerApp
-import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
     private val notif: NotificationWrapper by inject()
-    private val eventProcessor: EventProcessor by inject()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,10 +23,6 @@ class MainActivity : ComponentActivity() {
 
         DailyReportWorker.start(this)
         SyncWorker.start(this)
-
-        lifecycleScope.launch {
-            eventProcessor.processQueue()
-        }
 
         setContent {
             TrackerApp(

@@ -4,29 +4,13 @@ import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
 @Serializable
 data class Album(
     val title: String,
     val artist: String
-) {
-    class Builder {
-        private var title: String? = null
-        private var artist: String? = null
-
-        fun title(title: String): Builder {
-            this.title = title
-            return this
-        }
-        fun artist(artist: String): Builder {
-            this.artist = artist
-            return this
-        }
-        fun build() = Album(title!!, artist!!)
-    }
-}
+)
 
 @Serializable
 data class Track(
@@ -34,21 +18,6 @@ data class Track(
     val artist: String
 ) {
     fun withAlbum() = TrackWithAlbum(this, null)
-
-    class Builder {
-        private var title: String? = null
-        private var artist: String? = null
-
-        fun title(title: String): Builder {
-            this.title = title
-            return this
-        }
-        fun artist(artist: String): Builder {
-            this.artist = artist
-            return this
-        }
-        fun build() = Track(title!!, artist!!)
-    }
 }
 
 @Serializable
@@ -200,7 +169,7 @@ data class Play(
 
 
     val lastTimestamp
-        get() = associatedEvents.lastOrNull()?.timestamp ?: timestamp
+        get() = associatedEvents.lastOrNull()?.timestamp ?: endTimestamp
     val lastPosition
         get() = associatedEvents.lastOrNull()?.position ?: duration
     val lastPlaying
@@ -209,12 +178,12 @@ data class Play(
     val currentPosition
         get() = lastPosition + (timestamp - lastTimestamp)
     val endTimestamp
-        get() = lastTimestamp + (duration - lastPosition)
+        get() = associatedEvents.filterNotNull().last().timestamp + (duration - lastPosition)
 
     val isNowPlaying
         get() = lastPlaying && currentPosition <= duration
     val isTiny
-        get() = timePlayed < 2.seconds
+        get() = timePlayed < EventProcessor.SKIP_MIN_DURATION
     val isSkip
         get() = timePlayed < duration / 2 && timePlayed < 4.minutes
     val isFull

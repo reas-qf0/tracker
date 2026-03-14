@@ -79,6 +79,9 @@ data class Charts(
 object Settings : Route()
 
 @Serializable
+object Debug : Route()
+
+@Serializable
 data class ArtistInfo(
     val artist: String,
     val sort: ChartSort = ChartSort.TIME

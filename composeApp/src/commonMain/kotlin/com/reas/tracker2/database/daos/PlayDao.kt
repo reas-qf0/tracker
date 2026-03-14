@@ -163,4 +163,7 @@ interface PlayDao {
             "WHERE $inTimeRange AND $isFullPlay AND $hasAlbum GROUP BY albumArtist, album" +
             ") SELECT COUNT(*) FROM t0 WHERE metric > :count")
     fun getAlbumRankByPlayCount(count: Int, start: Instant, end: Instant): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM plays")
+    fun getPlayCount(): Flow<Int>
 }

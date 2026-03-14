@@ -18,4 +18,7 @@ interface EventDao {
 
     @Query("SELECT * FROM events")
     fun getEvents(): Flow<List<EventEntity>>
+
+    @Query("SELECT COUNT(*) FROM events")
+    fun getEventsCount(): Flow<Int>
 }

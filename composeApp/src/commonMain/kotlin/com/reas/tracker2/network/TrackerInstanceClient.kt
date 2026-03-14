@@ -11,6 +11,8 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
  data class SyncEvent(
     val id: Long,
@@ -24,6 +26,8 @@ class TrackerInstanceClient(
     private var host_ = ""
     private var port_ = 0
     private var apiKey = ""
+
+    private val queueLock = Mutex()
 
     suspend fun tryLogin(hostname: String, port: Int, username: String): String? {
         host_ = hostname
@@ -60,7 +64,6 @@ class TrackerInstanceClient(
             client.webSocket(
                 request = {
                     url {
-                        //protocol = URLProtocol.WS
                         host = host_
                         port = port_
                         url("sync")
@@ -70,10 +73,13 @@ class TrackerInstanceClient(
             ) {
                 Logger.d(tag = TAG) { "connected to server" }
 
+                // TODO: figure out something better
+                launch { submitEvents() }
+
                 val receiveJob = launch {
                     while (true) {
                         val play = receiveDeserialized<Play>()
-                        Logger.d(tag = TAG) { "received play from server" }
+                        Logger.d(tag = TAG) { "received play from server: $play" }
                         repository.insertPlay(play)
                     }
                 }
@@ -93,55 +99,39 @@ class TrackerInstanceClient(
     }
 
     suspend fun submitEvent(event: Event) {
-        try {
-            val r = client.post {
-                url {
-                    //protocol = URLProtocol.HTTP
-                    host = host_
-                    port = port_
-                    path("scrobble")
-                    parameters.append("api_key", apiKey)
-                }
-                contentType(ContentType.Application.Json)
-                setBody(event)
-            }
-            if (!r.status.isSuccess()) {
-                Logger.d(tag = TAG) { "submit failed with code ${r.status.value}; storing event" }
-                repository.insertEventInSync(event)
-            }
-            Logger.d(tag = TAG) { "submitted event" }
-            submitFromQueue()
-        } catch (e: Exception) {
-            Logger.w(throwable = e, tag = TAG) { "submit failed; storing event" }
-            repository.insertEventInSync(event)
-        }
+        // TODO: figure out something better
+        repository.insertEventInSync(event)
+        submitEvents()
     }
 
-    suspend fun submitFromQueue() {
-        val events = repository.getEventsInSync().first()
-        if (events.isEmpty()) return
-        events.chunked(500).forEach { batch ->
-            Logger.d(tag = TAG) { "submitting ${batch.size} events from queue" }
-            try {
-                val r = client.post {
-                    url {
-                        //protocol = URLProtocol.HTTP
-                        host = host_
-                        port = port_
-                        path("scrobble")
-                        parameters.append("api_key", apiKey)
+    suspend fun submitEvents() {
+        queueLock.withLock {
+            val events = repository.getEventsInSync().first()
+            if (events.isEmpty()) return
+            events.chunked(100).forEach { batch ->
+                Logger.d(tag = TAG) { "submitting ${batch.size} events from queue" }
+                try {
+                    val r = client.post {
+                        url {
+                            host = host_
+                            port = port_
+                            path("scrobble")
+                            parameters.append("api_key", apiKey)
+                        }
+                        contentType(ContentType.Application.Json)
+                        setBody(batch.map { it.event })
                     }
-                    contentType(ContentType.Application.Json)
-                    setBody(batch.map { it.event })
+                    if (!r.status.isSuccess()) {
+                        Logger.d(tag = TAG) { "batch event submit failed with code ${r.status.value}" }
+                        return
+                    } else {
+                        Logger.d(tag = TAG) { "batch event submit successful" }
+                        repository.deleteFromSync(batch.map { it.id })
+                    }
+                } catch (e: Exception) {
+                    Logger.w(throwable = e, tag = TAG) { "batch event submit failed" }
+                    return
                 }
-                if (!r.status.isSuccess()) {
-                    Logger.d(tag = TAG) { "submit failed with code ${r.status.value}; storing events" }
-                } else {
-                    Logger.d(tag = TAG) { "batch event submit successful" }
-                    repository.deleteFromSync(batch.map { it.id })
-                }
-            } catch (e: Exception) {
-                Logger.w(throwable = e, tag = TAG) { "submit failed; storing event" }
             }
         }
     }
