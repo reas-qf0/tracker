@@ -8,6 +8,7 @@ import io.ktor.serialization.kotlinx.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
+import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.*
@@ -23,6 +24,7 @@ import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
 fun main() {
@@ -57,6 +59,7 @@ fun Application.main() {
     }
 
     routing {
+        staticFiles("", File("server/webApp/dist"))
         get("/events") {
             call.respond(repository.getEvents())
         }
