@@ -11,9 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.AlignmentLine
-import androidx.compose.ui.layout.FirstBaseline
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -26,10 +23,7 @@ import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
 import kotlinx.datetime.offsetAt
 import org.jetbrains.compose.resources.stringResource
-import tracker2.composeapp.generated.resources.Res
-import tracker2.composeapp.generated.resources.hours_ago
-import tracker2.composeapp.generated.resources.minutes_ago
-import tracker2.composeapp.generated.resources.seconds_ago
+import tracker2.composeapp.generated.resources.*
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
@@ -109,19 +103,23 @@ fun Timestamp(
         val showHours by remember { derivedStateOf {
             1.hours <= difference && difference < 1.days
         } }
+        val showDays by remember { derivedStateOf {
+            1.days <= difference && difference < 30.days
+        }}
         val showDate by remember { derivedStateOf {
-            difference >= 1.days
+            difference >= 30.days
         }}
 
-        val text: String
-        if (showSeconds) {
-            text = stringResource(Res.string.seconds_ago, difference.inWholeSeconds)
+        val text = if (showSeconds) {
+            stringResource(Res.string.seconds_ago, difference.inWholeSeconds)
         } else if (showMinutes) {
-            text = stringResource(Res.string.minutes_ago, difference.inWholeMinutes)
+            stringResource(Res.string.minutes_ago, difference.inWholeMinutes)
         } else if (showHours) {
-            text = stringResource(Res.string.hours_ago, difference.inWholeHours)
+            stringResource(Res.string.hours_ago, difference.inWholeHours)
+        } else if (showDays) {
+            stringResource(Res.string.days_ago, difference.inWholeDays)
         } else {
-            text = timestamp.printShort()
+            timestamp.printShort()
         }
         Text(
             text,
@@ -140,6 +138,8 @@ fun Timestamp(
                     delay((difference.inWholeMinutes + 1).minutes - difference)
                 if (showHours)
                     delay((difference.inWholeHours + 1).hours - difference)
+                if (showDays)
+                    delay((difference.inWholeDays + 1).days - difference)
                 difference = Clock.System.now() - timestamp
             }
         }

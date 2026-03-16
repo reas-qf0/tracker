@@ -47,5 +47,6 @@
     <string name="seconds_ago">%1$d secs ago</string>
     <string name="minutes_ago">%1$d mins ago</string>
     <string name="hours_ago">%1$d hrs ago</string>
+    <string name="days_ago">%1$d days ago</string>
     <string name="update_canceled">Update canceled</string>
 </resources>
