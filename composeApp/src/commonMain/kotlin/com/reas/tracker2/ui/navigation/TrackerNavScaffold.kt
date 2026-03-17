@@ -136,7 +136,7 @@ fun TrackerNavScaffold(
             NavDisplay(
                 entries = decoratedEntries.toMutableStateList(),
                 onBack = { applicationState.goBack() },
-                sceneStrategy = remember { DialogSceneStrategy() },
+                sceneStrategies = remember { listOf(DialogSceneStrategy()) },
                 predictivePopTransitionSpec = {
                     ContentTransform(
                         fadeIn(),
