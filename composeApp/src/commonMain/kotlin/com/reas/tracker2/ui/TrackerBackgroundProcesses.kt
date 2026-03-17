@@ -46,7 +46,6 @@ fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
             val playsMap = plays.associateBy { it.key }
             val oldKeys = plugJobs.keys.toSet()
             val newKeys = playsMap.keys.toSet()
-            Logger.d(tag = TAG) { "$oldKeys $newKeys" }
 
             oldKeys.forEach { key ->
                 Logger.d(tag = TAG) { "cancelling job to plug hole for $key" }

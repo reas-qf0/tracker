@@ -108,7 +108,9 @@ class TrackerInstanceClient(
 
                         settings.set(lastSeenId, expectingId - 1)
                         send(expectingId.toString())
-                        repository.insertPlays(plays)
+                        repository.insertPlays(plays.filter {
+                            it.sourceDevice != apiKey
+                        })
                     }
                 }
 
