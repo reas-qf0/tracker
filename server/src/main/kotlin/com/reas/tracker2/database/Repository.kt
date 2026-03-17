@@ -7,18 +7,14 @@ import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.Play
 import com.reas.tracker2.shared.Source
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 interface Repository {
-    fun insertEvent(event: Event)
-    fun insertPlay(play: Play)
+    fun insertEvents(events: List<Event>)
     fun insertPlays(plays: List<Play>)
     fun getEvents(): List<Event>
     fun getPlays(): List<Play>
@@ -26,49 +22,40 @@ interface Repository {
 
     fun registerUser(user: String): String
     fun getUser(key: String): String?
+    fun getMissedPlays(user: String, lastSeen: Long): List<Play>
+    fun getNextIds(): MutableMap<String, Long>
 }
 
 class DatabaseRepository(private val database: Database) : Repository {
-    override fun insertEvent(event: Event) {
-        transaction(database) {
-            EventTable.upsert {
-                it[EventTable.track] = event.track
-                it[EventTable.artist] = event.artist
-                it[EventTable.album] = event.album
-                it[EventTable.albumArtist] = event.albumArtist
-                it[EventTable.timestamp] = event.timestamp.toEpochMilliseconds()
-                it[EventTable.position] = event.position.inWholeMilliseconds
-                it[EventTable.duration] = event.duration.inWholeMilliseconds
-                it[EventTable.isPlaying] = event.isPlaying
-                it[EventTable.sourceUser] = event.user
-                it[EventTable.sourceDevice] = event.device
-                it[EventTable.sourceApp] = event.app
+    override fun insertEvents(events: List<Event>) {
+        transaction(database, readOnly = false) {
+            EventTable.batchUpsert(events, shouldReturnGeneratedValues = false) { event ->
+                this[EventTable.track] = event.track
+                this[EventTable.artist] = event.artist
+                this[EventTable.album] = event.album
+                this[EventTable.albumArtist] = event.albumArtist
+                this[EventTable.timestamp] = event.timestamp.toEpochMilliseconds()
+                this[EventTable.position] = event.position.inWholeMilliseconds
+                this[EventTable.duration] = event.duration.inWholeMilliseconds
+                this[EventTable.isPlaying] = event.isPlaying
+                this[EventTable.sourceUser] = event.user
+                this[EventTable.sourceDevice] = event.device
+                this[EventTable.sourceApp] = event.app
             }
         }
     }
 
-    override fun insertPlay(play: Play) {
-        transaction(database) {
-            PlayTable.upsert {
-                it[PlayTable.track] = play.track
-                it[PlayTable.artist] = play.artist
-                it[PlayTable.album] = play.album
-                it[PlayTable.albumArtist] = play.albumArtist
-                it[PlayTable.timestamp] = play.timestamp.toEpochMilliseconds()
-                it[PlayTable.timePlayed] = play.timePlayed.inWholeMilliseconds
-                it[PlayTable.duration] = play.duration.inWholeMilliseconds
-                it[PlayTable.lastPosition] = play.lastPosition.inWholeMilliseconds
-                it[PlayTable.lastPlaying] = play.lastPlaying
-                it[PlayTable.sourceUser] = play.sourceUser
-                it[PlayTable.sourceDevice] = play.sourceDevice
-                it[PlayTable.sourceApp] = play.sourceApp
-                it[PlayTable.associatedEvents] = Json.encodeToString(play.associatedEvents)
-            }
-        }
+    override fun getNextIds() = transaction(database) {
+        val maxId = PlayTable.id.max()
+        PlayTable.select(maxId, PlayTable.sourceUser)
+            .groupBy(PlayTable.sourceUser)
+            .toList()
+            .associate { it[PlayTable.sourceUser] to (it[maxId] ?: 0) }
+            .toMutableMap()
     }
 
     override fun insertPlays(plays: List<Play>) {
-        transaction(database) {
+        transaction(database, readOnly = false) {
             PlayTable.batchUpsert(plays, shouldReturnGeneratedValues = false) { play ->
                 this[PlayTable.track] = play.track
                 this[PlayTable.artist] = play.artist
@@ -83,6 +70,7 @@ class DatabaseRepository(private val database: Database) : Repository {
                 this[PlayTable.sourceDevice] = play.sourceDevice
                 this[PlayTable.sourceApp] = play.sourceApp
                 this[PlayTable.associatedEvents] = Json.encodeToString(play.associatedEvents)
+                this[PlayTable.id] = play.id!!
             }
         }
     }
@@ -127,6 +115,12 @@ class DatabaseRepository(private val database: Database) : Repository {
             .limit(1).firstOrNull()?.get(ApiKeyTable.user)
     }
 
+    override fun getMissedPlays(user: String, lastSeen: Long) = transaction(database) {
+        PlayTable.selectAll().where {
+            (PlayTable.sourceUser eq user) and (PlayTable.id greaterEq lastSeen)
+        }.orderBy(PlayTable.id).map { it.toPlay() }
+    }
+
     private fun ResultRow.toEvent(): Event =
         Event.create(
             track = this[EventTable.track],
@@ -158,6 +152,7 @@ class DatabaseRepository(private val database: Database) : Repository {
                 device = this[PlayTable.sourceDevice],
                 app = this[PlayTable.sourceApp]
             ),
-            associatedEvents = Json.decodeFromString(this[PlayTable.associatedEvents])
+            associatedEvents = Json.decodeFromString(this[PlayTable.associatedEvents]),
+            id = this[PlayTable.id]
         )
 }

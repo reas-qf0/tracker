@@ -37,13 +37,13 @@ class EventProcessor(
         }
 
         val resultPlays = mutableListOf<Play>()
-        fun flush(event: Event, play: Play?): Play {
+        suspend fun flush(event: Event, play: Play?): Play {
             if (play != null) {
                 if (play.lastPlaying)
                     play.associatedEvents.add(null)
                 resultPlays.add(play)
             }
-            return Play.fromEvent(event)
+            return Play.fromEvent(event, id = adapter.getNextId(source.user))
         }
 
         eventsSorted.forEach { event ->

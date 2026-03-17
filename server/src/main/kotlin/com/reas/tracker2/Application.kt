@@ -15,9 +15,11 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
+import io.ktor.websocket.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -84,19 +86,26 @@ fun Application.main() {
                     event.copy(source = event.source.copy(user = user.name, device = user.device))
                 }
                 eventProcessor.addEvents(eventsWithUserData)
-                eventsWithUserData.forEach { event ->
-                    repository.insertEvent(event)
-                }
+                repository.insertEvents(eventsWithUserData)
                 call.respond(HttpStatusCode.OK)
             }
         }
         webSocket("/sync") {
             authorization { user ->
-                eventProcessor.collectPlays { plays ->
-                    plays.forEach { play ->
-                        if (play.sourceUser != user.name || play.sourceDevice == user.device) return@collectPlays
-                        sendSerialized(play)
+                launch {
+                    eventProcessor.collectPlays { plays ->
+                        sendSerialized(plays)
                     }
+                }
+
+                incoming.consumeEach { frame ->
+                    if (frame !is Frame.Text) return@consumeEach
+                    val lastSeen = frame.readText().toLong()
+                    repository.getMissedPlays(user.name, lastSeen)
+                        .take(100)
+                        .forEach { play ->
+                            sendSerialized(play)
+                        }
                 }
             }
         }

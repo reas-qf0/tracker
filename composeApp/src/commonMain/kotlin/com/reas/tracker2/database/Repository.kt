@@ -67,6 +67,7 @@ interface Repository {
     fun getTrackRankByPlayCount(count: Int, period: TimePeriod) : Flow<Int>
 
     suspend fun addKey(hostname: String, port: Int, username: String, key: String)
+    suspend fun deleteKey(hostname: String, port: Int, username: String)
     suspend fun getKey(hostname: String, port: Int, username: String): String?
 
     // functions for debug info
@@ -132,6 +133,7 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override fun getTrackRankByPlayCount(count: Int, period: TimePeriod) = db.playDao().getTrackRankByPlayCount(count, period.start, period.end)
 
     override suspend fun addKey(hostname: String, port: Int, username: String, key: String) = db.apiKeyDao().insert(ApiKeyEntity(hostname, port, username, key))
+    override suspend fun deleteKey(hostname: String, port: Int, username: String) = db.apiKeyDao().delete(hostname, port, username)
     override suspend fun getKey(hostname: String, port: Int, username: String) = db.apiKeyDao().getKey(hostname, port, username)
 
     override fun getEventCount() = db.eventDao().getEventsCount()

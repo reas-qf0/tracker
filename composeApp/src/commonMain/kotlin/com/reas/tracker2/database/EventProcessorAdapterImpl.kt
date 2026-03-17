@@ -10,4 +10,6 @@ class EventProcessorAdapterImpl(
     override suspend fun getLastPlayFromSource(source: Source) = repository.getLastPlayFromSource(source)
 
     override suspend fun clearQueue(source: Source, timestamp: Instant) = repository.clearQueue(source.app, timestamp)
+
+    override suspend fun getNextId(user: String) = null
 }

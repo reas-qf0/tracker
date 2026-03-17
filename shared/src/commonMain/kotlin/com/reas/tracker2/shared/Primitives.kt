@@ -143,7 +143,8 @@ data class Play(
     val timestamp: Instant,
     var timePlayed: Duration,
     val source: Source,
-    val associatedEvents: MutableList<EventInfo?>
+    val associatedEvents: MutableList<EventInfo?>,
+    val id: Long? = null
 ) {
     val track: String
         get() = metadata.track
@@ -193,12 +194,13 @@ data class Play(
         get() = "$sourceDevice/$sourceApp/$timestamp"
 
     companion object {
-        fun fromEvent(event: Event): Play = Play(
+        fun fromEvent(event: Event, id: Long? = null): Play = Play(
             metadata = event.metadata,
             timestamp = event.timestamp,
             timePlayed = Duration.ZERO,
             source = event.source,
-            associatedEvents = mutableListOf(EventInfo.fromEvent(event))
+            associatedEvents = mutableListOf(EventInfo.fromEvent(event)),
+            id = id
         )
 
         fun create(
@@ -210,7 +212,8 @@ data class Play(
             timestamp: Long,
             timePlayed: Long,
             source: Source,
-            associatedEvents: MutableList<EventInfo?>
+            associatedEvents: MutableList<EventInfo?>,
+            id: Long? = null
         ) = Play(
             metadata = Metadata(
                 trackObject = TrackWithAlbum(
@@ -228,7 +231,8 @@ data class Play(
             timePlayed = timePlayed.milliseconds,
             timestamp = Instant.fromEpochMilliseconds(timestamp),
             source = source,
-            associatedEvents = associatedEvents
+            associatedEvents = associatedEvents,
+            id = id
         )
     }
 

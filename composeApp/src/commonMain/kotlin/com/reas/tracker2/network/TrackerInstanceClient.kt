@@ -2,6 +2,10 @@
 
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.settings.Settings
+import com.reas.tracker2.settings.get
+import com.reas.tracker2.settings.lastSeenId
+import com.reas.tracker2.settings.set
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.Play
 import io.ktor.client.*
@@ -9,10 +13,14 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
 
  data class SyncEvent(
     val id: Long,
@@ -22,6 +30,7 @@ import kotlinx.coroutines.sync.withLock
 class TrackerInstanceClient(
     private val repository: Repository,
     private val client: HttpClient,
+    private val settings: Settings
 ) {
     private var host_ = ""
     private var port_ = 0
@@ -76,11 +85,30 @@ class TrackerInstanceClient(
                 // TODO: figure out something better
                 launch { submitEvents() }
 
+                send(settings.get(lastSeenId).toString())
+
                 val receiveJob = launch {
-                    while (true) {
-                        val play = receiveDeserialized<Play>()
-                        Logger.d(tag = TAG) { "received play from server: $play" }
-                        repository.insertPlay(play)
+                    incoming.consumeEach { frame ->
+                        if (frame !is Frame.Text) return@consumeEach
+                        val body = frame.readText()
+                        val plays = try {
+                            listOf(Json.decodeFromString<Play>(body))
+                        } catch (e: SerializationException) {
+                            Json.decodeFromString<List<Play>>(body)
+                        } catch (e: SerializationException) {
+                            Logger.w(tag = TAG, throwable = e) { "couldn't deserialize plays from server" }
+                            return@consumeEach
+                        }
+
+                        var expectingId = settings.get(lastSeenId) + 1
+                        val playsById = plays.associateBy { it.id }
+                        while (playsById.containsKey(expectingId)) {
+                            expectingId++
+                        }
+
+                        settings.set(lastSeenId, expectingId - 1)
+                        send(expectingId.toString())
+                        repository.insertPlays(plays)
                     }
                 }
 
