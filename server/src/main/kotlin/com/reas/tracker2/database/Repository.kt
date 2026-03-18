@@ -22,8 +22,9 @@ interface Repository {
 
     fun registerUser(user: String): String
     fun getUser(key: String): String?
-    fun getMissedPlays(user: String, lastSeen: Long): List<Play>
+    fun getMissedPlays(apiKey: String): List<Play>
     fun getNextIds(): MutableMap<String, Long>
+    fun setLastSeenId(apiKey: String, id: Long)
 }
 
 class DatabaseRepository(private val database: Database) : Repository {
@@ -105,6 +106,7 @@ class DatabaseRepository(private val database: Database) : Repository {
         ApiKeyTable.insert {
             it[ApiKeyTable.user] = user
             it[ApiKeyTable.key] = key
+            it[ApiKeyTable.lastSeenId] = 0
         }
         return@transaction key
     }
@@ -115,10 +117,23 @@ class DatabaseRepository(private val database: Database) : Repository {
             .limit(1).firstOrNull()?.get(ApiKeyTable.user)
     }
 
-    override fun getMissedPlays(user: String, lastSeen: Long) = transaction(database) {
+    override fun getMissedPlays(apiKey: String) = transaction(database) {
+        val apiKeyInfo = ApiKeyTable.selectAll()
+            .where { ApiKeyTable.key eq apiKey }.first()
+        val user = apiKeyInfo[ApiKeyTable.user]
+        val lastSeen = apiKeyInfo[ApiKeyTable.lastSeenId]
+
         PlayTable.selectAll().where {
             (PlayTable.sourceUser eq user) and (PlayTable.id greaterEq lastSeen)
         }.orderBy(PlayTable.id).map { it.toPlay() }
+    }
+
+    override fun setLastSeenId(apiKey: String, id: Long) {
+        transaction(database) {
+            ApiKeyTable.update({ ApiKeyTable.key eq apiKey }) {
+                it[ApiKeyTable.lastSeenId] = id
+            }
+        }
     }
 
     private fun ResultRow.toEvent(): Event =

@@ -34,11 +34,6 @@ class DebugScreenViewModel(
             viewModelScope,
             SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             0)
-    val lastSeen
-        get() = settings.flow(lastSeenId).stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            0)
 
     suspend fun refreshApiKey() {
         repository.deleteKey(
@@ -51,7 +46,6 @@ class DebugScreenViewModel(
             settings.get(instancePort),
             settings.get(username)
         )
-        settings.reset(lastSeenId)
     }
 
     suspend fun flushAllEvents() {

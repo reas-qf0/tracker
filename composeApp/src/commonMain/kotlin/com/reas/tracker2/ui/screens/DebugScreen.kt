@@ -25,7 +25,6 @@ fun DebugScreen(
     val unprocessedEventCount by remember { viewModel.unprocessedEventCount }.collectAsStateWithLifecycle()
     val unsyncedEventCount by remember { viewModel.unsyncedEventCount }.collectAsStateWithLifecycle()
     val playCount by remember { viewModel.playCount }.collectAsStateWithLifecycle()
-    val lastSeen by remember { viewModel.lastSeen }.collectAsStateWithLifecycle()
 
     applicationState.setTitle("Debug")
     Column(modifier = modifier) {
@@ -33,7 +32,6 @@ fun DebugScreen(
         Text("Unprocessed events: $unprocessedEventCount")
         Text("Unsynced events: $unsyncedEventCount")
         Text("Total plays: $playCount")
-        Text("lastSeenId: $lastSeen")
         Button(onClick = { scope.launch { viewModel.refreshApiKey() } }) {
             Text("Refresh API key")
         }

@@ -2,10 +2,6 @@
 
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.database.Repository
-import com.reas.tracker2.settings.Settings
-import com.reas.tracker2.settings.get
-import com.reas.tracker2.settings.lastSeenId
-import com.reas.tracker2.settings.set
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.Play
 import io.ktor.client.*
@@ -29,8 +25,7 @@ import kotlinx.serialization.json.Json
 
 class TrackerInstanceClient(
     private val repository: Repository,
-    private val client: HttpClient,
-    private val settings: Settings
+    private val client: HttpClient
 ) {
     private var host_ = ""
     private var port_ = 0
@@ -85,8 +80,6 @@ class TrackerInstanceClient(
                 // TODO: figure out something better
                 launch { submitEvents() }
 
-                send(settings.get(lastSeenId).toString())
-
                 val receiveJob = launch {
                     incoming.consumeEach { frame ->
                         if (frame !is Frame.Text) return@consumeEach
@@ -100,17 +93,7 @@ class TrackerInstanceClient(
                             return@consumeEach
                         }
 
-                        var expectingId = settings.get(lastSeenId) + 1
-                        val playsById = plays.associateBy { it.id }
-                        while (playsById.containsKey(expectingId)) {
-                            expectingId++
-                        }
-
-                        settings.set(lastSeenId, expectingId - 1)
-                        send(expectingId.toString())
-                        repository.insertPlays(plays.filter {
-                            it.sourceDevice != apiKey
-                        })
+                        repository.insertPlays(plays)
                     }
                 }
 
