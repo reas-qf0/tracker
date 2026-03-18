@@ -93,7 +93,9 @@ class TrackerInstanceClient(
                             return@consumeEach
                         }
 
-                        repository.insertPlays(plays)
+                        repository.insertPlays(plays.filter {
+                            it.sourceDevice != apiKey
+                        })
                     }
                 }
 
