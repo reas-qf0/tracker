@@ -9,11 +9,11 @@ class LoginDialogViewModel(
     private val settings: Settings
 ) : ViewModel() {
     val hostName
-        get() = settings.get(instanceHostName)
+        get() = settings[instanceHostName]
     val port
-        get() = settings.get(instancePort)
+        get() = settings[instancePort]
     val userName
-        get() = settings.get(username)
+        get() = settings[username]
 
     fun setValues(hostName: String, port: Int, userName: String) {
         viewModelScope.launch {

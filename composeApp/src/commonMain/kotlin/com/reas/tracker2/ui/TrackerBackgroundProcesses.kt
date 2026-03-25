@@ -1,17 +1,19 @@
 package com.reas.tracker2.ui
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.TrackerInstanceClient
 import com.reas.tracker2.settings.*
 import com.reas.tracker2.shared.EventProcessor
+import com.reas.tracker2.shared.HolePlugger
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.Error
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 private const val TAG = "TrackerBackgroundProcesses"
@@ -22,7 +24,7 @@ fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
     val settings: Settings = koinInject()
     val repository: Repository = koinInject()
     val eventProcessor: EventProcessor = koinInject()
-    val scope: CoroutineScope = rememberCoroutineScope()
+    val holePlugger: HolePlugger = koinInject()
 
     // event processing
     LaunchedEffect(Unit) {
@@ -40,31 +42,17 @@ fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
     }
 
     // plugging holes
-    val plugJobs = remember { mutableMapOf<String, Job>() }
     LaunchedEffect(Unit) {
         repository.getNowPlayingTracks().collect { plays ->
-            val playsMap = plays.associateBy { it.key }
-            val oldKeys = plugJobs.keys.toSet()
-            val newKeys = playsMap.keys.toSet()
-
-            oldKeys.forEach { key ->
-                Logger.d(tag = TAG) { "cancelling job to plug hole for $key" }
-                plugJobs[key]!!.cancel()
-                plugJobs.remove(key)
+            holePlugger.cancelAll()
+            plays.forEach { play ->
+                holePlugger.register(play)
             }
-            newKeys.forEach { key ->
-                val play = playsMap[key]!!
-                val delayTime = play.duration - play.lastPosition - (Clock.System.now() - play.lastTimestamp)
-                Logger.d(tag = TAG) { "launching job to plug hole for $key in $delayTime" }
-                plugJobs[key] = scope.launch(Dispatchers.IO) {
-                    delay(delayTime)
-                    Logger.d(tag = TAG) { "plugging hole for $key" }
-                    plugJobs.remove(key) // so that no one can cancel us
-                    play.timePlayed += play.duration - play.lastPosition
-                    play.associatedEvents.add(null)
-                    repository.insertPlay(play)
-                }
-            }
+        }
+    }
+    LaunchedEffect(Unit) {
+        holePlugger.collectPlays { play ->
+            repository.insertPlay(play)
         }
     }
 
@@ -77,7 +65,7 @@ fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
         if (port == 0) return@LaunchedEffect
         if (username.isEmpty()) return@LaunchedEffect
 
-        val response = instanceClient.tryLogin(hostName, port, username)
+        val response = instanceClient.tryLogin()
         Logger.d { response.toString() }
         if (response != null) {
             applicationState.navigate(Error("Failed to login: \n$response"))

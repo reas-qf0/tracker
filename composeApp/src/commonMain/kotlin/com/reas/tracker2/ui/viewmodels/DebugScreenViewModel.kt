@@ -37,15 +37,11 @@ class DebugScreenViewModel(
 
     suspend fun refreshApiKey() {
         repository.deleteKey(
-            settings.get(instanceHostName),
-            settings.get(instancePort),
-            settings.get(username)
+            settings[instanceHostName],
+            settings[instancePort],
+            settings[username]
         )
-        client.tryLogin(
-            settings.get(instanceHostName),
-            settings.get(instancePort),
-            settings.get(username)
-        )
+        client.tryLogin()
     }
 
     suspend fun flushAllEvents() {

@@ -179,7 +179,7 @@ data class Play(
     val currentPosition
         get() = lastPosition + (timestamp - lastTimestamp)
     val endTimestamp
-        get() = associatedEvents.filterNotNull().last().timestamp + (duration - lastPosition)
+        get() = associatedEvents.filterNotNull().last().timestamp + (duration - associatedEvents.filterNotNull().last().position)
 
     val isNowPlaying
         get() = lastPlaying && currentPosition <= duration

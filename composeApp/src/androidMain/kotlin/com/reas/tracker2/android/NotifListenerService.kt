@@ -231,7 +231,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
         val newControllerMap = ctrl.associateBy { it.packageName }
         val newControllers = newControllerMap.keys
 
-        val isScrobbling = settings.get(isScrobblingEnabled)
+        val isScrobbling = settings[isScrobblingEnabled]
 
         // rewire callbacks for any refreshed controllers with the same package name
         // (happens e.g. if the service gets restarted)

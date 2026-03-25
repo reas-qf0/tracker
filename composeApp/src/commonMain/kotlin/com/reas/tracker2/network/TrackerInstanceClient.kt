@@ -2,6 +2,7 @@
 
 import co.touchlab.kermit.Logger
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.settings.*
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.Play
 import io.ktor.client.*
@@ -25,18 +26,21 @@ import kotlinx.serialization.json.Json
 
 class TrackerInstanceClient(
     private val repository: Repository,
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val settings: Settings
 ) {
-    private var host_ = ""
-    private var port_ = 0
+    private val host_
+        get() = settings[instanceHostName]
+    private val port_
+        get() = settings[instancePort]
+    private val username_
+        get() = settings[username]
     private var apiKey = ""
 
     private val queueLock = Mutex()
 
-    suspend fun tryLogin(hostname: String, port: Int, username: String): String? {
-        host_ = hostname
-        port_ = port
-        repository.getKey(hostname, port, username)?.let {
+    suspend fun tryLogin(): String? {
+        repository.getKey(host_, port_, username_)?.let {
             apiKey = it
             return null
         }
@@ -46,7 +50,7 @@ class TrackerInstanceClient(
                     request.host = host_
                     request.port = port_
                     path("login")
-                    parameters.append("user", username)
+                    parameters.append("user", username_)
                 }
             }
             if (!r.status.isSuccess()) {
@@ -54,7 +58,7 @@ class TrackerInstanceClient(
                 return r.status.description
             }
             apiKey = r.bodyAsText()
-            repository.addKey(hostname, port, username, apiKey)
+            repository.addKey(host_, port_, username_, apiKey)
             return null
         } catch (e: Exception) {
             Logger.w(tag = TAG, throwable = e) { "Error while trying to login" }
@@ -120,6 +124,11 @@ class TrackerInstanceClient(
     }
 
     suspend fun submitEvents() {
+        // apiKey here can be empty if app hasn't been opened since device reboot
+        if (apiKey == "") {
+            tryLogin()
+        }
+
         queueLock.withLock {
             val events = repository.getEventsInSync().first()
             if (events.isEmpty()) return

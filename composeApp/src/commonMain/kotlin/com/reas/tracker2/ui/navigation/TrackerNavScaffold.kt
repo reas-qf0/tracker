@@ -25,11 +25,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.*
 import androidx.navigation3.scene.DialogSceneStrategy
+import androidx.navigation3.scene.DialogSceneStrategy.Companion.DialogKey
 import androidx.navigation3.ui.NavDisplay
 
 class CustomNavEntryDecorator<T : Any>(appState: ApplicationState): NavEntryDecorator<T>(
     decorate = { entry ->
-        if (!entry.metadata.containsKey("dialog"))
+        if (!entry.metadata.contains(DialogKey))
             appState.floatingActionButton(visibleIf = false) {}
         entry.Content()
     },

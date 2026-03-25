@@ -7,6 +7,7 @@ import com.reas.tracker2.database.RoomRepository
 import com.reas.tracker2.network.*
 import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.EventProcessorAdapter
+import com.reas.tracker2.shared.HolePlugger
 import com.reas.tracker2.ui.viewmodels.*
 import org.koin.core.KoinApplication
 import org.koin.core.context.GlobalContext.startKoin
@@ -29,6 +30,7 @@ val sharedModule = module {
     singleOf(::EventProcessorAdapterImpl) bind EventProcessorAdapter::class
     singleOf(::EventProcessor)
     singleOf(::TrackerInstanceClient)
+    singleOf(::HolePlugger)
 
     viewModelOf(::HistoryScreenViewModel)
     viewModelOf(::ChartsScreenViewModel)

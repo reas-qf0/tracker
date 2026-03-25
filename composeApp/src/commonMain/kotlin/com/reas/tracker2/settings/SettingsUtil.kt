@@ -33,7 +33,7 @@ fun<T> Settings.flow(setting: Setting<T>) =
 
 suspend fun<T> Settings.collect(setting: Setting<T>, collector: suspend (T) -> Unit) = flow(setting).drop(1).collect(collector)
 
-fun<T> Settings.get(setting: Setting<T>) = runBlocking { flow(setting).first() }
+operator fun<T> Settings.get(setting: Setting<T>) = runBlocking { flow(setting).first() }
 
 suspend fun<T> Settings.setAsync(setting: Setting<T>, value: T) =
     updateData {

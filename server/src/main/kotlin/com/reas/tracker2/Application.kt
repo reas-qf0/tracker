@@ -3,6 +3,7 @@ package com.reas.tracker2
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.EventProcessor
+import com.reas.tracker2.shared.HolePlugger
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.*
 import io.ktor.serialization.kotlinx.json.*
@@ -18,6 +19,8 @@ import io.ktor.server.websocket.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -47,14 +50,23 @@ fun Application.main() {
 
     val repository: Repository by inject()
     val eventProcessor: EventProcessor by inject()
+    val holePlugger: HolePlugger by inject()
 
     val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    val onUpdate = MutableSharedFlow<Unit>()
     scope.launch {
         eventProcessor.processQueue()
     }
     scope.launch {
         eventProcessor.collectPlays { plays ->
             repository.insertPlays(plays)
+            holePlugger.register(plays)
+            onUpdate.emit(Unit)
+        }
+    }
+    scope.launch {
+        holePlugger.collectPlays { play ->
+            repository.insertPlays(listOf(play))
         }
     }
 
@@ -90,12 +102,6 @@ fun Application.main() {
         }
         webSocket("/sync") {
             authorization { user ->
-                launch {
-                    eventProcessor.collectPlays { plays ->
-                        sendSerialized(plays)
-                    }
-                }
-
                 suspend fun sendMissedPlays() {
                     val plays = repository.getMissedPlays(user.device)
                     val playsToSend = plays.filter { it.sourceDevice != user.device }
@@ -103,11 +109,11 @@ fun Application.main() {
                         sendSerialized(playsToSend)
                     // TODO: acknowledgement system
                     if (plays.isNotEmpty())
-                        repository.setLastSeenId(user.device, plays.last().id!! + 1)
+                        repository.setLastSeenId(user.device, plays.last().id!!)
                 }
 
                 sendMissedPlays()
-                eventProcessor.collectPlays {
+                onUpdate.collectLatest {
                     sendMissedPlays()
                 }
             }

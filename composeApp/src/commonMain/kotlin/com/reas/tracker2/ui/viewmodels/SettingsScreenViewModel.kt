@@ -11,7 +11,7 @@ class SettingsScreenViewModel(private val settings: Settings) : ViewModel() {
     val scrobblingEnabledFlow = settings.flow(isScrobblingEnabled).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-        initialValue = settings.get(isScrobblingEnabled)
+        initialValue = settings[isScrobblingEnabled]
     )
 
     fun setScrobblingEnabled(value: Boolean) {

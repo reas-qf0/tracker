@@ -1,6 +1,7 @@
 package com.reas.tracker2.shared
 
 import co.touchlab.kermit.Logger
+import com.reas.tracker2.shared.Play.EventInfo
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlin.time.Duration.Companion.seconds
 
@@ -53,20 +54,20 @@ class EventProcessor(
             }
 
             // check if need to plug hole
-            val eventInfo = Play.EventInfo.fromEvent(event)
             val shouldPlugHole = event.timestamp > play.endTimestamp
             if (play.lastPlaying && shouldPlugHole) {
                 play.timePlayed += play.duration - play.lastPosition
                 play.associatedEvents.add(null)
             }
             if (play.associatedEvents.last() == null && !shouldPlugHole) {
-                play.timePlayed -= play.duration - play.lastPosition
                 play.associatedEvents.removeAt(play.associatedEvents.size - 1)
+                play.timePlayed -= play.duration - play.lastPosition
             }
             if (play.lastPlaying && !shouldPlugHole) {
                 play.timePlayed += event.timestamp - play.lastTimestamp
             }
 
+            val eventInfo = EventInfo.fromEvent(event)
             if (event.isPlaying) {
                 if (event.position <= SKIP_MIN_DURATION) {
                     if (event.metadata == play.metadata && play.lastPosition <= SKIP_MIN_DURATION) {
@@ -82,7 +83,11 @@ class EventProcessor(
                     }
                 }
             } else {
-                play.associatedEvents.add(eventInfo)
+                if (event.position <= SKIP_MIN_DURATION && play.lastPosition > SKIP_MIN_DURATION) {
+                    play = flush(event, play)
+                } else {
+                    play.associatedEvents.add(eventInfo)
+                }
             }
         }
 
