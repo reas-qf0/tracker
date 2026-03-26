@@ -17,5 +17,5 @@ val module = module {
 
     singleOf(::EventProcessorAdapterImpl) bind EventProcessorAdapter::class
     singleOf(::EventProcessor)
-    singleOf(::HolePlugger)
+    single { HolePlugger() }
 }

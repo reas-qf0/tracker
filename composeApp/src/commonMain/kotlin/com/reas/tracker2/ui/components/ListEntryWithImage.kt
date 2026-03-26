@@ -12,7 +12,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
-import co.touchlab.kermit.Logger
 import com.github.ajalt.colormath.extensions.android.composecolor.toColormathColor
 import com.github.ajalt.colormath.extensions.android.composecolor.toComposeColor
 import com.github.ajalt.colormath.transform.interpolate
@@ -23,6 +22,7 @@ import com.skydoves.landscapist.crossfade.CrossfadePlugin
 import com.skydoves.landscapist.image.LandscapistImage
 import com.skydoves.landscapist.palette.PalettePlugin
 import com.skydoves.landscapist.palette.rememberPaletteState
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -40,13 +40,14 @@ fun ListEntryWithImage(
     alignment: Alignment.Vertical = Alignment.Top,
     content: @Composable RowScope.() -> Unit,
 ) {
+    val logger = remember { KotlinLogging.logger {} }
     var model by remember { mutableStateOf<Any?>(null) }
     LaunchedEffect(Unit) {
         launch(Dispatchers.IO) {
             model = try {
                 url()
             } catch (e: Throwable) {
-                Logger.w(throwable = e, tag = "ListEntryWithImage") { "Couldn't retrieve image url" }
+                logger.warn(throwable = e) { "Couldn't retrieve image url" }
                 null
             }
         }

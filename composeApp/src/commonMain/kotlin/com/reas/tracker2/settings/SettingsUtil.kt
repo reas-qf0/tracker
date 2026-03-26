@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
+import com.reas.tracker2.util.PlatformDependentPaths
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
@@ -19,9 +20,9 @@ data class Setting<T>(
 )
 
 typealias Settings = DataStore<Preferences>
-fun createDataStore(producePath: String): Settings =
+fun createDataStore(pathProvider: PlatformDependentPaths): Settings =
     PreferenceDataStoreFactory.createWithPath(
-        produceFile = { producePath.toPath() },
+        produceFile = { pathProvider.getPreferencesPath().toPath() },
         corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() }
     )
 

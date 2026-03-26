@@ -11,7 +11,6 @@ import android.media.session.PlaybackState
 import android.os.SystemClock
 import android.service.notification.NotificationListenerService
 import androidx.core.content.getSystemService
-import co.touchlab.kermit.Logger
 import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
@@ -22,6 +21,7 @@ import com.reas.tracker2.settings.get
 import com.reas.tracker2.settings.isScrobblingEnabled
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.Source
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -38,9 +38,12 @@ private val MediaMetadata.albumArtist
 private val MediaMetadata.duration
     get() = this.getLong(MediaMetadata.METADATA_KEY_DURATION)
 
-private const val TAG = "NotificationListenerService"
+private object NotificationListenerService {
+    val logger = KotlinLogging.logger {}
+}
 
 private class MediaCallback(private val appId: String): MediaController.Callback(), KoinComponent {
+    private val logger = com.reas.tracker2.android.NotificationListenerService.logger
     private val repository: Repository by inject()
     private val notificationManager: NotificationWrapper by inject()
     private val syncManager: TrackerInstanceClient by inject()
@@ -155,7 +158,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     }
 
     override fun onMetadataChanged(metadata: MediaMetadata?) {
-        Logger.d(tag = TAG) { "onMetadataChanged($appId) $metadata" }
+        logger.debug { "onMetadataChanged($appId) $metadata" }
 
         if (metadata == null) return
         currentMetadata = metadata
@@ -163,7 +166,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     }
 
     override fun onPlaybackStateChanged(state: PlaybackState?) {
-        Logger.d(tag = TAG) { "onPlaybackStateChanged($appId) $state" }
+        logger.debug { "onPlaybackStateChanged($appId) $state" }
 
         if (state == null) return
         currentState = state
@@ -172,7 +175,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     }
 
     fun onDisconnect() {
-        Logger.d(tag = TAG) { "onDisconnect($appId)" }
+        logger.debug { "onDisconnect($appId)" }
         currentState = currentState?.let {
             PlaybackState.Builder(it).setState(
                 PlaybackState.STATE_STOPPED,
@@ -191,6 +194,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
 }
 
 private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListener, KoinComponent {
+    private val logger = com.reas.tracker2.android.NotificationListenerService.logger
     private val settings: Settings by inject()
     private val controllers = mutableMapOf<String, MediaController>()
     private var callbacks = mutableMapOf<String, MediaCallback>()
@@ -201,7 +205,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
         scope.launch {
             settings.collect(isScrobblingEnabled) { value ->
                 if (value) {
-                    Logger.d(tag = TAG) { "scrobbling enabled via settings" }
+                    logger.debug { "scrobbling enabled via settings" }
                     callbacks.forEach { (appId, callback) ->
                         val controller = controllers[appId]!!
                         withContext(Dispatchers.Main) {
@@ -210,7 +214,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
                         }
                     }
                 } else {
-                    Logger.d(tag = TAG) { "scrobbling disabled via settings" }
+                    logger.debug { "scrobbling disabled via settings" }
                     callbacks.forEach { (appId, callback) ->
                         val controller = controllers[appId]!!
                         withContext(Dispatchers.Main) {
@@ -224,7 +228,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
     }
 
     override fun onActiveSessionsChanged(ctrl: List<MediaController>?) {
-        Logger.d(tag = TAG) { "onActiveSessionsChanged $ctrl" }
+        logger.debug { "onActiveSessionsChanged $ctrl" }
         if (ctrl == null) return
 
         val oldControllers = controllers.keys
@@ -277,6 +281,7 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
 }
 
 class NotifListenerService: NotificationListenerService(), KoinComponent {
+    private val logger = com.reas.tracker2.android.NotificationListenerService.logger
     private var initialized = false
     private var listener: SessionListener? = null
 
@@ -305,7 +310,7 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        Logger.d(tag = TAG) { "onListenerConnected" }
+        logger.debug { "onListenerConnected" }
         if (!initialized) {
             synchronized(this) {
                 if (!initialized) {
@@ -318,7 +323,7 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        Logger.d(tag = TAG) { "onListenerDisconnected" }
+        logger.debug { "onListenerDisconnected" }
         destroy()
     }
 }

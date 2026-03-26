@@ -47,7 +47,7 @@ kotlin {
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
-            implementation(libs.compose.uiToolingPreview)
+            implementation(libs.compose.ui.tooling.preview)
             implementation(libs.compose.ui.graphics)
             implementation(libs.compose.adaptive)
             implementation(libs.compose.material3.adaptive.navigation.suite)
@@ -56,8 +56,8 @@ kotlin {
             implementation(libs.androidx.datastore.preferences.core)
             implementation(libs.androidx.paging.compose)
             implementation(libs.androidx.paging.common)
-            implementation(libs.androidx.lifecycle.viewmodelCompose)
-            implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.room.paging)
             implementation(libs.androidx.sqlite.bundled)
@@ -77,7 +77,7 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
-            implementation(libs.kermit)
+            implementation(libs.logging)
             implementation(libs.colormath)
             implementation(libs.colormath.compose)
         }
@@ -86,7 +86,9 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
+            implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.koin.logger.slf4j)
+            implementation(libs.logback)
         }
     }
 }
@@ -136,7 +138,7 @@ android {
 }
 
 dependencies {
-    debugImplementation(libs.compose.uiTooling)
+    debugImplementation(libs.compose.ui.tooling)
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspJvm", libs.androidx.room.compiler)
 }

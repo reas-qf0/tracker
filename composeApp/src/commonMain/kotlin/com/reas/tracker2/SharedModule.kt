@@ -5,6 +5,7 @@ import com.reas.tracker2.database.EventProcessorAdapterImpl
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.database.RoomRepository
 import com.reas.tracker2.network.*
+import com.reas.tracker2.settings.createDataStore
 import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.EventProcessorAdapter
 import com.reas.tracker2.shared.HolePlugger
@@ -20,6 +21,7 @@ import org.koin.dsl.includes
 import org.koin.dsl.module
 
 val sharedModule = module {
+    singleOf(::createDataStore)
     single {
         RoomRepository(AppDatabase.getDatabase(get()))
     } bind Repository::class
@@ -30,7 +32,7 @@ val sharedModule = module {
     singleOf(::EventProcessorAdapterImpl) bind EventProcessorAdapter::class
     singleOf(::EventProcessor)
     singleOf(::TrackerInstanceClient)
-    singleOf(::HolePlugger)
+    single { HolePlugger() }
 
     viewModelOf(::HistoryScreenViewModel)
     viewModelOf(::ChartsScreenViewModel)

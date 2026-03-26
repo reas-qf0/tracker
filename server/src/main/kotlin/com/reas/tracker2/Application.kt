@@ -31,11 +31,11 @@ import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
 fun main() {
-    embeddedServer(Netty, port = SERVER_PORT, host = "0.0.0.0", module = Application::main)
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
         .start(wait = true)
 }
 
-fun Application.main() {
+fun Application.module() {
     install(Koin) {
         slf4jLogger()
         modules(module)

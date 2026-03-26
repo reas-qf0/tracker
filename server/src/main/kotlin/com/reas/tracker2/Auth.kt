@@ -5,7 +5,7 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import org.koin.java.KoinJavaComponent.getKoin
+import org.koin.ktor.ext.inject
 
 data class User(
     val name: String,
@@ -17,7 +17,7 @@ suspend fun RoutingContext.optionalAuthorization(
 ) {
     val key = call.request.queryParameters["api_key"] ?: return inner(null)
 
-    val repository by getKoin().inject<Repository>()
+    val repository: Repository by call.inject()
     inner(repository.getUser(key)?.let {
         User(it, key)
     })
@@ -38,7 +38,7 @@ suspend fun DefaultWebSocketServerSession.optionalAuthorization(
 ) {
     val key = call.request.queryParameters["api_key"] ?: return inner(null)
 
-    val repository by getKoin().inject<Repository>()
+    val repository: Repository by call.inject()
     inner(repository.getUser(key)?.let {
         User(it, key)
     })

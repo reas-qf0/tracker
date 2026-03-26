@@ -1,10 +1,10 @@
  package com.reas.tracker2.network
 
-import co.touchlab.kermit.Logger
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.settings.*
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.Play
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
@@ -54,21 +54,21 @@ class TrackerInstanceClient(
                 }
             }
             if (!r.status.isSuccess()) {
-                Logger.w(tag = TAG) { "Error while trying to login: ${r.status}" }
+                logger.warn { "Error while trying to login: ${r.status}" }
                 return r.status.description
             }
             apiKey = r.bodyAsText()
             repository.addKey(host_, port_, username_, apiKey)
             return null
         } catch (e: Exception) {
-            Logger.w(tag = TAG, throwable = e) { "Error while trying to login" }
+            logger.warn(throwable = e) { "Error while trying to login" }
             return "${e.javaClass.name}${if (e.message != null) ": " + e.message else ""}"
         }
     }
 
     suspend fun tryEstablishConnection(): Boolean {
         try {
-            Logger.d(tag = TAG) { "connecting to server" }
+            logger.debug { "connecting to server" }
             client.webSocket(
                 request = {
                     url {
@@ -79,7 +79,7 @@ class TrackerInstanceClient(
                     }
                 }
             ) {
-                Logger.d(tag = TAG) { "connected to server" }
+                logger.debug { "connected to server" }
 
                 // TODO: figure out something better
                 launch { submitEvents() }
@@ -93,7 +93,7 @@ class TrackerInstanceClient(
                         } catch (e: SerializationException) {
                             Json.decodeFromString<List<Play>>(body)
                         } catch (e: SerializationException) {
-                            Logger.w(tag = TAG, throwable = e) { "couldn't deserialize plays from server" }
+                            logger.warn(throwable = e) { "couldn't deserialize plays from server" }
                             return@consumeEach
                         }
 
@@ -104,7 +104,7 @@ class TrackerInstanceClient(
                 }
 
                 outgoing.invokeOnClose {
-                    Logger.d(tag = TAG) { "connection closed" }
+                    logger.debug { "connection closed" }
                     receiveJob.cancel()
                 }
 
@@ -112,7 +112,7 @@ class TrackerInstanceClient(
             }
             return true
         } catch (e: Exception) {
-            Logger.w(throwable = e, tag = TAG) { "connection error" }
+            logger.warn(throwable = e) { "connection error" }
             return false
         }
     }
@@ -133,7 +133,7 @@ class TrackerInstanceClient(
             val events = repository.getEventsInSync().first()
             if (events.isEmpty()) return
             events.chunked(100).forEach { batch ->
-                Logger.d(tag = TAG) { "submitting ${batch.size} events from queue" }
+                logger.debug { "submitting ${batch.size} events from queue" }
                 try {
                     val r = client.post {
                         url {
@@ -146,14 +146,14 @@ class TrackerInstanceClient(
                         setBody(batch.map { it.event })
                     }
                     if (!r.status.isSuccess()) {
-                        Logger.d(tag = TAG) { "batch event submit failed with code ${r.status.value}" }
+                        logger.debug { "event submit failed with code ${r.status.value}" }
                         return
                     } else {
-                        Logger.d(tag = TAG) { "batch event submit successful" }
+                        logger.debug { "event submit successful" }
                         repository.deleteFromSync(batch.map { it.id })
                     }
                 } catch (e: Exception) {
-                    Logger.w(throwable = e, tag = TAG) { "batch event submit failed" }
+                    logger.warn(throwable = e) { "event submit failed" }
                     return
                 }
             }
@@ -161,6 +161,6 @@ class TrackerInstanceClient(
     }
 
     companion object {
-        private const val TAG = "TrackerInstanceClient"
+        private val logger = KotlinLogging.logger { }
     }
 }

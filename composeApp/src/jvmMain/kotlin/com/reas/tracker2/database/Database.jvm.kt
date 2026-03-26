@@ -2,13 +2,15 @@ package com.reas.tracker2.database
 
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import co.touchlab.kermit.Logger
-import java.io.File
+import com.reas.tracker2.util.PlatformDependentPaths
+import io.github.oshai.kotlinlogging.KotlinLogging
 
-fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
-    val dbFile = File(/*System.getProperty("java.io.tmpdir"), */"client.db")
-    Logger.d(tag = "Database") { "Database file: $dbFile" }
-    return Room.databaseBuilder<AppDatabase>(
-        name = dbFile.absolutePath,
-    )
+private object Database {
+    val logger = KotlinLogging.logger {}
+}
+
+fun getDatabaseBuilder(pathProvider: PlatformDependentPaths): RoomDatabase.Builder<AppDatabase> {
+    val dbFile = pathProvider.getDatabasePath()
+    Database.logger.debug { "Database file: $dbFile" }
+    return Room.databaseBuilder<AppDatabase>(name = dbFile)
 }

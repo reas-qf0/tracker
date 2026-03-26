@@ -1,7 +1,7 @@
 package com.reas.tracker2.shared
 
-import co.touchlab.kermit.Logger
 import com.reas.tracker2.shared.Play.EventInfo
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlin.time.Duration.Companion.seconds
 
@@ -10,11 +10,11 @@ class EventProcessor(
 ) {
     companion object {
         val SKIP_MIN_DURATION = 2.seconds
-        private const val TAG = "EventProcessor"
+        private val logger = KotlinLogging.logger {}
     }
 
-    private val eventFlow = MutableSharedFlow<List<Event>>()
-    private val playFlow = MutableSharedFlow<List<Play>>()
+    private val eventFlow = MutableSharedFlow<List<Event>>(replay = 1)
+    private val playFlow = MutableSharedFlow<List<Play>>(replay = 1)
 
     suspend fun addEvents(events: List<Event>) {
         eventFlow.emit(events)
@@ -30,9 +30,9 @@ class EventProcessor(
         var play = adapter.getLastPlayFromSource(source)
         val eventsSorted = events.sortedBy { it.timestamp }
         if (play != null && eventsSorted[0].timestamp < play.timestamp) {
-            Logger.e(tag = TAG) {
+            logger.error {
                 "ERROR: out-of-sync events source=$source " +
-                "eventTimestamp=${eventsSorted[0].timestamp} playTimestamp=${play.timestamp}"
+                "eventTimestamp=${eventsSorted[0].timestamp} playTimestamp=${play!!.timestamp}"
             }
             return
         }
@@ -99,7 +99,7 @@ class EventProcessor(
 
     suspend fun processQueue() {
         eventFlow.collect { snapshot ->
-            Logger.d(tag = TAG) { "processing ${snapshot.size} events" }
+            logger.debug { "processing ${snapshot.size} events" }
             snapshot.groupBy { it.source }.forEach {
                 process(it.value)
             }

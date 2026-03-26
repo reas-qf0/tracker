@@ -3,14 +3,12 @@ package com.reas.tracker2.database
 import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import co.touchlab.kermit.Logger
+import com.reas.tracker2.util.PlatformDependentPaths
 
-fun getDatabaseBuilder(context: Context): RoomDatabase.Builder<AppDatabase> {
-    val appContext = context.applicationContext
-    val dbFile = appContext.getDatabasePath("database")
-    Logger.d(tag = "Database") { "Database file: $dbFile" }
+fun getDatabaseBuilder(context: Context, pathProvider: PlatformDependentPaths): RoomDatabase.Builder<AppDatabase> {
+    val dbFile = pathProvider.getDatabasePath()
     return Room.databaseBuilder<AppDatabase>(
-        context = appContext,
-        name = dbFile.absolutePath
+        context = context.applicationContext,
+        name = dbFile
     )
 }

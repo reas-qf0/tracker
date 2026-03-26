@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.touchlab.kermit.Logger
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.TrackerInstanceClient
 import com.reas.tracker2.settings.*
@@ -15,8 +14,6 @@ import com.reas.tracker2.ui.navigation.Error
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 import kotlin.time.Duration.Companion.seconds
-
-private const val TAG = "TrackerBackgroundProcesses"
 
 @Composable
 fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
@@ -66,7 +63,6 @@ fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
         if (username.isEmpty()) return@LaunchedEffect
 
         val response = instanceClient.tryLogin()
-        Logger.d { response.toString() }
         if (response != null) {
             applicationState.navigate(Error("Failed to login: \n$response"))
             return@LaunchedEffect
