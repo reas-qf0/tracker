@@ -3,14 +3,17 @@ package com.reas.tracker2.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -18,11 +21,8 @@ import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.*
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.ArtistInfo
-import com.reas.tracker2.ui.navigation.ChartSort
-import com.reas.tracker2.ui.navigation.PreviewApplicationState
-import com.reas.tracker2.ui.theme.TrackerTheme
 import com.reas.tracker2.ui.viewmodels.ArtistInfoScreenViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import tracker2.composeapp.generated.resources.*
@@ -36,40 +36,28 @@ fun ArtistInfoScreen(
     viewModel: ArtistInfoScreenViewModel = koinViewModel()
 ) {
     val artist = arguments.artist
-    val sort = arguments.sort
+    val sort by viewModel.sort().collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     val period = TimePeriod.ALLTIME
 
     val plays by remember { viewModel.plays(artist, period) }.collectAsStateWithLifecycle()
     val timePlayed by remember { viewModel.timePlayed(artist, period) }.collectAsStateWithLifecycle()
     val playsAsString = if (plays == -1) "..." else plays.toString()
     val timePlayedAsString = if (timePlayed.isNegative()) "..." else timePlayed.inWholeMinutes.minutes.toString()
-    val rank by remember(plays, timePlayed) {
-        when (sort) {
-            ChartSort.PLAYS ->
-                if (plays == -1) MutableStateFlow("...") else viewModel.playRank(plays, period)
-            ChartSort.TIME ->
-                if (timePlayed.isNegative()) MutableStateFlow("...") else viewModel.rank(timePlayed, period)
-        }
-    }.collectAsStateWithLifecycle()
-    val albums = remember {
-        when (sort) {
-            ChartSort.TIME -> viewModel.topAlbums(artist, period)
-            ChartSort.PLAYS -> viewModel.topAlbumsByPlayCount(artist, period)
-        }
-    }.collectAsLazyPagingItems()
-    val tracks = remember {
-        when (sort) {
-            ChartSort.TIME -> viewModel.topTracks(artist, period)
-            ChartSort.PLAYS -> viewModel.topTracksByPlayCount(artist, period)
-        }
-    }.collectAsLazyPagingItems()
+    val timeRank by remember { viewModel.rank(artist, period) }.collectAsStateWithLifecycle()
+    val playRank by remember { viewModel.playRank(artist, period) }.collectAsStateWithLifecycle()
+
+    val timeAlbums = remember { viewModel.topAlbums(artist, period) }.collectAsLazyPagingItems()
+    val playAlbums = remember { viewModel.topAlbumsByPlayCount(artist, period) }.collectAsLazyPagingItems()
+    val timeTracks = remember { viewModel.topTracks(artist, period) }.collectAsLazyPagingItems()
+    val playTracks = remember { viewModel.topTracksByPlayCount(artist, period) }.collectAsLazyPagingItems()
 
     applicationState.setTitle(artist)
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        SortOrderSelectionChip(sort, { applicationState.navigate(arguments.copy(sort = it)) })
+        SortOrderSelectionChip(sort, { scope.launch { viewModel.setSort(it) } })
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -98,15 +86,21 @@ fun ArtistInfoScreen(
                     Text(stringResource(Res.string.time_played).lowercase(), color = MaterialTheme.colorScheme.secondary)
                 }
                 InfoBox {
-                    AutosizingText(rank, style = MaterialTheme.typography.headlineSmall)
-                    Text(
-                        when (sort) {
-                            ChartSort.TIME -> stringResource(Res.string.in_charts_by_time)
-                            ChartSort.PLAYS -> stringResource(Res.string.in_charts_by_plays)
-                        },
-                        color = MaterialTheme.colorScheme.secondary,
-                        textAlign = TextAlign.Center
-                    )
+                    if (sort.byTime) {
+                        AutosizingText(timeRank, style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            stringResource(Res.string.in_charts_by_time),
+                            color = MaterialTheme.colorScheme.secondary,
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        AutosizingText(playRank, style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            stringResource(Res.string.in_charts_by_plays),
+                            color = MaterialTheme.colorScheme.secondary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
@@ -118,8 +112,9 @@ fun ArtistInfoScreen(
                 onClick = {},
                 modifier = Modifier.padding(top = 5.dp)
             )
-            ChartColumn(
-                albums, limit = 5,
+            DoubleChartColumn(
+                sort.byTime, timeAlbums, playAlbums,
+                limit = 5,
                 onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
             )
 
@@ -131,42 +126,13 @@ fun ArtistInfoScreen(
                 onClick = {},
                 modifier = Modifier.padding(top = 5.dp)
             )
-            ChartColumn(
-                tracks, limit = 5,
+            DoubleChartColumn(
+                sort.byTime, timeTracks, playTracks,
+                limit = 5,
                 onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
             )
 
             Spacer(Modifier.height(5.dp))
-        }
-    }
-}
-
-
-@Preview
-@Composable
-fun ArtistInfoScreenPreview() {
-    TrackerTheme {
-        Scaffold { innerPadding ->
-            ArtistInfoScreen(
-                arguments = ArtistInfo("Artist"),
-                applicationState = PreviewApplicationState(),
-                modifier = Modifier.padding(innerPadding)
-            )
-        }
-    }
-}
-
-
-@Preview
-@Composable
-fun ArtistInfoScreenPreviewDark() {
-    TrackerTheme(darkTheme = true) {
-        Scaffold { innerPadding ->
-            ArtistInfoScreen(
-                arguments = ArtistInfo("Artist"),
-                applicationState = PreviewApplicationState(),
-                modifier = Modifier.padding(innerPadding)
-            )
         }
     }
 }

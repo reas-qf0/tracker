@@ -7,8 +7,8 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.core.app.ActivityCompat
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 private data class ChannelDescription(
     val id: String,
@@ -29,6 +29,7 @@ class NotificationWrapper(
 
     private val channels = hashMapOf<String, String>()
     private var nextId = 0
+    private val logger = KotlinLogging.logger {}
 
     init {
         channelDescriptions.forEach {
@@ -57,7 +58,7 @@ class NotificationWrapper(
                 Manifest.permission.POST_NOTIFICATIONS
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.e("MessagingService", "Notifications permission not granted")
+            logger.error { "Notifications permission not granted" }
         }
         val notificationId = id ?: nextId++
         val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
@@ -75,7 +76,6 @@ class NotificationWrapper(
     fun hide(id: Int) {
         notificationManager.cancel(id)
     }
-
 }
 
 typealias NotificationBuilder = Notification.Builder.(Context) -> Unit

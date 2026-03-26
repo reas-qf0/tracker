@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -19,10 +20,9 @@ import com.reas.tracker2.ui.components.InfoBox
 import com.reas.tracker2.ui.components.ListEntryWithImage
 import com.reas.tracker2.ui.components.SortOrderSelectionChip
 import com.reas.tracker2.ui.navigation.ApplicationState
-import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.navigation.TrackInfo
 import com.reas.tracker2.ui.viewmodels.TrackInfoScreenViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import tracker2.composeapp.generated.resources.*
@@ -36,28 +36,23 @@ fun TrackInfoScreen(
     viewModel: TrackInfoScreenViewModel = koinViewModel()
 ) {
     val track = arguments.track
-    val sort = arguments.sort
+    val sort by viewModel.sort().collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     val period = TimePeriod.ALLTIME
 
     val plays by remember { viewModel.plays(track, period) }.collectAsStateWithLifecycle()
     val timePlayed by remember { viewModel.timePlayed(track, period) }.collectAsStateWithLifecycle()
     val playsAsString = if (plays == -1) "..." else plays.toString()
     val timePlayedAsString = if (timePlayed.isNegative()) "..." else timePlayed.inWholeMinutes.minutes.toString()
-    val rank by remember(plays, timePlayed) {
-        when (sort) {
-            ChartSort.PLAYS ->
-                if (plays == -1) MutableStateFlow("...") else viewModel.playRank(plays, period)
-            ChartSort.TIME ->
-                if (timePlayed.isNegative()) MutableStateFlow("...") else viewModel.rank(timePlayed, period)
-        }
-    }.collectAsStateWithLifecycle()
+    val timeRank by remember { viewModel.rank(track, period) }.collectAsStateWithLifecycle()
+    val playRank by remember { viewModel.playRank(track, period) }.collectAsStateWithLifecycle()
 
     applicationState.setTitle("${track.artist} - ${track.track}")
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        SortOrderSelectionChip(sort, { applicationState.navigate(arguments.copy(sort = it)) })
+        SortOrderSelectionChip(sort, { scope.launch { viewModel.setSort(it) } })
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -102,15 +97,21 @@ fun TrackInfoScreen(
                     Text(stringResource(Res.string.time_played).lowercase(), color = MaterialTheme.colorScheme.secondary)
                 }
                 InfoBox {
-                    AutosizingText(rank, style = MaterialTheme.typography.headlineSmall)
-                    Text(
-                        when (sort) {
-                            ChartSort.TIME -> stringResource(Res.string.in_charts_by_time)
-                            ChartSort.PLAYS -> stringResource(Res.string.in_charts_by_plays)
-                        },
-                        color = MaterialTheme.colorScheme.secondary,
-                        textAlign = TextAlign.Center
-                    )
+                    if (sort.byTime) {
+                        AutosizingText(timeRank, style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            stringResource(Res.string.in_charts_by_time),
+                            color = MaterialTheme.colorScheme.secondary,
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        AutosizingText(playRank, style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            stringResource(Res.string.in_charts_by_plays),
+                            color = MaterialTheme.colorScheme.secondary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

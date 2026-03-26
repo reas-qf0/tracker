@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.*
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.settings.*
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
+import com.reas.tracker2.ui.navigation.ChartSort
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -14,7 +16,10 @@ import org.koin.core.time.inMs
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
-class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel() {
+class ArtistInfoScreenViewModel(
+    private val repository: Repository,
+    private val settings: Settings,
+): ViewModel() {
     private fun<T : Any> get(factory: () -> PagingSource<Int, T>, transform: (T) -> ChartEntryUiState) = Pager(
         initialKey = 0,
         pagingSourceFactory = factory,
@@ -39,7 +44,7 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
             initialValue = -Duration.INFINITE
         )
 
-    fun rank(time: Duration, period: TimePeriod) = repository.getArtistRank(time, period)
+    fun rank(artist: String, period: TimePeriod) = repository.getArtistRank(artist, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -47,7 +52,7 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
             initialValue = "..."
         )
 
-    fun playRank(count: Int, period: TimePeriod) = repository.getArtistRankByPlayCount(count, period)
+    fun playRank(artist: String, period: TimePeriod) = repository.getArtistRankByPlayCount(artist, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -61,6 +66,7 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
         ChartEntryUiState(
             label = info._album,
             label2 = null,
+            key = info.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
             bottomSheetInfo = BottomSheetInfo(album = info.album)
@@ -73,6 +79,7 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
         ChartEntryUiState(
             label = info._album,
             label2 = null,
+            key = info.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
             bottomSheetInfo = BottomSheetInfo(album = info.album)
@@ -85,9 +92,10 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
         ChartEntryUiState(
             label = info._track,
             label2 = null,
+            key = info.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
-            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum())
+            bottomSheetInfo = BottomSheetInfo(track = info.track)
         )
     }
 
@@ -97,10 +105,20 @@ class ArtistInfoScreenViewModel(private val repository: Repository): ViewModel()
         ChartEntryUiState(
             label = info._track,
             label2 = null,
+            key = info.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
-            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum())
+            bottomSheetInfo = BottomSheetInfo(track = info.track)
         )
+    }
+
+    fun sort() = settings.flow(chartSort).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+        initialValue = settings[chartSort]
+    )
+    suspend fun setSort(sort: ChartSort) {
+        settings[chartSort] = sort
     }
 
     companion object {

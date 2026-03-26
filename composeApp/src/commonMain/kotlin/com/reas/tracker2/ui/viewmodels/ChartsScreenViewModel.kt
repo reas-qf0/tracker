@@ -5,22 +5,26 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.*
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
+import com.reas.tracker2.settings.*
 import com.reas.tracker2.shared.Album
 import com.reas.tracker2.shared.TimePeriod
-import com.reas.tracker2.shared.Track
+import com.reas.tracker2.shared.TrackWithAlbum
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.navigation.ChartType
 import com.reas.tracker2.ui.navigation.Charts
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import org.koin.core.time.inMs
 import kotlin.time.Duration.Companion.minutes
 
 class ChartsScreenViewModel(
     private val repository: Repository,
-    private val networkRepository: NetworkRepository
+    private val networkRepository: NetworkRepository,
+    private val settings: Settings,
 ) : ViewModel() {
     private fun<T : Any> get(factory: () -> PagingSource<Int, T>, transform: (T) -> ChartEntryUiState) = Pager(
         initialKey = 0,
@@ -38,6 +42,7 @@ class ChartsScreenViewModel(
         ChartEntryUiState(
             label = info.artist,
             label2 = null,
+            key = info.artist,
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
             bottomSheetInfo = BottomSheetInfo(artist = info.artist),
@@ -51,6 +56,7 @@ class ChartsScreenViewModel(
         ChartEntryUiState(
             label = info._album,
             label2 = info._artist,
+            key = info.album.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
             bottomSheetInfo = BottomSheetInfo(album = info.album),
@@ -64,9 +70,10 @@ class ChartsScreenViewModel(
         ChartEntryUiState(
             label = info._track,
             label2 = info._artist,
+            key = info.track.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
-            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum()),
+            bottomSheetInfo = BottomSheetInfo(track = info.track),
             url = { getTrackImageUrl(info.track) }
         )
     }
@@ -77,6 +84,7 @@ class ChartsScreenViewModel(
         ChartEntryUiState(
             label = info.artist,
             label2 = null,
+            key = info.artist,
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
             bottomSheetInfo = BottomSheetInfo(artist = info.artist),
@@ -90,6 +98,7 @@ class ChartsScreenViewModel(
         ChartEntryUiState(
             label = info._album,
             label2 = info._artist,
+            key = info.album.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
             bottomSheetInfo = BottomSheetInfo(album = info.album),
@@ -103,15 +112,15 @@ class ChartsScreenViewModel(
         ChartEntryUiState(
             label = info._track,
             label2 = info._artist,
+            key = info.track.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
-            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum()),
+            bottomSheetInfo = BottomSheetInfo(track = info.track),
             url = { getTrackImageUrl(info.track) }
         )
     }
 
-    fun getInfo(arguments: Charts): Flow<PagingData<ChartEntryUiState>> {
-        val sort = arguments.sort
+    fun getInfo(arguments: Charts, sort: ChartSort): Flow<PagingData<ChartEntryUiState>> {
         val type = arguments.type
         val period = TimePeriod.ALLTIME
 
@@ -139,5 +148,20 @@ class ChartsScreenViewModel(
         return networkRepository.getAlbumImageUrl(album, "large")
     }
 
-    suspend fun getTrackImageUrl(track: Track) = null
+    suspend fun getTrackImageUrl(track: TrackWithAlbum): String? {
+        return track.asAlbumOrNull?.let { getAlbumImageUrl(it) }
+    }
+
+    fun sort() = settings.flow(chartSort).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+        initialValue = settings[chartSort]
+    )
+    suspend fun setSort(sort: ChartSort) {
+        settings[chartSort] = sort
+    }
+
+    companion object {
+        private const val TIMEOUT_MILLIS = 5000L
+    }
 }

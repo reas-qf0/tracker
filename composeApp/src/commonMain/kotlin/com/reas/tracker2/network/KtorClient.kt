@@ -12,7 +12,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration.Companion.seconds
 
-object KtorClient {
+private object KtorClient {
     val logger = KotlinLogging.logger {}
 }
 

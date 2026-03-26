@@ -1,8 +1,13 @@
 package com.reas.tracker2.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -13,6 +18,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemKey
+import com.reas.tracker2.startKoinMp
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.theme.TrackerTheme
 import kotlin.math.min
@@ -21,6 +28,7 @@ import kotlin.math.min
 data class ChartEntryUiState(
     val label: String,
     val label2: String?,
+    val key: String,
     val metric: Double,
     val metricAsString: String,
     val bottomSheetInfo: BottomSheetInfo,
@@ -28,49 +36,113 @@ data class ChartEntryUiState(
 )
 
 @Composable
+fun DoubleChartColumn(
+    sortedByTime: Boolean,
+    itemsByTime: LazyPagingItems<ChartEntryUiState>,
+    itemsByPlays: LazyPagingItems<ChartEntryUiState>,
+    limit: Int,
+    onClick: (ChartEntryUiState) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box {
+        AnimatedVisibility(
+            sortedByTime,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            ChartColumn(itemsByTime, limit, onClick, modifier)
+        }
+        AnimatedVisibility(
+            !sortedByTime,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            ChartColumn(itemsByPlays, limit, onClick, modifier)
+        }
+    }
+}
+
+@Composable
+fun LazyDoubleChartColumn(
+    sortedByTime: Boolean,
+    itemsByTime: LazyPagingItems<ChartEntryUiState>,
+    itemsByPlays: LazyPagingItems<ChartEntryUiState>,
+    onClick: (ChartEntryUiState) -> Unit,
+    modifier: Modifier = Modifier,
+    state: LazyListState = rememberLazyListState(),
+) {
+    Box {
+        AnimatedVisibility(
+            sortedByTime,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            LazyChartColumn(itemsByTime, onClick, modifier, state)
+        }
+        AnimatedVisibility(
+            !sortedByTime,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            LazyChartColumn(itemsByPlays, onClick, modifier, state)
+        }
+    }
+}
+
+@Composable
 fun ChartColumn(
+    items: LazyPagingItems<ChartEntryUiState>,
+    limit: Int,
+    onClick: (ChartEntryUiState) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        repeat(min(limit, items.itemCount)) { i ->
+            val entry = items[i]
+            entry?.let {
+                ChartEntry(
+                    number = i + 1,
+                    label = entry.label,
+                    label2 = entry.label2,
+                    metricAsString = entry.metricAsString,
+                    metric = entry.metric / items[0]!!.metric,
+                    onClick = { onClick(entry) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LazyChartColumn(
     items: LazyPagingItems<ChartEntryUiState>,
     onClick: (ChartEntryUiState) -> Unit,
     modifier: Modifier = Modifier,
-    limit: Int? = null,
+    state: LazyListState = rememberLazyListState()
 ) {
-    if (limit != null) {
-        Column(
-            modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            repeat(min(limit, items.itemCount)) { i ->
-                val entry = items[i]
-                entry?.let {
-                    ChartEntry(
-                        number = i + 1,
-                        label = entry.label,
-                        label2 = entry.label2,
-                        metricAsString = entry.metricAsString,
-                        metric = entry.metric / items[0]!!.metric,
-                        onClick = { onClick(entry) }
-                    )
-                }
-            }
-        }
-    } else {
-        LazyColumn(
-            modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            items(items.itemCount) { i ->
-                val entry = items[i]
-                entry?.let {
-                    ChartEntry(
-                        number = i + 1,
-                        label = entry.label,
-                        label2 = entry.label2,
-                        metricAsString = entry.metricAsString,
-                        metric = entry.metric / items[0]!!.metric,
-                        onClick = { onClick(entry) },
-                        url = entry.url
-                    )
-                }
+    LazyColumn(
+        modifier = modifier,
+        state = state,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        items(
+            items.itemCount,
+            key = items.itemKey { it.key },
+        ) { i ->
+            val entry = items[i]
+            entry?.let {
+                ChartEntry(
+                    number = i + 1,
+                    label = entry.label,
+                    label2 = entry.label2,
+                    metricAsString = entry.metricAsString,
+                    metric = entry.metric / items[0]!!.metric,
+                    onClick = { onClick(entry) },
+                    url = entry.url
+                )
             }
         }
     }
@@ -81,7 +153,7 @@ fun ChartColumn(
 fun ChartEntry(
     number: Int,
     label: String,
-    label2: String? = null,
+    label2: String?,
     metric: Double,
     metricAsString: String,
     modifier: Modifier = Modifier,
@@ -135,6 +207,7 @@ fun ChartEntry(
 @Preview(heightDp = 87)
 @Composable
 private fun ChartEntryPreview() {
+    startKoinMp {}
     TrackerTheme {
         Scaffold { innerPadding ->
             ChartEntry(1, "Album Name", "Artist Name", 0.5, "Metric",

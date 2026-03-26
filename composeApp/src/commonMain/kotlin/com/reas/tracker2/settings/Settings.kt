@@ -3,6 +3,7 @@ package com.reas.tracker2.settings
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.reas.tracker2.ui.navigation.ChartSort
 
 val isScrobblingEnabled = Setting(
     key = booleanPreferencesKey("isScrobblingEnabled"),
@@ -20,4 +21,11 @@ val instancePort = Setting(
 val username = Setting(
     key = stringPreferencesKey("username"),
     defaultValue = ""
+)
+
+val chartSort = SerializableSetting(
+    key = intPreferencesKey("chartSort"),
+    defaultValue = ChartSort.TIME,
+    encode = { it.ordinal },
+    decode = { ChartSort.entries[it] }
 )

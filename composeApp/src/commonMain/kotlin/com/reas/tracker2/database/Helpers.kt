@@ -2,7 +2,7 @@ package com.reas.tracker2.database
 
 import androidx.room.ColumnInfo
 import com.reas.tracker2.shared.Album
-import com.reas.tracker2.shared.Track
+import com.reas.tracker2.shared.TrackWithAlbum
 import kotlin.time.Duration
 
 // helper classes to pack information from db responses
@@ -23,10 +23,14 @@ data class TrackWithPlayCount(
     val _artist: String,
     @ColumnInfo(name = "track")
     val _track: String,
+    @ColumnInfo(name = "albumArtist")
+    val _albumArtist: String,
+    @ColumnInfo(name = "album")
+    val _album: String,
     val playCount: Int
 ) {
-    val track: Track
-        get() = Track(_track, _artist)
+    val track: TrackWithAlbum
+        get() = TrackWithAlbum(_track, _artist, _album, _albumArtist)
 }
 
 data class TrackWithTimePlayed(
@@ -34,10 +38,14 @@ data class TrackWithTimePlayed(
     val _artist: String,
     @ColumnInfo(name = "track")
     val _track: String,
+    @ColumnInfo(name = "albumArtist")
+    val _albumArtist: String,
+    @ColumnInfo(name = "album")
+    val _album: String,
     val timePlayed: Duration
 ) {
-    val track: Track
-        get() = Track(_track, _artist)
+    val track: TrackWithAlbum
+        get() = TrackWithAlbum(_track, _artist, _album, _albumArtist)
 }
 
 data class AlbumWithPlayCount(

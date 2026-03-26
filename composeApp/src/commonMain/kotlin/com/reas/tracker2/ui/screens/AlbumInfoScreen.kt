@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -20,9 +21,8 @@ import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.*
 import com.reas.tracker2.ui.navigation.AlbumInfo
 import com.reas.tracker2.ui.navigation.ApplicationState
-import com.reas.tracker2.ui.navigation.ChartSort
 import com.reas.tracker2.ui.viewmodels.AlbumInfoScreenViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import tracker2.composeapp.generated.resources.*
@@ -36,34 +36,26 @@ fun AlbumInfoScreen(
     viewModel: AlbumInfoScreenViewModel = koinViewModel()
 ) {
     val album = arguments.album
-    val sort = arguments.sort
+    val sort by viewModel.sort().collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     val period = TimePeriod.ALLTIME
 
     val plays by remember { viewModel.plays(album, period) }.collectAsStateWithLifecycle()
     val timePlayed by remember { viewModel.timePlayed(album, period) }.collectAsStateWithLifecycle()
     val playsAsString = if (plays == -1) "..." else plays.toString()
     val timePlayedAsString = if (timePlayed.isNegative()) "..." else timePlayed.inWholeMinutes.minutes.toString()
-    val rank by remember(plays, timePlayed) {
-        when (sort) {
-            ChartSort.PLAYS ->
-                if (plays == -1) MutableStateFlow("...") else viewModel.playRank(plays, period)
-            ChartSort.TIME ->
-                if (timePlayed.isNegative()) MutableStateFlow("...") else viewModel.rank(timePlayed, period)
-        }
-    }.collectAsStateWithLifecycle()
-    val tracks = remember {
-        when (sort) {
-            ChartSort.TIME -> viewModel.topTracks(album, period)
-            ChartSort.PLAYS -> viewModel.topTracksByPlayCount(album, period)
-        }
-    }.collectAsLazyPagingItems()
+    val timeRank by remember { viewModel.rank(album, period) }.collectAsStateWithLifecycle()
+    val playRank by remember { viewModel.playRank(album, period) }.collectAsStateWithLifecycle()
+
+    val timeTracks = remember { viewModel.topTracks(album, period) }.collectAsLazyPagingItems()
+    val playTracks = remember { viewModel.topTracksByPlayCount(album, period) }.collectAsLazyPagingItems()
 
     applicationState.setTitle("${album.artist} - ${album.title}")
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
-        SortOrderSelectionChip(sort, { applicationState.navigate(arguments.copy(sort = it)) })
+        SortOrderSelectionChip(sort, { scope.launch { viewModel.setSort(it) } })
         Column(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -95,15 +87,21 @@ fun AlbumInfoScreen(
                     Text(stringResource(Res.string.time_played).lowercase(), color = MaterialTheme.colorScheme.secondary)
                 }
                 InfoBox {
-                    AutosizingText(rank, style = MaterialTheme.typography.headlineSmall)
-                    Text(
-                        when (sort) {
-                            ChartSort.TIME -> stringResource(Res.string.in_charts_by_time)
-                            ChartSort.PLAYS -> stringResource(Res.string.in_charts_by_plays)
-                        },
-                        color = MaterialTheme.colorScheme.secondary,
-                        textAlign = TextAlign.Center
-                    )
+                    if (sort.byTime) {
+                        AutosizingText(timeRank, style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            stringResource(Res.string.in_charts_by_time),
+                            color = MaterialTheme.colorScheme.secondary,
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        AutosizingText(playRank, style = MaterialTheme.typography.headlineSmall)
+                        Text(
+                            stringResource(Res.string.in_charts_by_plays),
+                            color = MaterialTheme.colorScheme.secondary,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
@@ -115,8 +113,9 @@ fun AlbumInfoScreen(
                 onClick = {},
                 modifier = Modifier.padding(top = 5.dp)
             )
-            ChartColumn(
-                tracks, limit = 5,
+            DoubleChartColumn(
+                sort.byTime, timeTracks, playTracks,
+                limit = 5,
                 onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
             )
 

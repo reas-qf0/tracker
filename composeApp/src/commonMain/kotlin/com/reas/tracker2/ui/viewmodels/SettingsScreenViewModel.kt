@@ -16,7 +16,7 @@ class SettingsScreenViewModel(private val settings: Settings) : ViewModel() {
 
     fun setScrobblingEnabled(value: Boolean) {
         viewModelScope.launch {
-            settings.setAsync(isScrobblingEnabled, value)
+            settings[isScrobblingEnabled] = value
         }
     }
 

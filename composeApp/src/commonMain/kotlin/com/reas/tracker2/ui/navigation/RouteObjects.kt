@@ -49,15 +49,18 @@ enum class ChartSort {
             get() = Icons.Filled.AccessTime
         override val label: StringResource
             get() = Res.string.time_played
+        override val byTime = true
     }, PLAYS {
         override val icon: ImageVector
             get() = Icons.Filled.PlayArrow
         override val label: StringResource
             get() = Res.string.plays
+        override val byTime = false
     };
 
     @Transient abstract val icon: ImageVector
     @Transient abstract val label: StringResource
+    @Transient abstract val byTime: Boolean
 }
 
 
@@ -71,7 +74,6 @@ data class TrackHistory(
 
 @Serializable
 data class Charts(
-    val sort: ChartSort = ChartSort.TIME,
     val type: ChartType = ChartType.ARTISTS
 ) : Route()
 
@@ -83,20 +85,17 @@ object Debug : Route()
 
 @Serializable
 data class ArtistInfo(
-    val artist: String,
-    val sort: ChartSort = ChartSort.TIME
+    val artist: String
 ) : Route()
 
 @Serializable
 data class AlbumInfo(
-    val album: Album,
-    val sort: ChartSort = ChartSort.TIME
+    val album: Album
 ) : Route()
 
 @Serializable
 data class TrackInfo(
-    val track: TrackWithAlbum,
-    val sort: ChartSort = ChartSort.TIME
+    val track: TrackWithAlbum
 ) : Route()
 
 @Serializable

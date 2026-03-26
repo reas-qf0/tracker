@@ -61,16 +61,16 @@ interface PlayDao {
     fun getMostPlayedArtistsByPlayCount(start: Instant, end: Instant): PagingSource<Int, ArtistWithPlayCount>
 
     @Query("WITH t0 AS (" +
-            "SELECT SUM(timePlayed) as metric FROM plays " +
+            "SELECT artist, SUM(timePlayed) as metric FROM plays " +
             "WHERE $inTimeRange AND $isNotSkip GROUP BY artist" +
-            ") SELECT COUNT(*) FROM t0 WHERE metric > :time")
-    fun getArtistRank(time: Duration, start: Instant, end: Instant): Flow<Int>
+            ") SELECT COUNT(*) FROM t0 WHERE metric > (SELECT metric FROM t0 WHERE $matchesArtist)")
+    fun getArtistRank(artist: String, start: Instant, end: Instant): Flow<Int>
 
     @Query("WITH t0 AS (" +
-            "SELECT COUNT(*) as metric FROM plays " +
+            "SELECT artist, COUNT(*) as metric FROM plays " +
             "WHERE $inTimeRange AND $isFullPlay GROUP BY artist" +
-            ") SELECT COUNT(*) FROM t0 WHERE metric > :count")
-    fun getArtistRankByPlayCount(count: Int, start: Instant, end: Instant): Flow<Int>
+            ") SELECT COUNT(*) FROM t0 WHERE metric > (SELECT metric FROM t0 WHERE $matchesArtist)")
+    fun getArtistRankByPlayCount(artist: String, start: Instant, end: Instant): Flow<Int>
 
     @Query("SELECT COUNT(*) FROM plays " +
             "WHERE $matchesTrack AND $inTimeRange AND $isFullPlay")
@@ -85,47 +85,47 @@ interface PlayDao {
             "ORDER BY timestamp DESC")
     fun getTrackHistory(artist: String, track: String, album: String?, albumArtist: String?): PagingSource<Int, PlayEntity>
 
-    @Query("SELECT artist, track, SUM(timePlayed) as timePlayed FROM plays " +
+    @Query("SELECT artist, track, album, albumArtist, SUM(timePlayed) as timePlayed FROM plays " +
             "WHERE $inTimeRange AND $isNotSkip " +
-            "GROUP BY artist, track ORDER BY timePlayed DESC")
+            "GROUP BY artist, track, album, albumArtist ORDER BY timePlayed DESC")
     fun getMostPlayedTracks(start: Instant, end: Instant): PagingSource<Int, TrackWithTimePlayed>
 
-    @Query("SELECT artist, track, COUNT(*) as playCount FROM plays " +
+    @Query("SELECT artist, track, album, albumArtist, COUNT(*) as playCount FROM plays " +
             "WHERE $inTimeRange AND $isFullPlay" +
-            "GROUP BY artist, track ORDER BY playCount DESC")
+            "GROUP BY artist, track, album, albumArtist ORDER BY playCount DESC")
     fun getMostPlayedTracksByPlayCount(start: Instant, end: Instant): PagingSource<Int, TrackWithPlayCount>
 
-    @Query("SELECT artist, track, SUM(timePlayed) as timePlayed FROM plays " +
+    @Query("SELECT artist, track, album, albumArtist, SUM(timePlayed) as timePlayed FROM plays " +
             "WHERE $inTimeRange AND $isNotSkip AND $matchesArtist " +
-            "GROUP BY artist, track ORDER BY timePlayed DESC")
+            "GROUP BY artist, track, album, albumArtist ORDER BY timePlayed DESC")
     fun getMostPlayedTracksFromArtist(artist: String, start: Instant, end: Instant): PagingSource<Int, TrackWithTimePlayed>
 
-    @Query("SELECT artist, track, COUNT(*) as playCount FROM plays " +
+    @Query("SELECT artist, track, album, albumArtist, COUNT(*) as playCount FROM plays " +
             "WHERE $inTimeRange AND $isFullPlay AND $matchesArtist " +
-            "GROUP BY artist, track ORDER BY playCount DESC")
+            "GROUP BY artist, track, album, albumArtist ORDER BY playCount DESC")
     fun getMostPlayedTracksFromArtistByPlayCount(artist: String, start: Instant, end: Instant): PagingSource<Int, TrackWithPlayCount>
 
-    @Query("SELECT artist, track, SUM(timePlayed) as timePlayed FROM plays " +
+    @Query("SELECT artist, track, album, albumArtist, SUM(timePlayed) as timePlayed FROM plays " +
             "WHERE $inTimeRange AND $isNotSkip AND $matchesAlbum " +
-            "GROUP BY artist, track ORDER BY timePlayed DESC")
+            "GROUP BY artist, track, album, albumArtist ORDER BY timePlayed DESC")
     fun getMostPlayedTracksFromAlbum(artist: String, album: String, start: Instant, end: Instant): PagingSource<Int, TrackWithTimePlayed>
 
-    @Query("SELECT artist, track, COUNT(*) as playCount FROM plays " +
+    @Query("SELECT artist, track, album, albumArtist, COUNT(*) as playCount FROM plays " +
             "WHERE $inTimeRange AND $isFullPlay AND $matchesAlbum " +
-            "GROUP BY artist, track ORDER BY playCount DESC")
+            "GROUP BY artist, track, album, albumArtist ORDER BY playCount DESC")
     fun getMostPlayedTracksFromAlbumByPlayCount(artist: String, album: String, start: Instant, end: Instant): PagingSource<Int, TrackWithPlayCount>
 
     @Query("WITH t0 AS (" +
-            "SELECT SUM(timePlayed) as metric FROM plays " +
-            "WHERE $inTimeRange AND $isNotSkip GROUP BY artist, track" +
-            ") SELECT COUNT(*) FROM t0 WHERE metric > :time")
-    fun getTrackRank(time: Duration, start: Instant, end: Instant): Flow<Int>
+            "SELECT artist, track, album, albumArtist, SUM(timePlayed) as metric FROM plays " +
+            "WHERE $inTimeRange AND $isNotSkip GROUP BY artist, track, album, albumArtist" +
+            ") SELECT COUNT(*) FROM t0 WHERE metric > (SELECT metric FROM t0 WHERE $matchesTrack)")
+    fun getTrackRank(artist: String, track: String, album: String?, albumArtist: String?, start: Instant, end: Instant): Flow<Int>
 
     @Query("WITH t0 AS (" +
-            "SELECT COUNT(*) as metric FROM plays " +
-            "WHERE $inTimeRange AND $isFullPlay GROUP BY artist, track" +
-            ") SELECT COUNT(*) FROM t0 WHERE metric > :count")
-    fun getTrackRankByPlayCount(count: Int, start: Instant, end: Instant): Flow<Int>
+            "SELECT artist, track, album, albumArtist, COUNT(*) as metric FROM plays " +
+            "WHERE $inTimeRange AND $isFullPlay GROUP BY artist, track, album, albumArtist" +
+            ") SELECT COUNT(*) FROM t0 WHERE metric > (SELECT metric FROM t0 WHERE $matchesTrack)")
+    fun getTrackRankByPlayCount(artist: String, track: String, album: String?, albumArtist: String?, start: Instant, end: Instant): Flow<Int>
 
     @Query("SELECT COUNT(*) FROM plays WHERE $matchesAlbum " +
             "AND $inTimeRange AND $isFullPlay")
@@ -156,16 +156,16 @@ interface PlayDao {
     fun getMostPlayedAlbumsFromArtistByPlayCount(artist: String, start: Instant, end: Instant): PagingSource<Int, AlbumWithPlayCount>
 
     @Query("WITH t0 AS (" +
-            "SELECT SUM(timePlayed) as metric FROM plays " +
+            "SELECT albumArtist, album, SUM(timePlayed) as metric FROM plays " +
             "WHERE $inTimeRange AND $isNotSkip AND $hasAlbum GROUP BY albumArtist, album" +
-            ") SELECT COUNT(*) FROM t0 WHERE metric > :time")
-    fun getAlbumRank(time: Duration, start: Instant, end: Instant): Flow<Int>
+            ") SELECT COUNT(*) FROM t0 WHERE metric > (SELECT metric FROM t0 WHERE $matchesAlbum)")
+    fun getAlbumRank(artist: String, album: String, start: Instant, end: Instant): Flow<Int>
 
     @Query("WITH t0 AS (" +
-            "SELECT COUNT(*) as metric FROM plays " +
+            "SELECT albumArtist, album, COUNT(*) as metric FROM plays " +
             "WHERE $inTimeRange AND $isFullPlay AND $hasAlbum GROUP BY albumArtist, album" +
-            ") SELECT COUNT(*) FROM t0 WHERE metric > :count")
-    fun getAlbumRankByPlayCount(count: Int, start: Instant, end: Instant): Flow<Int>
+            ") SELECT COUNT(*) FROM t0 WHERE metric > (SELECT metric FROM t0 WHERE $matchesAlbum)")
+    fun getAlbumRankByPlayCount(artist: String, album: String, start: Instant, end: Instant): Flow<Int>
 
     @Query("SELECT COUNT(*) FROM plays")
     fun getPlayCount(): Flow<Int>

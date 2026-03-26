@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.*
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
+import com.reas.tracker2.settings.*
 import com.reas.tracker2.shared.Album
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
+import com.reas.tracker2.ui.navigation.ChartSort
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -18,7 +20,8 @@ import kotlin.time.Duration.Companion.minutes
 
 class AlbumInfoScreenViewModel(
     private val repository: Repository,
-    private val networkRepository: NetworkRepository
+    private val networkRepository: NetworkRepository,
+    private val settings: Settings,
 ): ViewModel() {
     private fun<T : Any> get(factory: () -> PagingSource<Int, T>, transform: (T) -> ChartEntryUiState) = Pager(
         initialKey = 0,
@@ -44,7 +47,7 @@ class AlbumInfoScreenViewModel(
             initialValue = -Duration.INFINITE
         )
 
-    fun rank(time: Duration, period: TimePeriod) = repository.getAlbumRank(time, period)
+    fun rank(album: Album, period: TimePeriod) = repository.getAlbumRank(album, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -52,7 +55,7 @@ class AlbumInfoScreenViewModel(
             initialValue = "..."
         )
 
-    fun playRank(count: Int, period: TimePeriod) = repository.getAlbumRankByPlayCount(count, period)
+    fun playRank(album: Album, period: TimePeriod) = repository.getAlbumRankByPlayCount(album, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -66,9 +69,10 @@ class AlbumInfoScreenViewModel(
         ChartEntryUiState(
             label = info._track,
             label2 = null,
+            key = info.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
-            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum())
+            bottomSheetInfo = BottomSheetInfo(track = info.track)
         )
     }
 
@@ -78,10 +82,20 @@ class AlbumInfoScreenViewModel(
         ChartEntryUiState(
             label = info._track,
             label2 = null,
+            key = info.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
-            bottomSheetInfo = BottomSheetInfo(track = info.track.withAlbum())
+            bottomSheetInfo = BottomSheetInfo(track = info.track)
         )
+    }
+
+    fun sort() = settings.flow(chartSort).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+        initialValue = settings[chartSort]
+    )
+    suspend fun setSort(sort: ChartSort) {
+        settings[chartSort] = sort
     }
 
     suspend fun getAlbumImageUrl(album: Album) =

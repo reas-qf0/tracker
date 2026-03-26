@@ -25,6 +25,12 @@ data class TrackWithAlbum(
     private val trackObject: Track,
     private val albumObject: Album?
 ) {
+    constructor(track: String, artist: String, album: String?, albumArtist: String?) :
+            this(
+                Track(track, artist),
+                album?.let { Album(album, albumArtist!!) }
+            )
+
     val track: String
         get() = trackObject.title
     val artist: String
@@ -105,16 +111,7 @@ data class Event(
             source: Source
         ) = Event(
             metadata = Metadata(
-                trackObject = TrackWithAlbum(
-                    trackObject = Track(
-                        title = track,
-                        artist = artist
-                    ),
-                    albumObject = if (album != null) Album(
-                        title = album,
-                        artist = albumArtist ?: artist
-                    ) else null,
-                ),
+                trackObject = TrackWithAlbum(track, artist, album, albumArtist ?: artist),
                 duration = duration.milliseconds
             ),
             timestamp = Instant.fromEpochMilliseconds(timestamp),
@@ -216,16 +213,7 @@ data class Play(
             id: Long? = null
         ) = Play(
             metadata = Metadata(
-                trackObject = TrackWithAlbum(
-                    trackObject = Track(
-                        title = track,
-                        artist = artist
-                    ),
-                    albumObject = if (album != null) Album(
-                        title = album,
-                        artist = albumArtist ?: artist
-                    ) else null,
-                ),
+                trackObject = TrackWithAlbum(track, artist, album, albumArtist ?: artist),
                 duration = duration.milliseconds
             ),
             timePlayed = timePlayed.milliseconds,
