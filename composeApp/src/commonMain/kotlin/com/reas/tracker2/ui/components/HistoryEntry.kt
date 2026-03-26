@@ -1,6 +1,5 @@
 package com.reas.tracker2.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -13,11 +12,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Brush.Companion.horizontalGradient
-import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.reas.tracker2.ui.theme.TrackerTheme
@@ -115,29 +109,6 @@ fun HistoryEntry(
             }
         }
     }
-}
-
-@Composable
-fun HistoryEndIndicator(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxWidth().background(
-            brush = Brush.composite(
-                verticalGradient(colors = listOf(
-                    MaterialTheme.colorScheme.background,
-                    MaterialTheme.colorScheme.surfaceContainerHighest
-                )),
-                horizontalGradient(
-                    0.0f to Color.White.copy(alpha = 0.0f),
-                    0.2f to Color.White,
-                    0.8f to Color.White,
-                    1.0f to Color.White.copy(alpha = 0.0f)
-                ),
-                blendMode = BlendMode.Modulate
-            )
-        )
-    )
 }
 
 

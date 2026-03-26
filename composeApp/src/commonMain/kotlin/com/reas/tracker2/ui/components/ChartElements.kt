@@ -5,7 +5,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.LinearProgressIndicator
@@ -13,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import com.reas.tracker2.startKoinMp
+import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.theme.TrackerTheme
 import kotlin.math.min
@@ -64,27 +65,39 @@ fun DoubleChartColumn(
 
 @Composable
 fun LazyDoubleChartColumn(
+    applicationState: ApplicationState,
     sortedByTime: Boolean,
     itemsByTime: LazyPagingItems<ChartEntryUiState>,
     itemsByPlays: LazyPagingItems<ChartEntryUiState>,
     onClick: (ChartEntryUiState) -> Unit,
     modifier: Modifier = Modifier,
-    state: LazyListState = rememberLazyListState(),
 ) {
+    val state1 = rememberLazyListState()
+    val state2 = rememberLazyListState()
+
     Box {
         AnimatedVisibility(
             sortedByTime,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            LazyChartColumn(itemsByTime, onClick, modifier, state)
+            LazyChartColumn(applicationState, itemsByTime, onClick, modifier, state1)
+
+            // idea doesn't like this but it doesn't seem to be that bad in terms of performance
+            LaunchedEffect(state1.firstVisibleItemIndex, state1.firstVisibleItemScrollOffset) {
+                state2.requestScrollToItem(state1.firstVisibleItemIndex, state1.firstVisibleItemScrollOffset)
+            }
         }
         AnimatedVisibility(
             !sortedByTime,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            LazyChartColumn(itemsByPlays, onClick, modifier, state)
+            LazyChartColumn(applicationState, itemsByPlays, onClick, modifier, state2)
+
+            LaunchedEffect(state2.firstVisibleItemIndex, state2.firstVisibleItemScrollOffset) {
+                state1.requestScrollToItem(state2.firstVisibleItemIndex, state2.firstVisibleItemScrollOffset)
+            }
         }
     }
 }
@@ -118,12 +131,14 @@ fun ChartColumn(
 
 @Composable
 fun LazyChartColumn(
+    applicationState: ApplicationState,
     items: LazyPagingItems<ChartEntryUiState>,
     onClick: (ChartEntryUiState) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState()
 ) {
-    LazyColumn(
+    LazyColumnWithScrollButton(
+        applicationState = applicationState,
         modifier = modifier,
         state = state,
         verticalArrangement = Arrangement.spacedBy(10.dp)

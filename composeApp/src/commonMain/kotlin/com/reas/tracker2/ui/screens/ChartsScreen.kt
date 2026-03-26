@@ -45,9 +45,9 @@ fun ChartsScreen(
         }
 
         LazyDoubleChartColumn(
+            applicationState,
             sort.byTime, infoTime, infoPlays,
-            onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
-            modifier = Modifier.padding(vertical = 5.dp)
+            onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) }
         )
     }
 }
