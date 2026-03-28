@@ -2,40 +2,38 @@
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
+kotlin = "2.3.20"
 agp = "8.12.0"
+compose-multiplatform = "1.10.3"
+
+activity-compose = "1.13.0"
+adaptive = "1.2.0"
+androidx-core = "1.18.0"
+build-config = "6.0.9"
 colormath = "3.6.1"
+compose-hot-reload = "1.0.0"
 datastore = "1.2.1"
 exposed = "1.1.1"
 h2 = "2.4.240"
-sqlite-jdbc = "3.51.3.0"
-logging = "8.0.01"
-kotlinx-datetime = "0.7.1"
-landscapist = "2.9.5"
-androidx-core = "1.18.0"
-espresso-core = "3.7.0"
-kotlinx-serialization-json = "1.10.0"
-lifecycle-runtime = "2.10.0"
-activity-compose = "1.13.0"
-navigation3 = "1.1.0-alpha04"
-paging = "3.4.2"
-adaptive = "1.2.0"
-room = "2.8.4"
-ksp = "2.3.3"
-work-runtime = "2.11.1"
-androidx-lifecycle = "2.10.0"
-compose-hot-reload = "1.0.0"
-compose-multiplatform = "1.10.3"
-junit = "4.13.2"
-kotlin = "2.3.20"
-kotlinx-coroutines = "1.10.2"
-ktor = "3.4.1"
-logback = "1.5.32"
-material3 = "1.10.0-alpha05"
-sqlite = "2.6.2"
 koin = "4.2.0"
 koin-plugin = "0.4.1"
+kotlinx-coroutines = "1.10.2"
+kotlinx-datetime = "0.7.1"
+kotlinx-serialization-json = "1.10.0"
+ksp = "2.3.3"
+ktor = "3.4.1"
+landscapist = "2.9.5"
+lifecycle = "2.10.0"
+logback = "1.5.32"
+logging = "8.0.01"
+material3 = "1.10.0-alpha05"
 material-icons = "1.7.3"
-build-config = "6.0.9"
+navigation3 = "1.1.0-alpha04"
+paging = "3.4.2"
+room = "2.8.4"
+sqlite = "2.6.2"
+sqlite-jdbc = "3.51.3.0"
+work-runtime = "2.11.2"
 
 [libraries]
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
@@ -55,9 +53,9 @@ androidx-datastore-preferences-core = { module = "androidx.datastore:datastore-p
 androidx-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version.ref = "work-runtime" }
-androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
-androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle-runtime" }
+androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-activity = { module = "androidx.activity:activity" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
@@ -65,16 +63,11 @@ androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.r
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "room" }
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
-sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
-h2 = { module = "com.h2database:h2", version.ref = "h2" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization-json" }
-logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-contentNegotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
@@ -83,9 +76,14 @@ ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.re
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
 ktor-server-testHost = { module = "io.ktor:ktor-server-test-host-jvm", version.ref = "ktor" }
-ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-server-contentNegotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.ref = "ktor" }
+ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
 landscapist-image = { module = "com.github.skydoves:landscapist-image", version.ref = "landscapist" }
 landscapist-palette = { module = "com.github.skydoves:landscapist-palette", version.ref = "landscapist" }
 landscapist-animation = { module = "com.github.skydoves:landscapist-animation", version.ref = "landscapist" }
@@ -101,8 +99,6 @@ colormath-compose = { module = "com.github.ajalt.colormath:colormath-ext-jetpack
 logging = { module = "io.github.oshai:kotlin-logging", version.ref = "logging" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
-junit = { module = "junit:junit", version.ref = "junit" }
-androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso-core" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

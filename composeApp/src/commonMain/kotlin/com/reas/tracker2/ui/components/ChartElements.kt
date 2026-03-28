@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +24,7 @@ import com.reas.tracker2.startKoinMp
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.theme.TrackerTheme
+import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.min
 
 // TODO kill it with fire
@@ -83,9 +85,12 @@ fun LazyDoubleChartColumn(
         ) {
             LazyChartColumn(applicationState, itemsByTime, onClick, modifier, state1)
 
-            // idea doesn't like this but it doesn't seem to be that bad in terms of performance
-            LaunchedEffect(state1.firstVisibleItemIndex, state1.firstVisibleItemScrollOffset) {
-                state2.requestScrollToItem(state1.firstVisibleItemIndex, state1.firstVisibleItemScrollOffset)
+            LaunchedEffect(state1) {
+                snapshotFlow {
+                    state1.firstVisibleItemIndex to state1.firstVisibleItemScrollOffset
+                }.collectLatest { (index, offset) ->
+                    state2.requestScrollToItem(index, offset)
+                }
             }
         }
         AnimatedVisibility(
@@ -95,8 +100,12 @@ fun LazyDoubleChartColumn(
         ) {
             LazyChartColumn(applicationState, itemsByPlays, onClick, modifier, state2)
 
-            LaunchedEffect(state2.firstVisibleItemIndex, state2.firstVisibleItemScrollOffset) {
-                state1.requestScrollToItem(state2.firstVisibleItemIndex, state2.firstVisibleItemScrollOffset)
+            LaunchedEffect(state2) {
+                snapshotFlow {
+                    state2.firstVisibleItemIndex to state2.firstVisibleItemScrollOffset
+                }.collectLatest { (index, offset) ->
+                    state1.requestScrollToItem(index, offset)
+                }
             }
         }
     }

@@ -35,14 +35,14 @@ fun HistoryScreen(
             scrobble?.let {
                 HistoryEntry(
                     title = scrobble.track,
-                    artist = scrobble.artist,
+                    artist = scrobble.artistsAsString,
                     album = scrobble.album,
                     timestamp = scrobble.timestamp,
                     isNowPlaying = scrobble.isNowPlaying,
 
                     imageUrl = { viewModel.getImageUrl(scrobble) },
                     onClick = {
-                        applicationState.navigate(BottomSheetInfo(track = scrobble.asTrackWithAlbum))
+                        applicationState.navigate(BottomSheetInfo(track = scrobble.metadata))
                     },
                     onMore = {},
                     modifier = Modifier.padding(5.dp).height(84.dp)

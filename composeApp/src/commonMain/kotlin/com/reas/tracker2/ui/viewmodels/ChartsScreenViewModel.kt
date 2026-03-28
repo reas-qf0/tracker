@@ -7,6 +7,7 @@ import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
 import com.reas.tracker2.settings.*
 import com.reas.tracker2.shared.Album
+import com.reas.tracker2.shared.Artist
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.shared.TrackWithAlbum
 import com.reas.tracker2.ui.components.ChartEntryUiState
@@ -40,9 +41,9 @@ class ChartsScreenViewModel(
         { repository.getMostPlayedArtists(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.artist,
+            label = info.artist.name,
             label2 = null,
-            key = info.artist,
+            key = info.artist.name,
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
             bottomSheetInfo = BottomSheetInfo(artist = info.artist),
@@ -54,8 +55,8 @@ class ChartsScreenViewModel(
         { repository.getMostPlayedAlbums(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._album,
-            label2 = info._artist,
+            label = info.album.name,
+            label2 = info.album.artistsAsString,
             key = info.album.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
@@ -68,8 +69,8 @@ class ChartsScreenViewModel(
         { repository.getMostPlayedTracks(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._track,
-            label2 = info._artist,
+            label = info.track.name,
+            label2 = info.track.artistsAsString,
             key = info.track.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
@@ -82,9 +83,9 @@ class ChartsScreenViewModel(
         { repository.getMostPlayedArtistsByPlayCount(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info.artist,
+            label = info.artist.name,
             label2 = null,
-            key = info.artist,
+            key = info.artist.name,
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
             bottomSheetInfo = BottomSheetInfo(artist = info.artist),
@@ -96,8 +97,8 @@ class ChartsScreenViewModel(
         { repository.getMostPlayedAlbumsByPlayCount(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._album,
-            label2 = info._artist,
+            label = info.album.name,
+            label2 = info.album.artistsAsString,
             key = info.album.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
@@ -110,8 +111,8 @@ class ChartsScreenViewModel(
         { repository.getMostPlayedTracksByPlayCount(period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._track,
-            label2 = info._artist,
+            label = info.track.name,
+            label2 = info.track.artistsAsString,
             key = info.track.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
@@ -142,7 +143,7 @@ class ChartsScreenViewModel(
         }
     }
 
-    suspend fun getArtistImageUrl(artist: String) = null
+    suspend fun getArtistImageUrl(artist: Artist) = null
 
     suspend fun getAlbumImageUrl(album: Album): String? {
         return networkRepository.getAlbumImageUrl(album, "large")

@@ -1,71 +1,98 @@
 package com.reas.tracker2.database
 
-import androidx.room.ColumnInfo
+import androidx.room.Embedded
+import androidx.room.Junction
+import androidx.room.Relation
+import com.reas.tracker2.database.entities.*
 import com.reas.tracker2.shared.Album
+import com.reas.tracker2.shared.Artist
+import com.reas.tracker2.shared.Track
 import com.reas.tracker2.shared.TrackWithAlbum
 import kotlin.time.Duration
 
-// helper classes to pack information from db responses
-// ideally shouldn't exist but idk how to get rid of them yet
+data class AlbumWithData(
+    @Embedded val album: AlbumEntity,
+    @Relation(
+        parentColumn = "albumId",
+        entityColumn = "artistId",
+        associateBy = Junction(AlbumArtistCrossRef::class)
+    )
+    val artists: List<ArtistEntity>
+) {
+    fun toAlbum() = Album(
+        id = album.albumId,
+        name = album.name,
+        artists = artists.map { Artist(it.name, it.artistId) }
+    )
+}
+
+data class TrackWithData(
+    @Embedded val track: TrackEntity,
+    @Relation(
+        parentColumn = "trackId",
+        entityColumn = "artistId",
+        associateBy = Junction(TrackArtistCrossRef::class)
+    )
+    val artists: List<ArtistEntity>,
+    @Relation(
+        entity = AlbumEntity::class,
+        parentColumn = "albumId",
+        entityColumn = "albumId"
+    )
+    val album: AlbumWithData?
+) {
+    fun toTrack() = TrackWithAlbum(
+        trackObject = Track(
+            id = track.trackId,
+            name = track.name,
+            artists = artists.map { Artist(it.name, it.artistId) }
+        ),
+        albumObject = if (album == null) null else Album(
+            id = album.album.albumId,
+            name = album.album.name,
+            artists = album.artists.map { Artist(it.name, it.artistId) }
+        )
+    )
+}
 
 data class ArtistWithPlayCount(
-    val artist: String,
+    @Embedded val artist: Artist,
     val playCount: Int
 )
 
 data class ArtistWithTimePlayed(
-    val artist: String,
+    @Embedded val artist: Artist,
     val timePlayed: Duration
 )
 
 data class TrackWithPlayCount(
-    @ColumnInfo(name = "artist")
-    val _artist: String,
-    @ColumnInfo(name = "track")
-    val _track: String,
-    @ColumnInfo(name = "albumArtist")
-    val _albumArtist: String,
-    @ColumnInfo(name = "album")
-    val _album: String,
+    @Embedded val _track: TrackWithData,
     val playCount: Int
 ) {
     val track: TrackWithAlbum
-        get() = TrackWithAlbum(_track, _artist, _album, _albumArtist)
+        get() = _track.toTrack()
 }
 
 data class TrackWithTimePlayed(
-    @ColumnInfo(name = "artist")
-    val _artist: String,
-    @ColumnInfo(name = "track")
-    val _track: String,
-    @ColumnInfo(name = "albumArtist")
-    val _albumArtist: String,
-    @ColumnInfo(name = "album")
-    val _album: String,
+    @Embedded val _track: TrackWithData,
     val timePlayed: Duration
 ) {
     val track: TrackWithAlbum
-        get() = TrackWithAlbum(_track, _artist, _album, _albumArtist)
+        get() = _track.toTrack()
 }
 
 data class AlbumWithPlayCount(
-    @ColumnInfo(name = "albumArtist")
-    val _artist: String,
-    @ColumnInfo(name = "album")
-    val _album: String,
+    @Embedded val _album: AlbumWithData,
     val playCount: Int
 ) {
     val album: Album
-        get() = Album(_album, _artist)
+        get() = _album.toAlbum()
 }
 
 data class AlbumWithTimePlayed(
-    @ColumnInfo(name = "albumArtist")
-    val _artist: String,
-    @ColumnInfo(name = "album")
-    val _album: String,
+    @Embedded val _album: AlbumWithData,
     val timePlayed: Duration
 ) {
     val album: Album
-        get() = Album(_album, _artist)
+        get() = _album.toAlbum()
 }

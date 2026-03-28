@@ -1,7 +1,6 @@
 package com.reas.tracker2.database
 
 import androidx.room.*
-import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.reas.tracker2.database.daos.*
 import com.reas.tracker2.database.entities.*
 import kotlinx.coroutines.Dispatchers
@@ -17,6 +16,11 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     ProcessingQueueEntity::class,
     SyncQueueEntity::class,
     ApiKeyEntity::class,
+    TrackEntity::class,
+    AlbumEntity::class,
+    ArtistEntity::class,
+    TrackArtistCrossRef::class,
+    AlbumArtistCrossRef::class,
 ], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -27,11 +31,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun processingQueueDao(): ProcessingQueueDao
     abstract fun syncQueueDao(): SyncQueueDao
     abstract fun apiKeyDao(): ApiKeyDao
+    abstract fun trackDao(): TrackDao
 
     companion object {
         fun getDatabase(builder: Builder<AppDatabase>) : AppDatabase {
             return builder
-                .setDriver(BundledSQLiteDriver())
                 .setQueryCoroutineContext(Dispatchers.IO)
                 .fallbackToDestructiveMigration(false)
                 .build()

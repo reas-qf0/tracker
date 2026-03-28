@@ -4,18 +4,14 @@ import android.app.Notification
 import android.content.Context
 import android.text.Html
 import androidx.paging.PagingSource
-import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkerParameters
+import androidx.work.*
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.shared.TimePeriod
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
@@ -52,17 +48,17 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
                             <b>${
                                 applicationContext.getString(R.string.daily_report_artists)
                             }</b><br>${
-                                artists.joinToString("<br>") { it.artist }
+                                artists.joinToString("<br>") { it.artist.name }
                             }<br>
                             <b>${
                                 applicationContext.getString(R.string.daily_report_albums)
                             }</b><br>${
-                                albums.joinToString("<br>") { "${it._artist} - ${it._album}" }
+                                albums.joinToString("<br>") { "${it.album.artistsAsString} - ${it._album}" }
                             }<br>
                             <b>${
                                 applicationContext.getString(R.string.daily_report_tracks)
                             }</b><br>${
-                                tracks.joinToString("<br>") { "${it._artist} - ${it._track}" }
+                                tracks.joinToString("<br>") { "${it.track.artistsAsString} - ${it._track}" }
                             }
                         """.trimIndent())
                     )

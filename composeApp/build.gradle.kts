@@ -60,7 +60,6 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.room.paging)
-            implementation(libs.androidx.sqlite.bundled)
             implementation(libs.androidx.navigation3.ui)
             implementation(libs.landscapist.image)
             implementation(libs.landscapist.palette)
@@ -89,6 +88,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.koin.logger.slf4j)
             implementation(libs.logback)
+            implementation(libs.androidx.sqlite.bundled)
         }
     }
 }

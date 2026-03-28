@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.shared.Album
+import com.reas.tracker2.shared.Artist
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.shared.TrackWithAlbum
 import kotlinx.coroutines.flow.SharingStarted
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlin.time.Duration.Companion.minutes
 
 class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel() {
-    fun artistPlays(artist: String) = repository.getArtistPlays(artist, TimePeriod.ALLTIME)
+    fun artistPlays(artist: Artist) = repository.getArtistPlays(artist, TimePeriod.ALLTIME)
         .map { it.toString() }
         .stateIn(
             scope = viewModelScope,
@@ -20,7 +21,7 @@ class InfoBottomSheetsViewModel(private val repository: Repository) : ViewModel(
             initialValue = "..."
         )
 
-    fun artistTimePlayed(artist: String) = repository.getArtistTimePlayed(artist, TimePeriod.ALLTIME)
+    fun artistTimePlayed(artist: Artist) = repository.getArtistTimePlayed(artist, TimePeriod.ALLTIME)
         .map { it.inWholeMinutes.minutes.toString() }
         .stateIn(
             scope = viewModelScope,

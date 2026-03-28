@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.reas.tracker2.platform.IS_DESKTOP
+import com.reas.tracker2.ui.components.ScrollablePages
 import com.reas.tracker2.ui.navigation.*
 import com.reas.tracker2.ui.viewmodels.InfoBottomSheetsViewModel
 import org.jetbrains.compose.resources.StringResource
@@ -33,10 +34,10 @@ fun InfoBottomSheet(
     modifier: Modifier = Modifier,
     viewModel: InfoBottomSheetsViewModel = koinViewModel()
 ) {
-    val track = arguments.track?.track
-    val album = arguments.track?.album ?: arguments.album?.title
-    val artist = arguments.track?.artist ?: arguments.album?.artist ?: arguments.artist!!
-    val albumArtist = arguments.track?.albumArtist ?: arguments.album?.artist
+    val track = arguments.track?.name
+    val album = arguments.track?.album ?: arguments.album?.name
+    val artists = arguments.track?.artists ?: arguments.album?.artists ?: listOf(arguments.artist!!)
+    val albumArtists = arguments.track?.albumArtists ?: arguments.album?.artists
 
     val trackO = arguments.track
     val albumO = arguments.track?.asAlbumOrNull ?: arguments.album
@@ -67,23 +68,26 @@ fun InfoBottomSheet(
                 BottomSheetSpacer()
             }
 
-            val artistPlays by remember { viewModel.artistPlays(artist) }.collectAsStateWithLifecycle()
-            val artistTimePlayed by remember { viewModel.artistTimePlayed(artist) }.collectAsStateWithLifecycle()
-            HistoryBottomSheetComponent(
-                icon = Icons.Filled.Person,
-                iconDescription = stringResource(Res.string.artist),
-                header = artist,
-                buttonContents = listOf(
-                    Res.string.artist_plays to artistPlays,
-                    Res.string.time_listened to artistTimePlayed
-                ),
-                onMore = {
-                    applicationState.navigate(ArtistInfo(artist))
-                }
-            )
+            ScrollablePages(artists.size) { i ->
+                val artistPlays by remember { viewModel.artistPlays(artists[i]) }.collectAsStateWithLifecycle()
+                val artistTimePlayed by remember { viewModel.artistTimePlayed(artists[i]) }.collectAsStateWithLifecycle()
+                HistoryBottomSheetComponent(
+                    icon = Icons.Filled.Person,
+                    iconDescription = stringResource(Res.string.artist),
+                    header = artists[i].name,
+                    buttonContents = listOf(
+                        Res.string.artist_plays to artistPlays,
+                        Res.string.time_listened to artistTimePlayed
+                    ),
+                    onMore = {
+                        applicationState.navigate(ArtistInfo(artists[i]))
+                    }
+                )
+            }
 
             album?.let {
                 albumO!!
+                val differentArtists = albumArtists != null && artists.toSet() != albumArtists.toSet()
                 val albumPlays by remember { viewModel.albumPlays(albumO) }.collectAsStateWithLifecycle()
                 val albumTimePlayed by remember { viewModel.albumTimePlayed(albumO) }.collectAsStateWithLifecycle()
                 BottomSheetSpacer()
@@ -97,7 +101,10 @@ fun InfoBottomSheet(
                     ),
                     onMore = {
                         applicationState.navigate(AlbumInfo(albumO))
-                    }
+                    },
+                    icon2 = if (differentArtists) Icons.Filled.Person else null,
+                    iconDescription2 = if (differentArtists) "Album artist" else null,
+                    subtitle = if (differentArtists) albumArtists.joinToString(", ") { it.name } else null
                 )
             }
         }
@@ -107,7 +114,7 @@ fun InfoBottomSheet(
 
 @Composable
 private fun BottomSheetSpacer() {
-    Spacer(Modifier.height(5.dp))
+    Spacer(Modifier.height(10.dp))
     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
     Spacer(Modifier.height(15.dp))
 }
@@ -120,81 +127,104 @@ private fun HistoryBottomSheetComponent(
     header: String,
     buttonContents: List<Pair<StringResource, String>>,
     onMore: () -> Unit,
-    onMainButton: () -> Unit = onMore
+    onMainButton: () -> Unit = onMore,
+    icon2: ImageVector? = null,
+    iconDescription2: String? = null,
+    subtitle: String? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.clickable(onClick = { expanded = !expanded })
-    ) {
-        Spacer(Modifier.width(5.dp))
-        Icon(icon, iconDescription, tint = MaterialTheme.colorScheme.secondary)
-        Spacer(Modifier.width(5.dp))
-        Text(header,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.primary,
-            maxLines = if (expanded) Int.MAX_VALUE else 1,
-            overflow = TextOverflow.Ellipsis
-        )
-    }
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Button(
-            shape = RoundedCornerShape(5.dp),
-            colors = ButtonDefaults.buttonColors(
-                MaterialTheme.colorScheme.surfaceContainerHigh,
-                MaterialTheme.colorScheme.secondary
-            ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
-            contentPadding = PaddingValues(0.dp),
-            onClick = onMainButton,
-            modifier = Modifier
-                .weight(2.0F)
-                .padding(5.dp)
-                .height(100.dp)
+    Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable(onClick = { expanded = !expanded })
         ) {
+            Spacer(Modifier.width(5.dp))
+            Icon(icon, iconDescription, tint = MaterialTheme.colorScheme.secondary)
+            Spacer(Modifier.width(5.dp))
+            Text(header,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = if (expanded) Int.MAX_VALUE else 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Spacer(Modifier.width(5.dp))
+        icon2?.let {
             Row(
-                modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable(onClick = { expanded = !expanded })
             ) {
-                buttonContents.forEach { (line1, line2) ->
-                    Column(
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            stringResource(line1),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                        Text(
-                            line2,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                Spacer(Modifier.width(5.dp))
+                Icon(icon2, iconDescription2!!, tint = MaterialTheme.colorScheme.secondary)
+                Spacer(Modifier.width(5.dp))
+                Text(subtitle!!,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = if (expanded) Int.MAX_VALUE else 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(Modifier.width(5.dp))
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Button(
+                shape = RoundedCornerShape(5.dp),
+                colors = ButtonDefaults.buttonColors(
+                    MaterialTheme.colorScheme.surfaceContainerHigh,
+                    MaterialTheme.colorScheme.secondary
+                ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
+                contentPadding = PaddingValues(0.dp),
+                onClick = onMainButton,
+                modifier = Modifier
+                    .weight(2.0F)
+                    .padding(5.dp)
+                    .height(100.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    buttonContents.forEach { (line1, line2) ->
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                stringResource(line1),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                line2,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             }
-        }
-        Button(
-            shape = RoundedCornerShape(5.dp),
-            colors = ButtonDefaults.buttonColors(
-                MaterialTheme.colorScheme.surfaceContainerHighest,
-                MaterialTheme.colorScheme.primary
-            ),
-            contentPadding = PaddingValues(0.dp),
-            onClick = onMore,
-            modifier = Modifier
-                .weight(1.0F)
-                .padding(5.dp)
-                .height(100.dp)
-        ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+            Button(
+                shape = RoundedCornerShape(5.dp),
+                colors = ButtonDefaults.buttonColors(
+                    MaterialTheme.colorScheme.surfaceContainerHighest,
+                    MaterialTheme.colorScheme.primary
+                ),
+                contentPadding = PaddingValues(0.dp),
+                onClick = onMore,
+                modifier = Modifier
+                    .weight(1.0F)
+                    .padding(5.dp)
+                    .height(100.dp)
             ) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, "See more")
-                Text("More info", style = MaterialTheme.typography.bodyMedium)
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, "See more")
+                    Text("More info", style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
     }

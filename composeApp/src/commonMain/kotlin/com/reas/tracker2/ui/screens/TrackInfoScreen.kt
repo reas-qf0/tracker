@@ -47,7 +47,7 @@ fun TrackInfoScreen(
     val timeRank by remember { viewModel.rank(track, period) }.collectAsStateWithLifecycle()
     val playRank by remember { viewModel.playRank(track, period) }.collectAsStateWithLifecycle()
 
-    applicationState.setTitle("${track.artist} - ${track.track}")
+    applicationState.setTitle("${track.artistsAsString} - ${track.name}")
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -65,12 +65,14 @@ fun TrackInfoScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.weight(1.0F)
                 ) {
-                    AutosizingText(track.track, style = MaterialTheme.typography.displaySmall)
-                    AutosizingText(
-                        track.artist,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+                    AutosizingText(track.name, style = MaterialTheme.typography.displaySmall)
+                    track.artists.forEach { artist ->
+                        AutosizingText(
+                            artist.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
                     track.album?.let {
                         AutosizingText(
                             track.album!!,

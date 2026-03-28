@@ -50,7 +50,7 @@ fun AlbumInfoScreen(
     val timeTracks = remember { viewModel.topTracks(album, period) }.collectAsLazyPagingItems()
     val playTracks = remember { viewModel.topTracksByPlayCount(album, period) }.collectAsLazyPagingItems()
 
-    applicationState.setTitle("${album.artist} - ${album.title}")
+    applicationState.setTitle("${album.artistsAsString} - ${album.name}")
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -69,8 +69,14 @@ fun AlbumInfoScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.weight(1.0F)
                 ) {
-                    AutosizingText(album.title, style = MaterialTheme.typography.displaySmall)
-                    AutosizingText(album.artist, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.secondary)
+                    AutosizingText(album.name, style = MaterialTheme.typography.displaySmall)
+                    album.artists.forEach { artist ->
+                        AutosizingText(
+                            artist.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(5.dp))

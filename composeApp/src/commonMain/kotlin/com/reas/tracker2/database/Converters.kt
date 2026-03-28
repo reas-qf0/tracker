@@ -19,8 +19,17 @@ class Converters {
     fun instantToLong(instant: Instant): Long = instant.toEpochMilliseconds()
 
     @TypeConverter
+    fun longToInstant(long: Long): Instant = Instant.fromEpochMilliseconds(long)
+
+    @TypeConverter
     fun durationToLong(duration: Duration): Long = duration.inWholeMilliseconds
 
     @TypeConverter
     fun longToDuration(long: Long): Duration = long.milliseconds
+
+    @TypeConverter
+    fun idListToString(list: List<Long>): String = Json.encodeToString(list)
+
+    @TypeConverter
+    fun stringToIdList(string: String): List<Long> = Json.decodeFromString(string)
 }

@@ -1,12 +1,7 @@
 package com.reas.tracker2.database
 
 import androidx.paging.PagingSource
-import com.reas.tracker2.database.entities.ApiKeyEntity
-import com.reas.tracker2.database.entities.EventEntity.Companion.toEntity
-import com.reas.tracker2.database.entities.PlayEntity
-import com.reas.tracker2.database.entities.PlayEntity.Companion.toEntity
-import com.reas.tracker2.database.entities.ProcessingQueueEntity
-import com.reas.tracker2.database.entities.SyncQueueEntity
+import com.reas.tracker2.database.entities.*
 import com.reas.tracker2.network.SyncEvent
 import com.reas.tracker2.shared.*
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +25,14 @@ interface Repository {
     fun getEventsInSync(): Flow<List<SyncEvent>>
     suspend fun deleteFromSync(ids: List<Long>)
 
+    suspend fun getArtist(id: Long): Artist
+    suspend fun getArtists(ids: List<Long>): List<Artist>
+    suspend fun getAlbum(id: Long): Album
+    suspend fun getTrack(id: Long): TrackWithAlbum
+    suspend fun getOrInsertArtists(artists: List<Artist>): List<Long>
+    suspend fun getOrInsertAlbum(album: Album): Long
+    suspend fun getOrInsertTrack(track: TrackWithAlbum): Long
+
     suspend fun insertPlay(play: Play): Long
     suspend fun insertPlays(plays: List<Play>)
     suspend fun updatePlay(play: Play)
@@ -38,20 +41,20 @@ interface Repository {
     fun getNowPlayingTracks(): Flow<List<Play>>
     fun getRecentPlays(): PagingSource<Int, PlayEntity>
 
-    fun getArtistPlays(artist: String, period: TimePeriod): Flow<Int>
-    fun getArtistTimePlayed(artist: String, period: TimePeriod): Flow<Duration>
+    fun getArtistPlays(artist: Artist, period: TimePeriod): Flow<Int>
+    fun getArtistTimePlayed(artist: Artist, period: TimePeriod): Flow<Duration>
     fun getMostPlayedArtists(period: TimePeriod): PagingSource<Int, ArtistWithTimePlayed>
     fun getMostPlayedArtistsByPlayCount(period: TimePeriod): PagingSource<Int, ArtistWithPlayCount>
-    fun getArtistRank(artist: String, period: TimePeriod): Flow<Int>
-    fun getArtistRankByPlayCount(artist: String, period: TimePeriod) : Flow<Int>
+    fun getArtistRank(artist: Artist, period: TimePeriod): Flow<Int>
+    fun getArtistRankByPlayCount(artist: Artist, period: TimePeriod) : Flow<Int>
 
     fun getTrackPlays(track: TrackWithAlbum, period: TimePeriod): Flow<Int>
     fun getTrackTimePlayed(track: TrackWithAlbum, period: TimePeriod): Flow<Duration>
     fun getTrackHistory(track: TrackWithAlbum): PagingSource<Int, PlayEntity>
     fun getMostPlayedTracks(period: TimePeriod): PagingSource<Int, TrackWithTimePlayed>
     fun getMostPlayedTracksByPlayCount(period: TimePeriod): PagingSource<Int, TrackWithPlayCount>
-    fun getMostPlayedTracksFromArtist(artist: String, period: TimePeriod): PagingSource<Int, TrackWithTimePlayed>
-    fun getMostPlayedTracksFromArtistByPlayCount(artist: String, period: TimePeriod): PagingSource<Int, TrackWithPlayCount>
+    fun getMostPlayedTracksFromArtist(artist: Artist, period: TimePeriod): PagingSource<Int, TrackWithTimePlayed>
+    fun getMostPlayedTracksFromArtistByPlayCount(artist: Artist, period: TimePeriod): PagingSource<Int, TrackWithPlayCount>
     fun getMostPlayedTracksFromAlbum(album: Album, period: TimePeriod): PagingSource<Int, TrackWithTimePlayed>
     fun getMostPlayedTracksFromAlbumByPlayCount(album: Album, period: TimePeriod): PagingSource<Int, TrackWithPlayCount>
     fun getAlbumRank(album: Album, period: TimePeriod): Flow<Int>
@@ -61,8 +64,8 @@ interface Repository {
     fun getAlbumTimePlayed(album: Album, period: TimePeriod): Flow<Duration>
     fun getMostPlayedAlbums(period: TimePeriod): PagingSource<Int, AlbumWithTimePlayed>
     fun getMostPlayedAlbumsByPlayCount(period: TimePeriod): PagingSource<Int, AlbumWithPlayCount>
-    fun getMostPlayedAlbumsFromArtist(artist: String, period: TimePeriod): PagingSource<Int, AlbumWithTimePlayed>
-    fun getMostPlayedAlbumsFromArtistByPlayCount(artist: String, period: TimePeriod): PagingSource<Int, AlbumWithPlayCount>
+    fun getMostPlayedAlbumsFromArtist(artist: Artist, period: TimePeriod): PagingSource<Int, AlbumWithTimePlayed>
+    fun getMostPlayedAlbumsFromArtistByPlayCount(artist: Artist, period: TimePeriod): PagingSource<Int, AlbumWithPlayCount>
     fun getTrackRank(track: TrackWithAlbum, period: TimePeriod): Flow<Int>
     fun getTrackRankByPlayCount(track: TrackWithAlbum, period: TimePeriod) : Flow<Int>
 
@@ -75,10 +78,58 @@ interface Repository {
     fun getUnprocessedEventCount(): Flow<Int>
     fun getUnsyncedEventCount(): Flow<Int>
     fun getPlayCount(): Flow<Int>
+
+    // oh my fucking god
+    // TODO get rid of this when the paging library becomes good
+    suspend fun playEntityToObject(entity: PlayEntity) = Play(
+        metadata = getTrack(entity.trackId),
+        timestamp = entity.timestamp,
+        duration = entity.duration,
+        timePlayed = entity.timePlayed,
+        source = Source.user(entity.sourceDevice, entity.sourceApp),
+        associatedEvents = entity.associatedEvents,
+    )
 }
 
 
 class RoomRepository(private val db: AppDatabase) : Repository {
+    private fun ArtistEntity.toObject() = Artist(name, artistId)
+    private suspend fun AlbumEntity.toObject() = Album(name, getArtists(artistIds), albumId)
+    private suspend fun TrackEntity.toObject() = TrackWithAlbum(
+        trackObject = Track(name, getArtists(artistIds), trackId),
+        albumObject = albumId?.let { getAlbum(it) }
+    )
+
+    private suspend fun Event.toEntity() = EventEntity(
+        trackId = getOrInsertTrack(metadata),
+        duration = duration,
+        isPlaying = isPlaying,
+        sourceApp = app,
+        timestamp = timestamp,
+        position = position
+    )
+    private suspend fun EventEntity.toObject() = Event(
+        metadata = getTrack(trackId),
+        timestamp = timestamp,
+        position = position,
+        isPlaying = isPlaying,
+        duration = duration,
+        source = Source.local(sourceApp)
+    )
+
+    private suspend fun Play.toEntity() = PlayEntity(
+        trackId = getOrInsertTrack(metadata),
+        timestamp = timestamp,
+        duration = duration,
+        timePlayed = timePlayed,
+        lastPosition = lastPosition,
+        lastPlaying = lastPlaying,
+        sourceDevice = sourceDevice,
+        sourceApp = sourceApp,
+        associatedEvents = associatedEvents,
+    )
+    private suspend fun PlayEntity.toObject() = playEntityToObject(this)
+
     override suspend fun insertEvent(event: Event) = db.eventDao().insert(event.toEntity())
     override suspend fun deleteEvent(event: Event) = db.eventDao().delete(event.toEntity())
     override suspend fun updateEvent(event: Event) = db.eventDao().update(event.toEntity())
@@ -96,6 +147,21 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override fun getEventsInSync() = db.syncQueueDao().getEvents().map { it.map { SyncEvent(it.id, it.event.toObject()) } }
     override suspend fun deleteFromSync(ids: List<Long>)  = db.syncQueueDao().deleteByIds(ids)
 
+    override suspend fun getArtist(id: Long) = db.trackDao().getArtist(id).toObject()
+    override suspend fun getArtists(ids: List<Long>) = db.trackDao().getArtists(ids).map { it.toObject() }
+    override suspend fun getAlbum(id: Long) = db.trackDao().getAlbum(id).toObject()
+
+    override suspend fun getTrack(id: Long) = db.trackDao().getTrack(id).toObject()
+
+    override suspend fun getOrInsertArtists(artists: List<Artist>) = db.trackDao().getOrInsertArtists(artists.map { it.name })
+    override suspend fun getOrInsertAlbum(album: Album) = db.trackDao().getOrInsertAlbum(album.name, album.artists.map { it.name })
+    override suspend fun getOrInsertTrack(track: TrackWithAlbum) = db.trackDao().getOrInsertTrack(
+        track.name,
+        track.artists.map { it.name },
+        track.asAlbumOrNull?.name,
+        track.asAlbumOrNull?.artists?.map { it.name }
+    )
+
     override suspend fun insertPlay(play: Play) = db.playDao().insert(play.toEntity())
     override suspend fun insertPlays(plays: List<Play>) = db.playDao().insertBatch(plays.map { it.toEntity() })
     override suspend fun deletePlay(play: Play) = db.playDao().delete(play.toEntity())
@@ -104,33 +170,33 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override fun getNowPlayingTracks() = db.playDao().getNowPlayingTracks().map { it.map { it.toObject() } }
     override fun getRecentPlays() = db.playDao().getRecentPlays()
 
-    override fun getArtistPlays(artist: String, period: TimePeriod) = db.playDao().getArtistPlays(artist, period.start, period.end)
-    override fun getArtistTimePlayed(artist: String, period: TimePeriod) = db.playDao().getArtistTimePlayed(artist, period.start, period.end)
+    override fun getArtistPlays(artist: Artist, period: TimePeriod) = db.playDao().getArtistPlays(artist.id, period.start, period.end)
+    override fun getArtistTimePlayed(artist: Artist, period: TimePeriod) = db.playDao().getArtistTimePlayed(artist.id, period.start, period.end)
     override fun getMostPlayedArtists(period: TimePeriod) = db.playDao().getMostPlayedArtists(period.start, period.end)
     override fun getMostPlayedArtistsByPlayCount(period: TimePeriod) = db.playDao().getMostPlayedArtistsByPlayCount(period.start, period.end)
-    override fun getArtistRank(artist: String, period: TimePeriod) = db.playDao().getArtistRank(artist, period.start, period.end)
-    override fun getArtistRankByPlayCount(artist: String, period: TimePeriod) = db.playDao().getArtistRankByPlayCount(artist, period.start, period.end)
+    override fun getArtistRank(artist: Artist, period: TimePeriod) = db.playDao().getArtistRank(artist.id, period.start, period.end)
+    override fun getArtistRankByPlayCount(artist: Artist, period: TimePeriod) = db.playDao().getArtistRankByPlayCount(artist.id, period.start, period.end)
 
-    override fun getAlbumPlays(album: Album, period: TimePeriod) = db.playDao().getAlbumPlays(album.artist, album.title, period.start, period.end)
-    override fun getAlbumTimePlayed(album: Album, period: TimePeriod) = db.playDao().getAlbumTimePlayed(album.artist, album.title, period.start, period.end)
+    override fun getAlbumPlays(album: Album, period: TimePeriod) = db.playDao().getAlbumPlays(album.id, period.start, period.end)
+    override fun getAlbumTimePlayed(album: Album, period: TimePeriod) = db.playDao().getAlbumTimePlayed(album.id, period.start, period.end)
     override fun getMostPlayedAlbums(period: TimePeriod) = db.playDao().getMostPlayedAlbums(period.start, period.end)
     override fun getMostPlayedAlbumsByPlayCount(period: TimePeriod) = db.playDao().getMostPlayedAlbumsByPlayCount(period.start, period.end)
-    override fun getMostPlayedAlbumsFromArtist(artist: String, period: TimePeriod) = db.playDao().getMostPlayedAlbumsFromArtist(artist, period.start, period.end)
-    override fun getMostPlayedAlbumsFromArtistByPlayCount(artist: String, period: TimePeriod) = db.playDao().getMostPlayedAlbumsFromArtistByPlayCount(artist, period.start, period.end)
-    override fun getAlbumRank(album: Album, period: TimePeriod) = db.playDao().getAlbumRank(album.artist, album.title, period.start, period.end)
-    override fun getAlbumRankByPlayCount(album: Album, period: TimePeriod) = db.playDao().getAlbumRankByPlayCount(album.artist, album.title, period.start, period.end)
+    override fun getMostPlayedAlbumsFromArtist(artist: Artist, period: TimePeriod) = db.playDao().getMostPlayedAlbumsFromArtist(artist.id, period.start, period.end)
+    override fun getMostPlayedAlbumsFromArtistByPlayCount(artist: Artist, period: TimePeriod) = db.playDao().getMostPlayedAlbumsFromArtistByPlayCount(artist.id, period.start, period.end)
+    override fun getAlbumRank(album: Album, period: TimePeriod) = db.playDao().getAlbumRank(album.id, period.start, period.end)
+    override fun getAlbumRankByPlayCount(album: Album, period: TimePeriod) = db.playDao().getAlbumRankByPlayCount(album.id, period.start, period.end)
 
-    override fun getTrackPlays(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackPlays(track.artist, track.track, track.album, track.albumArtist, period.start, period.end)
-    override fun getTrackTimePlayed(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackTimePlayed(track.artist, track.track, track.album, track.albumArtist, period.start, period.end)
-    override fun getTrackHistory(track: TrackWithAlbum) = db.playDao().getTrackHistory(track.artist, track.track, track.album, track.albumArtist)
+    override fun getTrackPlays(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackPlays(track.id, period.start, period.end)
+    override fun getTrackTimePlayed(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackTimePlayed(track.id, period.start, period.end)
+    override fun getTrackHistory(track: TrackWithAlbum) = db.playDao().getTrackHistory(track.id)
     override fun getMostPlayedTracks(period: TimePeriod) = db.playDao().getMostPlayedTracks(period.start, period.end)
     override fun getMostPlayedTracksByPlayCount(period: TimePeriod) = db.playDao().getMostPlayedTracksByPlayCount(period.start, period.end)
-    override fun getMostPlayedTracksFromArtist(artist: String, period: TimePeriod) = db.playDao().getMostPlayedTracksFromArtist(artist, period.start, period.end)
-    override fun getMostPlayedTracksFromArtistByPlayCount(artist: String, period: TimePeriod) = db.playDao().getMostPlayedTracksFromArtistByPlayCount(artist, period.start, period.end)
-    override fun getMostPlayedTracksFromAlbum(album: Album, period: TimePeriod) = db.playDao().getMostPlayedTracksFromAlbum(album.artist, album.title, period.start, period.end)
-    override fun getMostPlayedTracksFromAlbumByPlayCount(album: Album, period: TimePeriod) = db.playDao().getMostPlayedTracksFromAlbumByPlayCount(album.artist, album.title, period.start, period.end)
-    override fun getTrackRank(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackRank(track.artist, track.track, track.album, track.albumArtist, period.start, period.end)
-    override fun getTrackRankByPlayCount(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackRankByPlayCount(track.artist, track.track, track.album, track.albumArtist, period.start, period.end)
+    override fun getMostPlayedTracksFromArtist(artist: Artist, period: TimePeriod) = db.playDao().getMostPlayedTracksFromArtist(artist.id, period.start, period.end)
+    override fun getMostPlayedTracksFromArtistByPlayCount(artist: Artist, period: TimePeriod) = db.playDao().getMostPlayedTracksFromArtistByPlayCount(artist.id, period.start, period.end)
+    override fun getMostPlayedTracksFromAlbum(album: Album, period: TimePeriod) = db.playDao().getMostPlayedTracksFromAlbum(album.id, period.start, period.end)
+    override fun getMostPlayedTracksFromAlbumByPlayCount(album: Album, period: TimePeriod) = db.playDao().getMostPlayedTracksFromAlbumByPlayCount(album.id, period.start, period.end)
+    override fun getTrackRank(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackRank(track.id, period.start, period.end)
+    override fun getTrackRankByPlayCount(track: TrackWithAlbum, period: TimePeriod) = db.playDao().getTrackRankByPlayCount(track.id, period.start, period.end)
 
     override suspend fun addKey(hostname: String, port: Int, username: String, key: String) = db.apiKeyDao().insert(ApiKeyEntity(hostname, port, username, key))
     override suspend fun deleteKey(hostname: String, port: Int, username: String) = db.apiKeyDao().delete(hostname, port, username)

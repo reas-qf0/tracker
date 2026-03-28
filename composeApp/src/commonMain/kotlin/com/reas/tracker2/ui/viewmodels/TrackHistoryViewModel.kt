@@ -24,7 +24,7 @@ class TrackHistoryViewModel(
         pagingSourceFactory = { repository.getTrackHistory(track) },
         config = PagingConfig(pageSize = 50, initialLoadSize = 50)
     ).flow.cachedIn(viewModelScope)
-        .map { pagingData -> pagingData.map { it.toObject() }}
+        .map { it.map { entity -> repository.playEntityToObject(entity) } }
 
     fun trackPlays(track: TrackWithAlbum) = repository.getTrackPlays(track, TimePeriod.ALLTIME)
         .map { it.toString() }

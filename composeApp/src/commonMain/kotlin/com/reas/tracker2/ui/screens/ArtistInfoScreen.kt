@@ -52,7 +52,7 @@ fun ArtistInfoScreen(
     val timeTracks = remember { viewModel.topTracks(artist, period) }.collectAsLazyPagingItems()
     val playTracks = remember { viewModel.topTracksByPlayCount(artist, period) }.collectAsLazyPagingItems()
 
-    applicationState.setTitle(artist)
+    applicationState.setTitle(artist.name)
     Column(
         modifier = modifier.padding(5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
@@ -67,7 +67,7 @@ fun ArtistInfoScreen(
                 alignment = Alignment.CenterVertically
             ) {
                 AutosizingText(
-                    artist,
+                    artist.name,
                     style = MaterialTheme.typography.displaySmall,
                     modifier = Modifier.weight(1.0F)
                 )

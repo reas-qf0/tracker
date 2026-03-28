@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.*
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.settings.*
+import com.reas.tracker2.shared.Artist
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
@@ -30,21 +31,21 @@ class ArtistInfoScreenViewModel(
             it.map { info -> transform(info) }
         }
 
-    fun plays(artist: String, period: TimePeriod) = repository.getArtistPlays(artist, period)
+    fun plays(artist: Artist, period: TimePeriod) = repository.getArtistPlays(artist, period)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = -1
         )
 
-    fun timePlayed(artist: String, period: TimePeriod) = repository.getArtistTimePlayed(artist, period)
+    fun timePlayed(artist: Artist, period: TimePeriod) = repository.getArtistTimePlayed(artist, period)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
             initialValue = -Duration.INFINITE
         )
 
-    fun rank(artist: String, period: TimePeriod) = repository.getArtistRank(artist, period)
+    fun rank(artist: Artist, period: TimePeriod) = repository.getArtistRank(artist, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -52,7 +53,7 @@ class ArtistInfoScreenViewModel(
             initialValue = "..."
         )
 
-    fun playRank(artist: String, period: TimePeriod) = repository.getArtistRankByPlayCount(artist, period)
+    fun playRank(artist: Artist, period: TimePeriod) = repository.getArtistRankByPlayCount(artist, period)
         .map { "#" + (it + 1).toString() }
         .stateIn(
             scope = viewModelScope,
@@ -60,12 +61,12 @@ class ArtistInfoScreenViewModel(
             initialValue = "..."
         )
 
-    fun topAlbums(artist: String, period: TimePeriod) = get(
+    fun topAlbums(artist: Artist, period: TimePeriod) = get(
         { repository.getMostPlayedAlbumsFromArtist(artist, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._album,
-            label2 = null,
+            label = info.album.name,
+            label2 = if (info.album.artists.size > 1) info.album.artistsAsString else null,
             key = info.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
@@ -73,12 +74,12 @@ class ArtistInfoScreenViewModel(
         )
     }
 
-    fun topAlbumsByPlayCount(artist: String, period: TimePeriod) = get(
+    fun topAlbumsByPlayCount(artist: Artist, period: TimePeriod) = get(
         { repository.getMostPlayedAlbumsFromArtistByPlayCount(artist, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._album,
-            label2 = null,
+            label = info.album.name,
+            label2 = if (info.album.artists.size > 1) info.album.artistsAsString else null,
             key = info.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",
@@ -86,12 +87,12 @@ class ArtistInfoScreenViewModel(
         )
     }
 
-    fun topTracks(artist: String, period: TimePeriod) = get(
+    fun topTracks(artist: Artist, period: TimePeriod) = get(
         { repository.getMostPlayedTracksFromArtist(artist, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._track,
-            label2 = null,
+            label = info.track.name,
+            label2 = if (info.track.artists.size > 1) info.track.artistsAsString else null,
             key = info.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
@@ -99,12 +100,12 @@ class ArtistInfoScreenViewModel(
         )
     }
 
-    fun topTracksByPlayCount(artist: String, period: TimePeriod) = get(
+    fun topTracksByPlayCount(artist: Artist, period: TimePeriod) = get(
         { repository.getMostPlayedTracksFromArtistByPlayCount(artist, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._track,
-            label2 = null,
+            label = info.track.name,
+            label2 = if (info.track.artists.size > 1) info.track.artistsAsString else null,
             key = info.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",

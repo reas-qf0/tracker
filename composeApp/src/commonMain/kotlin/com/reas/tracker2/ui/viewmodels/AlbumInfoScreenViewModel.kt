@@ -67,8 +67,8 @@ class AlbumInfoScreenViewModel(
         { repository.getMostPlayedTracksFromAlbum(album, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._track,
-            label2 = null,
+            label = info.track.name,
+            label2 = if (info.track.artists.toSet() != album.artists.toSet()) info.track.artistsAsString else null,
             key = info.toString(),
             metric = info.timePlayed.inMs,
             metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
@@ -80,8 +80,8 @@ class AlbumInfoScreenViewModel(
         { repository.getMostPlayedTracksFromAlbumByPlayCount(album, period) }
     ) { info ->
         ChartEntryUiState(
-            label = info._track,
-            label2 = null,
+            label = info.track.name,
+            label2 = if (info.track.artists.toSet() != album.artists.toSet()) info.track.artistsAsString else null,
             key = info.toString(),
             metric = info.playCount.toDouble(),
             metricAsString = "${info.playCount} plays",

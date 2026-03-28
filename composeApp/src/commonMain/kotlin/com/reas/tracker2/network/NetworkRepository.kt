@@ -25,8 +25,8 @@ class KtorNetworkRepository : NetworkRepository, KoinComponent {
                     append("method", "album.getinfo")
                     append("api_key", Secrets.LASTFM_API_KEY)
                     append("format", "json")
-                    append("artist", album.artist)
-                    append("album", album.title)
+                    append("artist", album.artists[0].name)
+                    append("album", album.name)
                 }
             }
         }

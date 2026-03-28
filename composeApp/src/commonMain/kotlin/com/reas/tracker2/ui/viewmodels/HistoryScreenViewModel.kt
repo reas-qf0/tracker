@@ -20,7 +20,7 @@ class HistoryScreenViewModel(
         pagingSourceFactory = { repository.getRecentPlays() },
         config = PagingConfig(pageSize = 50, initialLoadSize = 50)
     ).flow.cachedIn(viewModelScope)
-        .map { pagingData -> pagingData.map { it.toObject() }}
+        .map { it.map { entity -> repository.playEntityToObject(entity) } }
 
     suspend fun getImageUrl(scrobble: Play): String? {
         scrobble.asAlbumOrNull?.let { album ->

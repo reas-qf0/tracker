@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import com.reas.tracker2.shared.Album
+import com.reas.tracker2.shared.Artist
 import com.reas.tracker2.shared.TrackWithAlbum
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -85,7 +86,7 @@ object Debug : Route()
 
 @Serializable
 data class ArtistInfo(
-    val artist: String
+    val artist: Artist
 ) : Route()
 
 @Serializable
@@ -100,7 +101,7 @@ data class TrackInfo(
 
 @Serializable
 data class BottomSheetInfo(
-    val artist: String? = null,
+    val artist: Artist? = null,
     val album: Album? = null,
     val track: TrackWithAlbum? = null
 ) : DialogRoute()
