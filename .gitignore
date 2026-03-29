@@ -22,6 +22,7 @@ server/webApp/dist
 composeApp/client.db*
 composeApp/tracker2.preferences_pb
 **/Secrets.kt
+androidApp/release
 composeApp/release
 server/webApp/package-lock.json
 keystore-release.jks
