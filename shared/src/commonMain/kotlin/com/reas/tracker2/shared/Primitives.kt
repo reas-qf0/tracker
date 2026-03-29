@@ -11,7 +11,11 @@ import kotlin.time.Instant
 data class Artist(
     val name: String,
     @Transient val id: Long = -1,
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        return other is Artist && name == other.name
+    }
+}
 
 @Serializable
 data class Album(
@@ -21,6 +25,10 @@ data class Album(
 ) {
     val artistsAsString: String
         get() = artists.joinToString(", ") { it.name }
+
+    override fun equals(other: Any?): Boolean {
+        return other is Album && name == other.name && artists == other.artists
+    }
 }
 
 @Serializable
@@ -32,6 +40,10 @@ data class Track(
     val artistsAsString: String
         get() = artists.joinToString(", ") { it.name }
     fun withAlbum() = TrackWithAlbum(this, null)
+
+    override fun equals(other: Any?): Boolean {
+        return other is Track && name == other.name && artists == other.artists
+    }
 }
 
 @Serializable
@@ -67,6 +79,18 @@ data class TrackWithAlbum(
         get() = albumObject!!
     val asAlbumOrNull: Album?
         get() = albumObject
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other !is TrackWithAlbum) return false
+        if (this === other) return true
+
+        if (name != other.name) return false
+        if (artists != other.artists) return false
+        if (album != other.album) return false
+        if (albumArtists != other.albumArtists) return false
+        return true
+    }
 }
 
 @Serializable
@@ -92,24 +116,29 @@ data class Event(
         get() = metadata.album
     val user: String
         get() = source.user
-    val device: String
-        get() = source.device
+    val client: String
+        get() = source.client
     val app: String
         get() = source.app
 
     companion object {
         fun create(
             track: String,
-            artists: List<Artist>,
+            artists: List<String>,
             album: String?,
-            albumArtists: List<Artist>?,
+            albumArtists: List<String>?,
             duration: Long,
             timestamp: Long,
             position: Long,
             isPlaying: Boolean,
             source: Source
         ) = Event(
-            metadata = TrackWithAlbum(track, artists, album, albumArtists ?: artists),
+            metadata = TrackWithAlbum(
+                track,
+                artists.map { Artist(it) },
+                album,
+                (albumArtists ?: artists).map { Artist(it) }
+            ),
             duration = duration.milliseconds,
             timestamp = Instant.fromEpochMilliseconds(timestamp),
             position = position.milliseconds,
@@ -122,11 +151,11 @@ data class Event(
 @Serializable
 data class Source(
     val user: String,
-    val device: String,
+    val client: String,
     val app: String
 ) {
     companion object {
-        fun user(device: String, app: String) = Source("", device, app)
+        fun user(client: String, app: String) = Source("", client, app)
         fun local(app: String) = Source("", "", app)
     }
 }
@@ -153,11 +182,11 @@ data class Play(
         get() = metadata.albumArtistsAsString
     val album: String?
         get() = metadata.album
-    val sourceUser: String
+    val user: String
         get() = source.user
-    val sourceDevice: String
-        get() = source.device
-    val sourceApp: String
+    val client: String
+        get() = source.client
+    val app: String
         get() = source.app
 
     val asAlbumOrNull: Album?
@@ -186,7 +215,7 @@ data class Play(
         get() = !isNowPlaying && !isTiny && !isSkip
 
     val key
-        get() = "$sourceDevice/$sourceApp/$timestamp"
+        get() = "$client/$app/$timestamp"
 
     companion object {
         fun fromEvent(event: Event, id: Long? = null): Play = Play(
@@ -201,9 +230,9 @@ data class Play(
 
         fun create(
             track: String,
-            artists: List<Artist>,
+            artists: List<String>,
             album: String?,
-            albumArtists: List<Artist>?,
+            albumArtists: List<String>?,
             duration: Long,
             timestamp: Long,
             timePlayed: Long,
@@ -211,7 +240,12 @@ data class Play(
             associatedEvents: MutableList<EventInfo?>,
             id: Long? = null
         ) = Play(
-            metadata = TrackWithAlbum(track, artists, album, albumArtists ?: artists),
+            metadata = TrackWithAlbum(
+                track,
+                artists.map { Artist(it) },
+                album,
+                (albumArtists ?: artists).map { Artist(it) }
+            ),
             duration = duration.milliseconds,
             timePlayed = timePlayed.milliseconds,
             timestamp = Instant.fromEpochMilliseconds(timestamp),

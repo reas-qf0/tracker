@@ -124,8 +124,8 @@ class RoomRepository(private val db: AppDatabase) : Repository {
         timePlayed = timePlayed,
         lastPosition = lastPosition,
         lastPlaying = lastPlaying,
-        sourceDevice = sourceDevice,
-        sourceApp = sourceApp,
+        sourceDevice = client,
+        sourceApp = app,
         associatedEvents = associatedEvents,
     )
     private suspend fun PlayEntity.toObject() = playEntityToObject(this)
@@ -166,7 +166,7 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override suspend fun insertPlays(plays: List<Play>) = db.playDao().insertBatch(plays.map { it.toEntity() })
     override suspend fun deletePlay(play: Play) = db.playDao().delete(play.toEntity())
     override suspend fun updatePlay(play: Play) = db.playDao().update(play.toEntity())
-    override suspend fun getLastPlayFromSource(source: Source) = db.playDao().getLastPlayFromSource(source.device, source.app)?.toObject()
+    override suspend fun getLastPlayFromSource(source: Source) = db.playDao().getLastPlayFromSource(source.client, source.app)?.toObject()
     override fun getNowPlayingTracks() = db.playDao().getNowPlayingTracks().map { it.map { it.toObject() } }
     override fun getRecentPlays() = db.playDao().getRecentPlays()
 

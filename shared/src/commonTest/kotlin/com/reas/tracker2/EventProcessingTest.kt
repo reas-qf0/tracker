@@ -75,7 +75,7 @@ class EventProcessingTest {
                 position = event.position,
                 source = Source(
                     user = event.source_user,
-                    device = event.source_device,
+                    client = event.source_device,
                     app = event.source_app,
                 )
             )

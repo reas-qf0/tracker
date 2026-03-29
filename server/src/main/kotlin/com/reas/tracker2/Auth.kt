@@ -9,7 +9,7 @@ import org.koin.ktor.ext.inject
 
 data class User(
     val name: String,
-    val device: String
+    val client: String
 )
 
 suspend fun RoutingContext.optionalAuthorization(

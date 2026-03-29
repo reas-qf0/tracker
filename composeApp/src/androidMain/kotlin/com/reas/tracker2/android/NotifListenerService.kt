@@ -19,7 +19,6 @@ import com.reas.tracker2.settings.Settings
 import com.reas.tracker2.settings.collect
 import com.reas.tracker2.settings.get
 import com.reas.tracker2.settings.isScrobblingEnabled
-import com.reas.tracker2.shared.Artist
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.Source
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -105,9 +104,9 @@ private class MediaCallback(private val appId: String): MediaController.Callback
 
         val event = Event.create(
             track = metadata.title,
-            artists = metadata.artist.split(" & ").map { Artist(it) },
+            artists = metadata.artist.split(" & "),
             album = metadata.album,
-            albumArtists = (metadata.albumArtist ?: metadata.artist).split(" & ").map { Artist(it) },
+            albumArtists = (metadata.albumArtist ?: metadata.artist).split(" & "),
             duration = metadata.duration,
             timestamp = state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis(),
             position = state.position,

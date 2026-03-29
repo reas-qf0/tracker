@@ -1,7 +1,8 @@
 package com.reas.tracker2
 
+import com.reas.tracker2.api.EventAPI
+import com.reas.tracker2.api.PlayAPI
 import com.reas.tracker2.database.Repository
-import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.HolePlugger
 import io.ktor.http.*
@@ -73,10 +74,14 @@ fun Application.module() {
     routing {
         staticFiles("", File("server/webApp/dist"))
         get("/events") {
-            call.respond(repository.getEvents())
+            call.respond(repository.getEvents().map { event ->
+                EventAPI.fromEvent(event)
+            })
         }
         get("/plays") {
-            call.respond(repository.getPlays())
+            call.respond(repository.getPlays().map { play ->
+                PlayAPI.fromPlay(play)
+            })
         }
         post("/login") {
             val user = call.request.queryParameters["user"] ?: return@post call.respond(HttpStatusCode.BadRequest)
@@ -86,14 +91,16 @@ fun Application.module() {
             authorization { user ->
                 val body = call.receiveText()
                 val events = try {
-                    listOf(Json.decodeFromString<Event>(body))
+                    listOf(Json.decodeFromString<EventAPI>(body))
                 } catch (e: SerializationException) {
-                    Json.decodeFromString<List<Event>>(body)
+                    Json.decodeFromString<List<EventAPI>>(body)
                 } catch (e: SerializationException) {
                     return@authorization call.respond(HttpStatusCode.BadRequest)
                 }
                 val eventsWithUserData = events.map { event ->
-                    event.copy(source = event.source.copy(user = user.name, device = user.device))
+                    event.toEvent().let {
+                        it.copy(source = it.source.copy(user = user.name, client = user.client))
+                    }
                 }
                 eventProcessor.addEvents(eventsWithUserData)
                 repository.insertEvents(eventsWithUserData)
@@ -103,13 +110,15 @@ fun Application.module() {
         webSocket("/sync") {
             authorization { user ->
                 suspend fun sendMissedPlays() {
-                    val plays = repository.getMissedPlays(user.device)
-                    val playsToSend = plays.filter { it.sourceDevice != user.device }
+                    val plays = repository.getMissedPlays(user.client)
+                    val playsToSend = plays.filter { it.client != user.client }
                     if (playsToSend.isNotEmpty())
-                        sendSerialized(playsToSend)
+                        sendSerialized(playsToSend.map {
+                            PlayAPI.fromPlay(it)
+                        })
                     // TODO: acknowledgement system
                     if (plays.isNotEmpty())
-                        repository.setLastSeenId(user.device, plays.last().id!!)
+                        repository.setLastSeenId(user.client, plays.last().id!!)
                 }
 
                 sendMissedPlays()

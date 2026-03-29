@@ -28,8 +28,8 @@ class Converters {
     fun longToDuration(long: Long): Duration = long.milliseconds
 
     @TypeConverter
-    fun idListToString(list: List<Long>): String = Json.encodeToString(list)
+    fun idListToString(list: List<Long>): String = list.joinToString(",")
 
     @TypeConverter
-    fun stringToIdList(string: String): List<Long> = Json.decodeFromString(string)
+    fun stringToIdList(string: String): List<Long> = string.split(",").map { it.toLong() }
 }

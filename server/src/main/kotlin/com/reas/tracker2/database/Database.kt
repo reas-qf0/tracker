@@ -1,11 +1,23 @@
 package com.reas.tracker2.database
 
-import com.reas.tracker2.database.tables.ApiKeyTable
-import com.reas.tracker2.database.tables.EventTable
-import com.reas.tracker2.database.tables.PlayTable
+import com.reas.tracker2.database.tables.*
+import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+
+fun createTables(db: Database) = transaction(db) {
+    SchemaUtils.create(
+        EventTable,
+        PlayTable,
+        ApiKeyTable,
+        ArtistTable,
+        TrackTable,
+        AlbumTable,
+        AlbumArtistCrossRefTable,
+        TrackArtistCrossRefTable
+    )
+}
 
 fun createInMemoryDatabase(): Database {
     val database = Database.connect(
@@ -14,19 +26,19 @@ fun createInMemoryDatabase(): Database {
         driver = "org.h2.Driver",
         password = "",
     )
-    transaction(database) {
-        SchemaUtils.create(EventTable, PlayTable, ApiKeyTable)
-    }
+    createTables(database)
     return database
 }
 
 fun createSQLiteDatabase(): Database {
     val database = Database.connect(
         url = "jdbc:sqlite:server.db",
-        driver = "org.sqlite.JDBC"
+        driver = "org.sqlite.JDBC",
+        databaseConfig = DatabaseConfig {
+            defaultMinRetryDelay = 10
+            defaultMaxRetryDelay = 1000
+        }
     )
-    transaction(database) {
-        SchemaUtils.create(EventTable, PlayTable, ApiKeyTable)
-    }
+    createTables(database)
     return database
 }

@@ -109,19 +109,14 @@ fun ScrollablePages(
             Box {
                 var offset = offset.value
                 if ((showPrevious && !canMoveLeft) || (showNext && !canMoveRight)) {
-                    offset = smooth(offset, 100f)
+                    offset = smooth(offset, 60f)
                 }
-                Box(Modifier.fillMaxWidth().offset { IntOffset(offset.roundToInt(), 0) }) {
-                    content(index)
-                }
-                if (showPrevious && canMoveLeft) {
-                    Box(Modifier.fillMaxWidth().offset { IntOffset(offset.roundToInt() - width, 0) }) {
-                        content(index - 1)
-                    }
-                }
-                if (showNext && canMoveRight) {
-                    Box(Modifier.fillMaxWidth().offset { IntOffset(offset.roundToInt() + width, 0) }) {
-                        content(index + 1)
+
+                repeat(count) { i ->
+                    if (i == index || (i == index - 1 && showPrevious) || (i == index + 1 && showNext)) {
+                        Box(Modifier.fillMaxWidth().offset { IntOffset(offset.roundToInt() + width * (i - index), 0) }) {
+                            content(i)
+                        }
                     }
                 }
             }

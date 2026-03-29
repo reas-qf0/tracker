@@ -1,9 +1,10 @@
  package com.reas.tracker2.network
 
+import com.reas.tracker2.api.EventAPI
+import com.reas.tracker2.api.PlayAPI
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.settings.*
 import com.reas.tracker2.shared.Event
-import com.reas.tracker2.shared.Play
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
@@ -89,17 +90,17 @@ class TrackerInstanceClient(
                         if (frame !is Frame.Text) return@consumeEach
                         val body = frame.readText()
                         val plays = try {
-                            listOf(Json.decodeFromString<Play>(body))
+                            listOf(Json.decodeFromString<PlayAPI>(body))
                         } catch (e: SerializationException) {
-                            Json.decodeFromString<List<Play>>(body)
+                            Json.decodeFromString<List<PlayAPI>>(body)
                         } catch (e: SerializationException) {
                             logger.warn(throwable = e) { "couldn't deserialize plays from server" }
                             return@consumeEach
                         }
 
                         repository.insertPlays(plays.filter {
-                            it.sourceDevice != apiKey
-                        })
+                            it.client != apiKey
+                        }.map { it.toPlay() })
                     }
                 }
 
@@ -143,7 +144,7 @@ class TrackerInstanceClient(
                             parameters.append("api_key", apiKey)
                         }
                         contentType(ContentType.Application.Json)
-                        setBody(batch.map { it.event })
+                        setBody(batch.map { EventAPI.fromEvent(it.event) })
                     }
                     if (!r.status.isSuccess()) {
                         logger.debug { "event submit failed with code ${r.status.value}" }

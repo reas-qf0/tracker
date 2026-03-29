@@ -95,7 +95,7 @@ interface PlayDao {
     @Query("SELECT COUNT(*) FROM plays WHERE trackId = :trackId AND $inTimeRange AND $isFullPlay")
     fun getTrackPlays(trackId: Long, start: Instant, end: Instant): Flow<Int>
 
-    @Query("SELECT SUM(timePlayed) FROM plays WHERE trackId = :trackId AND $inTimeRange AND $isFullPlay")
+    @Query("SELECT SUM(timePlayed) FROM plays WHERE trackId = :trackId AND $inTimeRange AND $isNotSkip")
     fun getTrackTimePlayed(trackId: Long, start: Instant, end: Instant): Flow<Duration>
 
     @Query("SELECT * FROM plays WHERE trackId = :trackId AND $isFullPlay ORDER BY timestamp DESC")

@@ -3,10 +3,7 @@ package com.reas.tracker2.database.tables
 import org.jetbrains.exposed.v1.core.Table
 
 object EventTable : Table("events") {
-    val track = text("track")
-    val artist = text("artist")
-    val album = text("album").nullable()
-    val albumArtist = text("album_artist").nullable()
+    val trackId = reference("trackId", TrackTable.id)
     val timestamp = long("timestamp")
     val position = long("position")
     val duration = long("duration")

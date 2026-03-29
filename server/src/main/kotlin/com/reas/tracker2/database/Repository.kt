@@ -1,19 +1,24 @@
 package com.reas.tracker2.database
 
-import com.reas.tracker2.database.tables.ApiKeyTable
-import com.reas.tracker2.database.tables.EventTable
-import com.reas.tracker2.database.tables.PlayTable
-import com.reas.tracker2.shared.Event
-import com.reas.tracker2.shared.Play
-import com.reas.tracker2.shared.Source
+import com.reas.tracker2.database.tables.*
+import com.reas.tracker2.shared.*
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 interface Repository {
+    fun getOrInsertArtists(artists: List<String>): List<Long>
+    fun getOrInsertAlbum(name: String, artists: List<String>): Long
+    fun getOrInsertTrack(name: String, artists: List<String>, album: String?, albumArtists: List<String>?): Long
+    fun getArtists(ids: List<Long>): List<Artist>
+    fun getAlbum(id: Long): Album
+    fun getTrack(id: Long): TrackWithAlbum
+
     fun insertEvents(events: List<Event>)
     fun insertPlays(plays: List<Play>)
     fun getEvents(): List<Event>
@@ -28,19 +33,129 @@ interface Repository {
 }
 
 class DatabaseRepository(private val database: Database) : Repository {
+    private fun getOrInsertArtistsNoTransaction(artists: List<String>): List<Long> {
+        val existingArtists = ArtistTable.selectAll()
+            .where(ArtistTable.name inList artists)
+            .associate { it[ArtistTable.name] to it[ArtistTable.id].value }
+        val newArtists = artists.filter { !existingArtists.containsKey(it) }
+        return if (newArtists.isEmpty()) {
+            artists.map { existingArtists[it]!! }
+        } else {
+            val newArtistIds = ArtistTable.batchInsert(newArtists) { artist ->
+                this[ArtistTable.name] = artist
+            }.associate { it[ArtistTable.name] to it[ArtistTable.id].value }
+            artists.map { existingArtists[it] ?: newArtistIds[it]!! }
+        }
+    }
+    override fun getOrInsertArtists(artists: List<String>) = transaction(database) {
+        getOrInsertArtistsNoTransaction(artists)
+    }
+
+    private fun getOrInsertAlbumNoTransaction(name: String, artists: List<String>): Long {
+        val artistIds = getOrInsertArtistsNoTransaction(artists)
+        val artistIdsAsString = artistIds.joinToString(",")
+
+        val albumId = AlbumTable.select(AlbumTable.id)
+            .where { (AlbumTable.name eq name) and (AlbumTable.artistIds eq artistIdsAsString) }
+            .firstOrNull()?.get(AlbumTable.id)?.value
+
+        return albumId ?: run {
+            val newAlbumId = AlbumTable.insert {
+                it[AlbumTable.name] = name
+                it[AlbumTable.artistIds] = artistIdsAsString
+            }[AlbumTable.id].value
+            AlbumArtistCrossRefTable.batchInsert(artistIds) { artistId ->
+                this[AlbumArtistCrossRefTable.albumId] = newAlbumId
+                this[AlbumArtistCrossRefTable.artistId] = artistId
+            }
+            newAlbumId
+        }
+    }
+
+    override fun getOrInsertAlbum(name: String, artists: List<String>) = transaction(database) {
+        getOrInsertAlbumNoTransaction(name, artists)
+    }
+
+    private fun getOrInsertTrackNoTransaction(name: String, artists: List<String>, album: String?, albumArtists: List<String>?): Long {
+        val artistIds = getOrInsertArtistsNoTransaction(artists)
+        val artistIdsAsString = artistIds.joinToString(",")
+        val albumId = album?.let { getOrInsertAlbumNoTransaction(album, albumArtists!!) }
+
+        val trackId = TrackTable.select(TrackTable.id)
+            .where {
+                (TrackTable.name eq name) and
+                        (TrackTable.artistIds eq artistIdsAsString) and
+                        (TrackTable.albumId eq albumId)
+            }.firstOrNull()?.get(TrackTable.id)?.value
+
+        return trackId ?: run {
+            val newTrackId = TrackTable.insert {
+                it[TrackTable.name] = name
+                it[TrackTable.albumId] = albumId
+                it[TrackTable.artistIds] = artistIdsAsString
+            }[TrackTable.id].value
+            TrackArtistCrossRefTable.batchInsert(artistIds) { artistId ->
+                this[TrackArtistCrossRefTable.artistId] = artistId
+                this[TrackArtistCrossRefTable.trackId] = newTrackId
+            }
+            newTrackId
+        }
+    }
+
+    override fun getOrInsertTrack(name: String, artists: List<String>, album: String?, albumArtists: List<String>?) = transaction(database) {
+        getOrInsertTrackNoTransaction(name, artists, album, albumArtists)
+    }
+
+    private fun getOrInsertTrack(track: TrackWithAlbum) = getOrInsertTrackNoTransaction(
+        track.name,
+        track.artists.map { it.name },
+        track.asAlbumOrNull?.name,
+        track.asAlbumOrNull?.artists?.map { it.name },
+    )
+
+    override fun getArtists(ids: List<Long>) = transaction(database) {
+        ArtistTable.selectAll()
+            .where(ArtistTable.id inList ids)
+            .map { Artist(it[ArtistTable.name], it[ArtistTable.id].value) }
+    }
+
+    override fun getAlbum(id: Long) = transaction(database) {
+        AlbumTable.selectAll()
+            .where(AlbumTable.id eq id)
+            .first().let {
+                Album(
+                    it[AlbumTable.name],
+                    getArtists(it[AlbumTable.artistIds].split(",").map { it.toLong() }),
+                    it[AlbumTable.id].value
+                )
+            }
+    }
+
+    override fun getTrack(id: Long) = transaction(database) {
+        TrackTable.selectAll()
+            .where(TrackTable.id eq id)
+            .first().let {
+                TrackWithAlbum(
+                    trackObject = Track(
+                        it[TrackTable.name],
+                        getArtists(it[TrackTable.artistIds].split(",").map { it.toLong() }),
+                        it[TrackTable.id].value
+                    ),
+                    albumObject = it[TrackTable.albumId]?.let { getAlbum(it.value) }
+                )
+            }
+    }
+
     override fun insertEvents(events: List<Event>) {
-        transaction(database, readOnly = false) {
+        transaction(database) {
             EventTable.batchUpsert(events, shouldReturnGeneratedValues = false) { event ->
-                this[EventTable.track] = event.track
-                this[EventTable.artist] = event.artist
-                this[EventTable.album] = event.album
-                this[EventTable.albumArtist] = event.albumArtist
+                this[EventTable.trackId] = getOrInsertTrack(event.metadata)
                 this[EventTable.timestamp] = event.timestamp.toEpochMilliseconds()
                 this[EventTable.position] = event.position.inWholeMilliseconds
                 this[EventTable.duration] = event.duration.inWholeMilliseconds
                 this[EventTable.isPlaying] = event.isPlaying
                 this[EventTable.sourceUser] = event.user
-                this[EventTable.sourceDevice] = event.device
+                this[EventTable.sourceDevice] = event.client
                 this[EventTable.sourceApp] = event.app
             }
         }
@@ -56,20 +171,17 @@ class DatabaseRepository(private val database: Database) : Repository {
     }
 
     override fun insertPlays(plays: List<Play>) {
-        transaction(database, readOnly = false) {
+        transaction(database) {
             PlayTable.batchUpsert(plays, shouldReturnGeneratedValues = false) { play ->
-                this[PlayTable.track] = play.track
-                this[PlayTable.artist] = play.artist
-                this[PlayTable.album] = play.album
-                this[PlayTable.albumArtist] = play.albumArtist
+                this[PlayTable.trackId] = getOrInsertTrack(play.metadata)
                 this[PlayTable.timestamp] = play.timestamp.toEpochMilliseconds()
                 this[PlayTable.timePlayed] = play.timePlayed.inWholeMilliseconds
                 this[PlayTable.duration] = play.duration.inWholeMilliseconds
                 this[PlayTable.lastPosition] = play.lastPosition.inWholeMilliseconds
                 this[PlayTable.lastPlaying] = play.lastPlaying
-                this[PlayTable.sourceUser] = play.sourceUser
-                this[PlayTable.sourceDevice] = play.sourceDevice
-                this[PlayTable.sourceApp] = play.sourceApp
+                this[PlayTable.sourceUser] = play.user
+                this[PlayTable.sourceDevice] = play.client
+                this[PlayTable.sourceApp] = play.app
                 this[PlayTable.associatedEvents] = Json.encodeToString(play.associatedEvents)
                 this[PlayTable.id] = play.id!!
             }
@@ -92,7 +204,7 @@ class DatabaseRepository(private val database: Database) : Repository {
         PlayTable.selectAll()
             .where {
                 (PlayTable.sourceApp eq source.app) and
-                (PlayTable.sourceDevice eq source.device) and
+                (PlayTable.sourceDevice eq source.client) and
                 (PlayTable.sourceUser eq source.user)
             }
             .orderBy(PlayTable.timestamp, SortOrder.DESC)
@@ -137,34 +249,28 @@ class DatabaseRepository(private val database: Database) : Repository {
     }
 
     private fun ResultRow.toEvent(): Event =
-        Event.create(
-            track = this[EventTable.track],
-            artist = this[EventTable.artist],
-            album = this[EventTable.album],
-            albumArtist = this[EventTable.albumArtist],
-            timestamp = this[EventTable.timestamp],
-            position = this[EventTable.position],
-            duration = this[EventTable.duration],
+        Event(
+            metadata = getTrack(this[EventTable.trackId].value),
+            timestamp = Instant.fromEpochMilliseconds(this[EventTable.timestamp]),
+            position = this[EventTable.position].milliseconds,
+            duration = this[EventTable.duration].milliseconds,
             isPlaying = this[EventTable.isPlaying],
             source = Source(
                 user = this[EventTable.sourceUser],
-                device = this[EventTable.sourceDevice],
+                client = this[EventTable.sourceDevice],
                 app = this[EventTable.sourceApp]
             )
         )
 
     private fun ResultRow.toPlay(): Play =
-        Play.create(
-            track = this[PlayTable.track],
-            artist = this[PlayTable.artist],
-            album = this[PlayTable.album],
-            albumArtist = this[PlayTable.albumArtist],
-            timestamp = this[PlayTable.timestamp],
-            duration = this[PlayTable.duration],
-            timePlayed = this[PlayTable.timePlayed],
+        Play(
+            metadata = getTrack(this[PlayTable.trackId].value),
+            timestamp = Instant.fromEpochMilliseconds(this[PlayTable.timestamp]),
+            duration = this[PlayTable.duration].milliseconds,
+            timePlayed = this[PlayTable.timePlayed].milliseconds,
             source = Source(
                 user = this[PlayTable.sourceUser],
-                device = this[PlayTable.sourceDevice],
+                client = this[PlayTable.sourceDevice],
                 app = this[PlayTable.sourceApp]
             ),
             associatedEvents = Json.decodeFromString(this[PlayTable.associatedEvents]),
