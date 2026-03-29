@@ -9,21 +9,17 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
-import com.reas.tracker2.startKoinMp
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
-import com.reas.tracker2.ui.theme.TrackerTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.min
 
@@ -223,52 +219,6 @@ fun ChartEntry(
                 drawStopIndicator = {},
                 modifier = Modifier.fillMaxWidth(),
             )
-        }
-    }
-}
-
-
-@Preview(heightDp = 87)
-@Composable
-private fun ChartEntryPreview() {
-    startKoinMp {}
-    TrackerTheme {
-        Scaffold { innerPadding ->
-            ChartEntry(1, "Album Name", "Artist Name", 0.5, "Metric",
-                modifier = Modifier.padding(innerPadding))
-        }
-    }
-}
-
-@Preview(heightDp = 87)
-@Composable
-private fun ChartEntryPreviewDark() {
-    TrackerTheme(darkTheme = true) {
-        Scaffold { innerPadding ->
-            ChartEntry(1, "Album Name", "Artist Name", 0.5, "Metric",
-                modifier = Modifier.padding(innerPadding))
-        }
-    }
-}
-
-@Preview(heightDp = 87)
-@Composable
-private fun ChartEntryPreview2() {
-    TrackerTheme {
-        Scaffold { innerPadding ->
-            ChartEntry(1, "Album Name", null,  0.5, "Metric",
-                modifier = Modifier.padding(innerPadding))
-        }
-    }
-}
-
-@Preview(heightDp = 87)
-@Composable
-private fun ChartEntryPreviewDark2() {
-    TrackerTheme(darkTheme = true) {
-        Scaffold { innerPadding ->
-            ChartEntry(1, "Album Name", null, 0.5, "Metric",
-                modifier = Modifier.padding(innerPadding))
         }
     }
 }

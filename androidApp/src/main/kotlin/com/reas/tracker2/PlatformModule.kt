@@ -11,7 +11,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-actual val platformModule = module {
+val platformModule = module {
     singleOf(::PlatformDependentPathsAndroid) bind PlatformDependentPaths::class
     singleOf(::getDatabaseBuilder)
     single {

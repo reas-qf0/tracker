@@ -4,11 +4,8 @@ import android.content.Context
 import androidx.work.*
 import com.reas.tracker2.R
 import com.reas.tracker2.network.TrackerInstanceClient
-import org.jetbrains.compose.resources.getString
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import tracker2.composeapp.generated.resources.Res
-import tracker2.composeapp.generated.resources.backup_in_progress
 import java.util.concurrent.TimeUnit
 
 class SyncWorker(context: Context, params: WorkerParameters):
@@ -17,7 +14,7 @@ class SyncWorker(context: Context, params: WorkerParameters):
     private val sync: TrackerInstanceClient by inject()
 
     override suspend fun doWork(): Result {
-        val s = getString(Res.string.backup_in_progress)
+        val s = applicationContext.getString(R.string.backup_in_progress)
         val id = notif.show("Sync Indicator") {
             setContentTitle(s)
             setSmallIcon(R.drawable.ic_stat_name)

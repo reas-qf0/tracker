@@ -3,7 +3,7 @@ android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
 kotlin = "2.3.20"
-agp = "8.12.0"
+agp = "9.0.1"
 compose-multiplatform = "1.10.3"
 
 activity-compose = "1.13.0"
@@ -101,8 +101,10 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 
 [plugins]
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 compose-hotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

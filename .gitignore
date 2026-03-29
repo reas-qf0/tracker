@@ -26,5 +26,5 @@ composeApp/release
 server/webApp/package-lock.json
 keystore-release.jks
 release-signing.properties
-server.db
+server/server.db
 gradle/gradle-daemon-jvm.properties

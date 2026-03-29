@@ -5,4 +5,5 @@
     <string name="daily_report_artists">Most played artists:</string>
     <string name="daily_report_albums">Most played albums:</string>
     <string name="daily_report_tracks">Most played tracks:</string>
+    <string name="backup_in_progress">Backup in progress…</string>
 </resources>

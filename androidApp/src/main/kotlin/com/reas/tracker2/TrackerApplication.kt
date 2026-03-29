@@ -5,6 +5,7 @@ import android.util.Log
 import io.github.oshai.kotlinlogging.*
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.GlobalContext.startKoin
 
 class TrackerApplication : Application() {
     override fun onCreate() {
@@ -40,9 +41,10 @@ class TrackerApplication : Application() {
             }
         }
 
-        startKoinMp {
+        startKoin {
             androidLogger()
             androidContext(this@TrackerApplication)
+            modules(platformModule, sharedModule)
         }
     }
 }
