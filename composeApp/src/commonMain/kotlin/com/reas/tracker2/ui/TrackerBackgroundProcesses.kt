@@ -42,9 +42,7 @@ fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
     LaunchedEffect(Unit) {
         repository.getNowPlayingTracks().collect { plays ->
             holePlugger.cancelAll()
-            plays.forEach { play ->
-                holePlugger.register(play)
-            }
+            holePlugger.register(plays)
         }
     }
     LaunchedEffect(Unit) {

@@ -5,20 +5,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.reas.tracker2.platform.IS_DEBUG
+import com.reas.tracker2.shared.Play
 import com.reas.tracker2.ui.theme.TrackerTheme
 import com.reas.tracker2.ui.theme.Typography
 import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.vectorResource
 import tracker2.composeapp.generated.resources.Res
 import tracker2.composeapp.generated.resources.now_playing
+import tracker2.composeapp.generated.resources.wrench
 import kotlin.time.Clock
 import kotlin.time.Instant
 
@@ -29,6 +30,7 @@ fun HistoryEntry(
     artist: String,
     album: String?,
     timestamp: Instant,
+    associatedEvents: List<Play.EventInfo?> = listOf(),
     modifier: Modifier = Modifier,
     isNowPlaying: Boolean = false,
     imageUrl: suspend () -> Any? = { null },
@@ -57,6 +59,38 @@ fun HistoryEntry(
                     modifier = Modifier.weight(1.0F)
                 )
                 Spacer(Modifier.width(5.dp))
+
+                if (IS_DEBUG && associatedEvents.isNotEmpty()) {
+                    var debugInfoExpanded by remember { mutableStateOf(false) }
+                    Icon(
+                        vectorResource(Res.drawable.wrench),
+                        "Debug",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(
+                            onClick = { debugInfoExpanded = !debugInfoExpanded }
+                        )
+                    )
+                    DropdownMenu(
+                        debugInfoExpanded,
+                        onDismissRequest = { debugInfoExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Associated events: ") },
+                            onClick = {}
+                        )
+                        associatedEvents.forEach { event ->
+                            DropdownMenuItem(
+                                text = { Text(if (event != null) """
+                                    ${event.timestamp}
+                                        ${event.position}
+                                        ${if (event.isPlaying) "playing" else "stopped" }
+                                """.trimIndent() else "plug event") },
+                                onClick = {}
+                            )
+                        }
+                    }
+                }
+
                 Icon(
                     Icons.Filled.MoreVert,
                     "More",

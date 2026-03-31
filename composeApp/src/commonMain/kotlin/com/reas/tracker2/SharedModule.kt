@@ -10,6 +10,7 @@ import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.EventProcessorAdapter
 import com.reas.tracker2.shared.HolePlugger
 import com.reas.tracker2.ui.viewmodels.*
+import com.reas.tracker2.util.InMemoryLog
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.bind
@@ -28,6 +29,7 @@ val sharedModule = module {
     singleOf(::EventProcessor)
     singleOf(::TrackerInstanceClient)
     single { HolePlugger() }
+    singleOf(::InMemoryLog)
 
     viewModelOf(::HistoryScreenViewModel)
     viewModelOf(::ChartsScreenViewModel)

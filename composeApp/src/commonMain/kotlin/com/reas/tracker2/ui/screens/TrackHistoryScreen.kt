@@ -54,6 +54,7 @@ fun TrackHistoryScreen(
                     album = scrobble.album,
                     timestamp = scrobble.timestamp,
                     isNowPlaying = false,
+                    associatedEvents = scrobble.associatedEvents,
 
                     imageUrl = { viewModel.getImageUrl(scrobble) },
                     onClick = {

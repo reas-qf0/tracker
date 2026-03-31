@@ -39,6 +39,7 @@ fun HistoryScreen(
                     album = scrobble.album,
                     timestamp = scrobble.timestamp,
                     isNowPlaying = scrobble.isNowPlaying,
+                    associatedEvents = scrobble.associatedEvents,
 
                     imageUrl = { viewModel.getImageUrl(scrobble) },
                     onClick = {

@@ -21,6 +21,7 @@ import com.reas.tracker2.settings.get
 import com.reas.tracker2.settings.isScrobblingEnabled
 import com.reas.tracker2.shared.Event
 import com.reas.tracker2.shared.Source
+import com.reas.tracker2.util.InMemoryLog
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
@@ -44,6 +45,7 @@ private object NotificationListenerService {
 
 private class MediaCallback(private val appId: String): MediaController.Callback(), KoinComponent {
     private val logger = com.reas.tracker2.android.NotificationListenerService.logger
+    private val inMemoryLogger: InMemoryLog by inject()
     private val repository: Repository by inject()
     private val notificationManager: NotificationWrapper by inject()
     private val syncManager: TrackerInstanceClient by inject()
@@ -60,7 +62,6 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     private var sentEvent: Boolean = false
 
     private fun updateNotification(event: Event) {
-        //Logger.d(TAG) { "updateNotification" }
         if (event.isPlaying) {
             notificationBuilder = { context ->
                 setContentTitle(event.track)
@@ -151,22 +152,61 @@ private class MediaCallback(private val appId: String): MediaController.Callback
         }
     }
 
+    private fun log(message: () -> String) {
+        logger.debug(message)
+        scope.launch {
+            inMemoryLogger.log("MediaEvents", message)
+        }
+    }
 
     fun onConnect(controller: MediaController) {
+        log { "onConnect              ($appId)" }
         controller.metadata?.let { onMetadataChanged(it) }
         controller.playbackState?.let { onPlaybackStateChanged(it) }
     }
 
     override fun onMetadataChanged(metadata: MediaMetadata?) {
-        logger.debug { "onMetadataChanged($appId) $metadata" }
+        log { """
+            onMetadataChanged      ($appId)
+                    track=${metadata?.title}
+                    artist=${metadata?.artist}
+                    album=${metadata?.album}
+                    albumArtist=${metadata?.albumArtist}
+                    duration=${metadata?.duration}
+        """.trimIndent() }
 
         if (metadata == null) return
         currentMetadata = metadata
         addEvent()
     }
 
+    private fun getStringForStateInt(state: Int?): String {
+        when (state) {
+            null -> return "null"
+            PlaybackState.STATE_NONE -> return "NONE"
+            PlaybackState.STATE_STOPPED -> return "STOPPED"
+            PlaybackState.STATE_PAUSED -> return "PAUSED"
+            PlaybackState.STATE_PLAYING -> return "PLAYING"
+            PlaybackState.STATE_FAST_FORWARDING -> return "FAST_FORWARDING"
+            PlaybackState.STATE_REWINDING -> return "REWINDING"
+            PlaybackState.STATE_BUFFERING -> return "BUFFERING"
+            PlaybackState.STATE_ERROR -> return "ERROR"
+            PlaybackState.STATE_CONNECTING -> return "CONNECTING"
+            PlaybackState.STATE_SKIPPING_TO_PREVIOUS -> return "SKIPPING_TO_PREVIOUS"
+            PlaybackState.STATE_SKIPPING_TO_NEXT -> return "SKIPPING_TO_NEXT"
+            PlaybackState.STATE_SKIPPING_TO_QUEUE_ITEM -> return "SKIPPING_TO_QUEUE_ITEM"
+            else -> return "UNKNOWN"
+        }
+    }
+
     override fun onPlaybackStateChanged(state: PlaybackState?) {
-        logger.debug { "onPlaybackStateChanged($appId) $state" }
+        log { """
+            onPlaybackStateChanged ($appId)
+                    lastPositionUpdateTime=${state?.lastPositionUpdateTime}
+                    position=${state?.position}
+                    state=${getStringForStateInt(state?.state)}
+                    playbackSpeed=${state?.playbackSpeed}
+        """.trimIndent() }
 
         if (state == null) return
         currentState = state
@@ -175,7 +215,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     }
 
     fun onDisconnect() {
-        logger.debug { "onDisconnect($appId)" }
+        log { "onDisconnect           ($appId)" }
         currentState = currentState?.let {
             PlaybackState.Builder(it).setState(
                 PlaybackState.STATE_STOPPED,
@@ -195,6 +235,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
 
 private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListener, KoinComponent {
     private val logger = com.reas.tracker2.android.NotificationListenerService.logger
+    private val inMemoryLogger: InMemoryLog by inject()
     private val settings: Settings by inject()
     private val controllers = mutableMapOf<String, MediaController>()
     private var callbacks = mutableMapOf<String, MediaCallback>()
@@ -227,8 +268,15 @@ private class SessionListener: MediaSessionManager.OnActiveSessionsChangedListen
         }
     }
 
+    private fun log(message: () -> String) {
+        logger.debug(message)
+        scope.launch {
+            inMemoryLogger.log("MediaEvents", message)
+        }
+    }
+
     override fun onActiveSessionsChanged(ctrl: List<MediaController>?) {
-        logger.debug { "onActiveSessionsChanged $ctrl" }
+        log { "onActiveSessionsChanged ${ctrl?.map { it.packageName }}" }
         if (ctrl == null) return
 
         val oldControllers = controllers.keys
@@ -284,11 +332,20 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
     private val logger = com.reas.tracker2.android.NotificationListenerService.logger
     private var initialized = false
     private var listener: SessionListener? = null
+    private val inMemoryLogger: InMemoryLog by inject()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 //        if (startId == 42)
 //            listener!!.onNotificationDismissed(intent!!.getStringExtra("org.reas.tracker2.appId")!!)
         return START_STICKY
+    }
+
+    private fun log(message: () -> String) {
+        logger.debug(message)
+        scope.launch {
+            inMemoryLogger.log("MediaEvents", message)
+        }
     }
 
     private fun init() {
@@ -310,7 +367,7 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        logger.debug { "onListenerConnected" }
+        log { "onListenerConnected" }
         if (!initialized) {
             synchronized(this) {
                 if (!initialized) {
@@ -323,7 +380,7 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
 
     override fun onListenerDisconnected() {
         super.onListenerDisconnected()
-        logger.debug { "onListenerDisconnected" }
+        log { "onListenerDisconnected" }
         destroy()
     }
 }
