@@ -34,13 +34,18 @@ interface PlayDao {
     @Query("SELECT * FROM plays WHERE lastPlaying = 1")
     fun getNowPlayingTracks(): Flow<List<PlayEntity>>
 
+    @Transaction
     @Query("""
-        SELECT * FROM
-            (SELECT * FROM plays WHERE lastPlaying = 1)
-        UNION ALL SELECT * FROM
-            (SELECT * FROM plays WHERE $isFullPlay AND lastPlaying = 0 ORDER BY timestamp DESC)
+        WITH t0 as (
+            SELECT * FROM
+                (SELECT *, 1 as sort1, 0 as sort2 FROM plays WHERE lastPlaying = 1)
+            UNION ALL SELECT * FROM
+                (SELECT *, 2 as sort1, timestamp as sort2 FROM plays WHERE $isFullPlay AND lastPlaying = 0)
+        ) SELECT t0.*, tracks.name, tracks.albumId, tracks.artistIds FROM t0
+        JOIN tracks ON t0.trackId = tracks.trackId
+        ORDER BY sort1, sort2 DESC
     """)
-    fun getRecentPlays(): PagingSource<Int, PlayEntity>
+    fun getRecentPlays(): PagingSource<Int, PlayWithData>
 
     @Query("""
         SELECT COUNT(*) FROM plays
@@ -98,8 +103,13 @@ interface PlayDao {
     @Query("SELECT SUM(timePlayed) FROM plays WHERE trackId = :trackId AND $inTimeRange AND $isNotSkip")
     fun getTrackTimePlayed(trackId: Long, start: Instant, end: Instant): Flow<Duration>
 
-    @Query("SELECT * FROM plays WHERE trackId = :trackId AND $isFullPlay ORDER BY timestamp DESC")
-    fun getTrackHistory(trackId: Long): PagingSource<Int, PlayEntity>
+    @Transaction
+    @Query("""
+        SELECT plays.*, tracks.name, tracks.albumId, tracks.artistIds FROM plays
+        JOIN tracks ON plays.trackId = tracks.trackId
+        WHERE plays.trackId = :trackId AND $isFullPlay ORDER BY timestamp DESC
+    """)
+    fun getTrackHistory(trackId: Long): PagingSource<Int, PlayWithData>
 
     @Transaction
     @Query("""

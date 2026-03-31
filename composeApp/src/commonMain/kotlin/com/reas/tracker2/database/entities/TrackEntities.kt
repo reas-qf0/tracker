@@ -4,7 +4,10 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "tracks")
+@Entity(
+    tableName = "tracks",
+    indices = [Index("name", "albumId", "artistIds", unique = true)]
+)
 data class TrackEntity(
     @PrimaryKey(autoGenerate = true)
     val trackId: Long = 0,
@@ -13,7 +16,10 @@ data class TrackEntity(
     val artistIds: List<Long>,
 )
 
-@Entity(tableName = "albums")
+@Entity(
+    tableName = "albums",
+    indices = [Index("name", "artistIds", unique = true)]
+)
 data class AlbumEntity(
     @PrimaryKey(autoGenerate = true)
     val albumId: Long = 0,
@@ -21,7 +27,10 @@ data class AlbumEntity(
     val artistIds: List<Long>,
 )
 
-@Entity(tableName = "artists")
+@Entity(
+    tableName = "artists",
+    indices = [Index("name", unique = true)]
+)
 data class ArtistEntity(
     @PrimaryKey(autoGenerate = true)
     val artistId: Long = 0,

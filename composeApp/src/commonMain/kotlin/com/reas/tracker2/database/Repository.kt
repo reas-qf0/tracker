@@ -39,7 +39,7 @@ interface Repository {
     suspend fun deletePlay(play: Play)
     suspend fun getLastPlayFromSource(source: Source): Play?
     fun getNowPlayingTracks(): Flow<List<Play>>
-    fun getRecentPlays(): PagingSource<Int, PlayEntity>
+    fun getRecentPlays(): PagingSource<Int, PlayWithData>
 
     fun getArtistPlays(artist: Artist, period: TimePeriod): Flow<Int>
     fun getArtistTimePlayed(artist: Artist, period: TimePeriod): Flow<Duration>
@@ -50,7 +50,7 @@ interface Repository {
 
     fun getTrackPlays(track: TrackWithAlbum, period: TimePeriod): Flow<Int>
     fun getTrackTimePlayed(track: TrackWithAlbum, period: TimePeriod): Flow<Duration>
-    fun getTrackHistory(track: TrackWithAlbum): PagingSource<Int, PlayEntity>
+    fun getTrackHistory(track: TrackWithAlbum): PagingSource<Int, PlayWithData>
     fun getMostPlayedTracks(period: TimePeriod): PagingSource<Int, TrackWithTimePlayed>
     fun getMostPlayedTracksByPlayCount(period: TimePeriod): PagingSource<Int, TrackWithPlayCount>
     fun getMostPlayedTracksFromArtist(artist: Artist, period: TimePeriod): PagingSource<Int, TrackWithTimePlayed>
@@ -81,8 +81,8 @@ interface Repository {
 
     // oh my fucking god
     // TODO get rid of this when the paging library becomes good
-    suspend fun playEntityToObject(entity: PlayEntity) = Play(
-        metadata = getTrack(entity.trackId),
+    suspend fun playEntityToObject(entity: PlayWithData) = Play(
+        metadata = entity.metadata.toTrack(),
         timestamp = entity.timestamp,
         duration = entity.duration,
         timePlayed = entity.timePlayed,
@@ -128,7 +128,14 @@ class RoomRepository(private val db: AppDatabase) : Repository {
         sourceApp = app,
         associatedEvents = associatedEvents,
     )
-    private suspend fun PlayEntity.toObject() = playEntityToObject(this)
+    private suspend fun PlayEntity.toObject() = Play(
+        metadata = getTrack(trackId),
+        timestamp = timestamp,
+        duration = duration,
+        timePlayed = timePlayed,
+        source = Source.user(sourceDevice, sourceApp),
+        associatedEvents = associatedEvents,
+    )
 
     override suspend fun insertEvent(event: Event) = db.eventDao().insert(event.toEntity())
     override suspend fun deleteEvent(event: Event) = db.eventDao().delete(event.toEntity())

@@ -4,11 +4,9 @@ import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
 import com.reas.tracker2.database.entities.*
-import com.reas.tracker2.shared.Album
-import com.reas.tracker2.shared.Artist
-import com.reas.tracker2.shared.Track
-import com.reas.tracker2.shared.TrackWithAlbum
+import com.reas.tracker2.shared.*
 import kotlin.time.Duration
+import kotlin.time.Instant
 
 data class AlbumWithData(
     @Embedded val album: AlbumEntity,
@@ -54,6 +52,18 @@ data class TrackWithData(
         )
     )
 }
+
+data class PlayWithData(
+    @Embedded val metadata: TrackWithData,
+    val timestamp: Instant,
+    val duration: Duration,
+    var timePlayed: Duration,
+    var lastPosition: Duration,
+    var lastPlaying: Boolean,
+    val sourceDevice: String,
+    val sourceApp: String,
+    val associatedEvents: MutableList<Play.EventInfo?>
+)
 
 data class ArtistWithPlayCount(
     @Embedded val artist: Artist,
