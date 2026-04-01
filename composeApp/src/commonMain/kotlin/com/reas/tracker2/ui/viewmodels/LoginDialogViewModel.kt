@@ -1,13 +1,12 @@
 package com.reas.tracker2.ui.viewmodels
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reas.tracker2.settings.*
 import kotlinx.coroutines.launch
 
 class LoginDialogViewModel(
     private val settings: Settings
-) : ViewModel() {
+) : TrackerViewModel() {
     val hostName
         get() = settings[instanceHostName]
     val port

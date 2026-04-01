@@ -90,7 +90,7 @@ interface Repository {
 
     // oh my fucking god
     // TODO get rid of this when the paging library becomes good
-    suspend fun playEntityToObject(entity: PlayWithData) = Play(
+    fun playEntityToObject(entity: PlayWithData) = Play(
         metadata = entity.metadata.toTrack(),
         timestamp = entity.timestamp,
         duration = entity.duration,

@@ -16,6 +16,8 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import com.reas.tracker2.ui.derivedState
+import com.reas.tracker2.ui.state
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
@@ -113,22 +115,22 @@ fun Timestamp(
         },
         state = tooltipState
     ) {
-        var difference by remember { mutableStateOf(Clock.System.now() - timestamp) }
-        val showSeconds by remember { derivedStateOf {
+        var difference by state(Clock.System.now() - timestamp)
+        val showSeconds by derivedState {
             difference < 1.minutes
-        } }
-        val showMinutes by remember { derivedStateOf {
+        }
+        val showMinutes by derivedState {
             1.minutes <= difference && difference < 1.hours
-        } }
-        val showHours by remember { derivedStateOf {
+        }
+        val showHours by derivedState {
             1.hours <= difference && difference < 1.days
-        } }
-        val showDays by remember { derivedStateOf {
+        }
+        val showDays by derivedState {
             1.days <= difference && difference < 30.days
-        }}
-        val showDate by remember { derivedStateOf {
+        }
+        val showDate by derivedState {
             difference >= 30.days
-        }}
+        }
 
         val text = if (showSeconds) {
             stringResource(Res.string.seconds_ago, difference.inWholeSeconds)

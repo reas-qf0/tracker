@@ -6,17 +6,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.reas.tracker2.ui.components.HistoryEntry
 import com.reas.tracker2.ui.components.LazyColumnWithScrollButton
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.TrackHistory
+import com.reas.tracker2.ui.rememberAsPagingItems
+import com.reas.tracker2.ui.rememberAsState
 import com.reas.tracker2.ui.viewmodels.TrackHistoryViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -29,8 +28,8 @@ fun TrackHistoryScreen(
 ) {
     val track = arguments.track
 
-    val trackPlays by remember { viewModel.trackPlays(track) }.collectAsStateWithLifecycle()
-    val history = remember { viewModel.history(track) }.collectAsLazyPagingItems()
+    val trackPlays by rememberAsState { viewModel.trackPlays(track) }
+    val history = rememberAsPagingItems { viewModel.history(track) }
 
     applicationState.setTitle("${track.artistsAsString} - ${track.name}")
     LazyColumnWithScrollButton(applicationState, modifier = modifier) {

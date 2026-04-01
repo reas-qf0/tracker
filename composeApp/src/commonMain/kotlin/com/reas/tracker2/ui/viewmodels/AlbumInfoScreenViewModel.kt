@@ -1,77 +1,56 @@
 package com.reas.tracker2.ui.viewmodels
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
-import com.reas.tracker2.settings.*
+import com.reas.tracker2.settings.Settings
+import com.reas.tracker2.settings.chartSort
+import com.reas.tracker2.settings.set
 import com.reas.tracker2.shared.Album
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
-import kotlinx.coroutines.flow.SharingStarted
+import com.reas.tracker2.util.toDisplayString
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import org.koin.core.time.inMs
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.minutes
 
 class AlbumInfoScreenViewModel(
     private val repository: Repository,
     private val networkRepository: NetworkRepository,
     private val settings: Settings,
-): ViewModel() {
-    fun plays(album: Album, period: TimePeriod) = repository.getAlbumPlays(album, period)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = -1
-        )
+): TrackerViewModel() {
+    fun plays(album: Album, period: TimePeriod) =
+        repository.getAlbumPlays(album, period).asIntStateFlow()
 
-    fun timePlayed(album: Album, period: TimePeriod) = repository.getAlbumTimePlayed(album, period)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = -Duration.INFINITE
-        )
+    fun timePlayed(album: Album, period: TimePeriod) =
+        repository.getAlbumTimePlayed(album, period).asDurationStateFlow()
 
-    fun rank(album: Album, period: TimePeriod) = repository.getAlbumRank(album, period)
-        .map { "#" + (it + 1).toString() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = "..."
-        )
+    fun rank(album: Album, period: TimePeriod) =
+        repository.getAlbumRank(album, period)
+            .map { "#" + (it + 1).toString() }
+            .asStringStateFlow()
 
-    fun playRank(album: Album, period: TimePeriod) = repository.getAlbumRankByPlayCount(album, period)
-        .map { "#" + (it + 1).toString() }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-            initialValue = "..."
-        )
+    fun playRank(album: Album, period: TimePeriod) =
+        repository.getAlbumRankByPlayCount(album, period)
+            .map { "#" + (it + 1).toString() }
+            .asStringStateFlow()
 
     fun topTracks(album: Album, period: TimePeriod) =
         repository.getMostPlayedTracksFromAlbum(album, period, limit = 5)
-            .map { it.map { info ->
+            .mapElements { info ->
                 ChartEntryUiState(
                     label = info.track.name,
                     label2 = if (info.track.artists.toSet() != album.artists.toSet()) info.track.artistsAsString else null,
                     key = info.toString(),
                     metric = info.timePlayed.inMs,
-                    metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
+                    metricAsString = info.timePlayed.toDisplayString(),
                     bottomSheetInfo = BottomSheetInfo(track = info.track)
                 )
-            } }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-                initialValue = listOf()
-            )
+            }.asListStateFlow()
 
     fun topTracksByPlayCount(album: Album, period: TimePeriod) =
         repository.getMostPlayedTracksFromAlbumByPlayCount(album, period, limit = 5)
-            .map { it.map { info ->
+            .mapElements { info ->
                 ChartEntryUiState(
                     label = info.track.name,
                     label2 = if (info.track.artists.toSet() != album.artists.toSet()) info.track.artistsAsString else null,
@@ -80,24 +59,14 @@ class AlbumInfoScreenViewModel(
                     metricAsString = "${info.playCount} plays",
                     bottomSheetInfo = BottomSheetInfo(track = info.track)
                 )
-            } }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-                initialValue = listOf()
-            )
-    fun sort() = settings.flow(chartSort).stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
-        initialValue = settings[chartSort]
-    )
+            }.asListStateFlow()
+
+    fun sort() = settings.stateFlow(chartSort)
+
     suspend fun setSort(sort: ChartSort) {
         settings[chartSort] = sort
     }
 
     suspend fun getAlbumImageUrl(album: Album) =
         networkRepository.getAlbumImageUrl(album, "large")
-
-    companion object {
-        private const val TIMEOUT_MILLIS = 5_000L
-    }
 }

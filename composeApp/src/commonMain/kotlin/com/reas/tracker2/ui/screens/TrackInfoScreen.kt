@@ -7,7 +7,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,12 +20,13 @@ import com.reas.tracker2.ui.components.ListEntryWithImage
 import com.reas.tracker2.ui.components.SortOrderSelectionChip
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.TrackInfo
+import com.reas.tracker2.ui.rememberAsState
 import com.reas.tracker2.ui.viewmodels.TrackInfoScreenViewModel
+import com.reas.tracker2.util.toDisplayString
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import tracker2.composeapp.generated.resources.*
-import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun TrackInfoScreen(
@@ -40,12 +40,12 @@ fun TrackInfoScreen(
     val scope = rememberCoroutineScope()
     val period = TimePeriod.ALLTIME
 
-    val plays by remember { viewModel.plays(track, period) }.collectAsStateWithLifecycle()
-    val timePlayed by remember { viewModel.timePlayed(track, period) }.collectAsStateWithLifecycle()
+    val plays by rememberAsState { viewModel.plays(track, period) }
+    val timePlayed by rememberAsState { viewModel.timePlayed(track, period) }
     val playsAsString = if (plays == -1) "..." else plays.toString()
-    val timePlayedAsString = if (timePlayed.isNegative()) "..." else timePlayed.inWholeMinutes.minutes.toString()
-    val timeRank by remember { viewModel.rank(track, period) }.collectAsStateWithLifecycle()
-    val playRank by remember { viewModel.playRank(track, period) }.collectAsStateWithLifecycle()
+    val timePlayedAsString = timePlayed.toDisplayString()
+    val timeRank by rememberAsState { viewModel.rank(track, period) }
+    val playRank by rememberAsState { viewModel.playRank(track, period) }
 
     applicationState.setTitle("${track.artistsAsString} - ${track.name}")
     Column(

@@ -10,12 +10,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.reas.tracker2.ui.navigation.ApplicationState
+import com.reas.tracker2.ui.rememberAsState
 import com.reas.tracker2.ui.viewmodels.DebugScreenViewModel
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -27,11 +30,11 @@ fun DebugScreen(
     viewModel: DebugScreenViewModel = koinViewModel()
 ) {
     val scope = rememberCoroutineScope()
-    val eventCount by remember { viewModel.eventCount }.collectAsStateWithLifecycle()
-    val unprocessedEventCount by remember { viewModel.unprocessedEventCount }.collectAsStateWithLifecycle()
-    val unsyncedEventCount by remember { viewModel.unsyncedEventCount }.collectAsStateWithLifecycle()
-    val playCount by remember { viewModel.playCount }.collectAsStateWithLifecycle()
-    val mediaEventLog by remember { viewModel.mediaEventLog }.collectAsStateWithLifecycle()
+    val eventCount by rememberAsState { viewModel.eventCount }
+    val unprocessedEventCount by rememberAsState { viewModel.unprocessedEventCount }
+    val unsyncedEventCount by rememberAsState { viewModel.unsyncedEventCount }
+    val playCount by rememberAsState { viewModel.playCount }
+    val mediaEventLog by rememberAsState { viewModel.mediaEventLog }
 
     val verticalScrollState = rememberScrollState()
     LaunchedEffect(mediaEventLog) {

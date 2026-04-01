@@ -5,12 +5,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemKey
 import com.reas.tracker2.ui.components.HistoryEntry
 import com.reas.tracker2.ui.components.LazyColumnWithScrollButton
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
+import com.reas.tracker2.ui.rememberAsPagingItems
 import com.reas.tracker2.ui.viewmodels.HistoryScreenViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -25,7 +25,7 @@ fun HistoryScreen(
 ) {
     applicationState.setTitle(stringResource(Res.string.history))
 
-    val history = viewModel.history.collectAsLazyPagingItems()
+    val history = rememberAsPagingItems { viewModel.history }
     LazyColumnWithScrollButton(applicationState, modifier = modifier) {
         items(
             history.itemCount,

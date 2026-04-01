@@ -10,7 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -18,6 +20,7 @@ import androidx.compose.ui.graphics.Brush.Companion.horizontalGradient
 import androidx.compose.ui.graphics.Brush.Companion.verticalGradient
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.reas.tracker2.ui.derivedState
 import com.reas.tracker2.ui.navigation.ApplicationState
 import kotlinx.coroutines.launch
 
@@ -29,7 +32,7 @@ fun LazyColumnWithScrollButton(
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: LazyListScope.() -> Unit,
 ) {
-    val showButton by remember { derivedStateOf { state.firstVisibleItemIndex > 0 } }
+    val showButton by derivedState { state.firstVisibleItemIndex > 0 }
     val scope = rememberCoroutineScope()
     applicationState.floatingActionButton(
         visibleIf = showButton,

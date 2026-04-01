@@ -4,13 +4,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.Login
+import com.reas.tracker2.ui.rememberAsState
 import com.reas.tracker2.ui.viewmodels.SettingsScreenViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -33,7 +32,7 @@ fun SettingsScreen(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val scrobblingEnabled by remember { viewModel.scrobblingEnabledFlow }.collectAsStateWithLifecycle()
+            val scrobblingEnabled by rememberAsState { viewModel.scrobblingEnabledFlow }
             Text(stringResource(Res.string.enable_tracking))
             Spacer(Modifier.weight(1.0F))
             Switch(

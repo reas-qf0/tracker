@@ -9,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,12 +19,13 @@ import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.*
 import com.reas.tracker2.ui.navigation.AlbumInfo
 import com.reas.tracker2.ui.navigation.ApplicationState
+import com.reas.tracker2.ui.rememberAsState
 import com.reas.tracker2.ui.viewmodels.AlbumInfoScreenViewModel
+import com.reas.tracker2.util.toDisplayString
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import tracker2.composeapp.generated.resources.*
-import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun AlbumInfoScreen(
@@ -39,15 +39,15 @@ fun AlbumInfoScreen(
     val scope = rememberCoroutineScope()
     val period = TimePeriod.ALLTIME
 
-    val plays by remember { viewModel.plays(album, period) }.collectAsStateWithLifecycle()
-    val timePlayed by remember { viewModel.timePlayed(album, period) }.collectAsStateWithLifecycle()
+    val plays by rememberAsState { viewModel.plays(album, period) }
+    val timePlayed by rememberAsState { viewModel.timePlayed(album, period) }
     val playsAsString = if (plays == -1) "..." else plays.toString()
-    val timePlayedAsString = if (timePlayed.isNegative()) "..." else timePlayed.inWholeMinutes.minutes.toString()
-    val timeRank by remember { viewModel.rank(album, period) }.collectAsStateWithLifecycle()
-    val playRank by remember { viewModel.playRank(album, period) }.collectAsStateWithLifecycle()
+    val timePlayedAsString = timePlayed.toDisplayString()
+    val timeRank by rememberAsState { viewModel.rank(album, period) }
+    val playRank by rememberAsState { viewModel.playRank(album, period) }
 
-    val timeTracks by remember { viewModel.topTracks(album, period) }.collectAsStateWithLifecycle()
-    val playTracks by remember { viewModel.topTracksByPlayCount(album, period) }.collectAsStateWithLifecycle()
+    val timeTracks by rememberAsState { viewModel.topTracks(album, period) }
+    val playTracks by rememberAsState { viewModel.topTracksByPlayCount(album, period) }
 
     applicationState.setTitle("${album.artistsAsString} - ${album.name}")
     Column(

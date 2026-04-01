@@ -3,10 +3,14 @@ package com.reas.tracker2.ui.dialogs
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.reas.tracker2.ui.derivedState
 import com.reas.tracker2.ui.navigation.ApplicationState
+import com.reas.tracker2.ui.state
 import com.reas.tracker2.ui.viewmodels.LoginDialogViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -16,11 +20,11 @@ fun LoginDialog(
     modifier: Modifier = Modifier,
     viewModel: LoginDialogViewModel = koinViewModel()
 ) {
-    var hostName by remember { mutableStateOf(viewModel.hostName) }
-    var port by remember { mutableStateOf(viewModel.port.toString()) }
-    var userName by remember { mutableStateOf(viewModel.userName) }
+    var hostName by state(viewModel.hostName)
+    var port by state(viewModel.port.toString())
+    var userName by state(viewModel.userName)
 
-    val canSave by remember { derivedStateOf { port != "" && userName != "" && hostName != "" } }
+    val canSave by derivedState { port != "" && userName != "" && hostName != "" }
 
     Column(
         modifier = modifier.background(
@@ -72,8 +76,10 @@ fun LoginDialog(
                     applicationState.goBack()
                 },
                 modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                )
             ) {
                 Text("Cancel")
             }

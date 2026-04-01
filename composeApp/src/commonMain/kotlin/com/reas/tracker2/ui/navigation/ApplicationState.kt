@@ -9,10 +9,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.navigation3.runtime.NavBackStack
+import com.reas.tracker2.ui.state
 import kotlinx.serialization.serializer
 
 class ApplicationStateData(
@@ -161,11 +161,11 @@ fun rememberBackStack(startRoute: Route) =
 fun rememberApplicationState(
     backStack: NavBackStack<Route>,
 ): TrackerApplicationState {
-    val title = remember { mutableStateOf("") }
+    val title = state("")
     val snackbarHostState = remember { SnackbarHostState() }
-    val isFloatingButtonVisible = remember { mutableStateOf(false) }
-    val floatingButtonContents = remember { mutableStateOf(@Composable {}) }
-    val floatingButtonOnClick = remember { mutableStateOf({}) }
+    val isFloatingButtonVisible = state(false)
+    val floatingButtonContents = state(@Composable {})
+    val floatingButtonOnClick = state({})
 
     return remember {
         TrackerApplicationState(ApplicationStateData(

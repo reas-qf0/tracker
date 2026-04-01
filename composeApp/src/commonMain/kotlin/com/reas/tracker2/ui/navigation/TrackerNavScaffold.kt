@@ -15,7 +15,10 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -27,6 +30,7 @@ import androidx.navigation3.runtime.*
 import androidx.navigation3.scene.DialogSceneStrategy
 import androidx.navigation3.scene.DialogSceneStrategy.Companion.DialogKey
 import androidx.navigation3.ui.NavDisplay
+import com.reas.tracker2.ui.derivedState
 
 class CustomNavEntryDecorator<T : Any>(appState: ApplicationState): NavEntryDecorator<T>(
     decorate = { entry ->
@@ -56,8 +60,8 @@ fun TrackerNavScaffold(
     navigationItems: List<TrackerNavItem>,
     entries: EntryProviderScope<NavKey>.() -> Unit
 ) {
-    val canNavigateBack by remember { derivedStateOf { applicationState.canNavigateBack() } }
-    val currentTab by remember { derivedStateOf { applicationState.currentTab() } }
+    val canNavigateBack by derivedState { applicationState.canNavigateBack() }
+    val currentTab by derivedState { applicationState.currentTab() }
 
     val navLayoutType = NavigationSuiteScaffoldDefaults.navigationSuiteType(currentWindowAdaptiveInfo())
     val scrollBehavior = if (navLayoutType == NavigationSuiteType.ShortNavigationBarMedium)

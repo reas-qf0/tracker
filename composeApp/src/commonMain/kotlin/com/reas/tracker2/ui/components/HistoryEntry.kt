@@ -6,12 +6,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.reas.tracker2.platform.IS_DEBUG
 import com.reas.tracker2.shared.Play
+import com.reas.tracker2.ui.state
 import com.reas.tracker2.ui.theme.Typography
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
@@ -52,7 +55,7 @@ fun HistoryEntry(
                 Spacer(Modifier.width(5.dp))
 
                 if (IS_DEBUG && play.associatedEvents.isNotEmpty()) {
-                    var debugInfoExpanded by remember { mutableStateOf(false) }
+                    var debugInfoExpanded by state(false)
                     Icon(
                         vectorResource(Res.drawable.wrench),
                         "Debug",

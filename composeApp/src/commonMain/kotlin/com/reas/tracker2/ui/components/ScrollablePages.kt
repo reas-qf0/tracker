@@ -21,6 +21,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
+import com.reas.tracker2.ui.derivedState
+import com.reas.tracker2.ui.state
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -39,13 +41,13 @@ fun ScrollablePages(
     if (count == 1) {
         content(0)
     } else {
-        var index by remember { mutableIntStateOf(0) }
+        var index by state(0)
         val offset = remember { Animatable(0f) }
-        val showPrevious by remember { derivedStateOf { offset.value > 0 } }
-        val showNext by remember { derivedStateOf { offset.value < 0 } }
-        val canMoveLeft by remember { derivedStateOf { index > 0 } }
-        val canMoveRight by remember { derivedStateOf { index < count - 1 } }
-        var width by remember { mutableIntStateOf(0) }
+        val showPrevious by derivedState { offset.value > 0 }
+        val showNext by derivedState { offset.value < 0 }
+        val canMoveLeft by derivedState { index > 0 }
+        val canMoveRight by derivedState { index < count - 1 }
+        var width by state(0)
         val scope = rememberCoroutineScope()
 
         Column(modifier.fillMaxWidth().onGloballyPositioned { coordinates ->

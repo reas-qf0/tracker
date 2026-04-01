@@ -3,9 +3,12 @@ package com.reas.tracker2.ui.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.reas.tracker2.ui.navigation.ChartType
+import com.reas.tracker2.ui.state
 import org.jetbrains.compose.resources.stringResource
 import kotlin.enums.enumEntries
 
@@ -17,7 +20,7 @@ fun ChartTypeSelectionChip(
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
-        var expanded by remember { mutableStateOf(false) }
+        var expanded by state(false)
         AssistChip(
             onClick = { expanded = !expanded },
             label = { Text(stringResource(value.label)) },

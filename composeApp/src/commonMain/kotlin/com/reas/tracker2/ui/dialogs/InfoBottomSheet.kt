@@ -10,16 +10,19 @@ import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.reas.tracker2.platform.IS_DESKTOP
 import com.reas.tracker2.ui.components.ScrollablePages
 import com.reas.tracker2.ui.navigation.*
+import com.reas.tracker2.ui.rememberAsState
+import com.reas.tracker2.ui.state
 import com.reas.tracker2.ui.viewmodels.InfoBottomSheetsViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
@@ -48,8 +51,8 @@ fun InfoBottomSheet(
     ) {
         Column(modifier = Modifier.padding(horizontal = if (IS_DESKTOP) 8.dp else 0.dp)) {
             track?.let {
-                val trackPlays by remember { viewModel.trackPlays(trackO) }.collectAsStateWithLifecycle()
-                val trackTimePlayed by remember { viewModel.trackTimePlayed(trackO) }.collectAsStateWithLifecycle()
+                val trackPlays by rememberAsState { viewModel.trackPlays(trackO) }
+                val trackTimePlayed by rememberAsState { viewModel.trackTimePlayed(trackO) }
                 HistoryBottomSheetComponent(
                     icon = Icons.Filled.MusicNote,
                     iconDescription = stringResource(Res.string.track),
@@ -69,8 +72,8 @@ fun InfoBottomSheet(
             }
 
             ScrollablePages(artists.size) { i ->
-                val artistPlays by remember { viewModel.artistPlays(artists[i]) }.collectAsStateWithLifecycle()
-                val artistTimePlayed by remember { viewModel.artistTimePlayed(artists[i]) }.collectAsStateWithLifecycle()
+                val artistPlays by rememberAsState { viewModel.artistPlays(artists[i]) }
+                val artistTimePlayed by rememberAsState { viewModel.artistTimePlayed(artists[i]) }
                 HistoryBottomSheetComponent(
                     icon = Icons.Filled.Person,
                     iconDescription = stringResource(Res.string.artist),
@@ -88,8 +91,8 @@ fun InfoBottomSheet(
             album?.let {
                 albumO!!
                 val differentArtists = albumArtists != null && artists.toSet() != albumArtists.toSet()
-                val albumPlays by remember { viewModel.albumPlays(albumO) }.collectAsStateWithLifecycle()
-                val albumTimePlayed by remember { viewModel.albumTimePlayed(albumO) }.collectAsStateWithLifecycle()
+                val albumPlays by rememberAsState { viewModel.albumPlays(albumO) }
+                val albumTimePlayed by rememberAsState { viewModel.albumTimePlayed(albumO) }
                 BottomSheetSpacer()
                 HistoryBottomSheetComponent(
                     icon = Icons.Filled.Album,
@@ -132,7 +135,7 @@ private fun HistoryBottomSheetComponent(
     iconDescription2: String? = null,
     subtitle: String? = null,
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by state(false)
 
     Column {
         Row(

@@ -16,6 +16,7 @@ import com.github.ajalt.colormath.extensions.android.composecolor.toColormathCol
 import com.github.ajalt.colormath.extensions.android.composecolor.toComposeColor
 import com.github.ajalt.colormath.transform.interpolate
 import com.kmpalette.palette.graphics.Target
+import com.reas.tracker2.ui.state
 import com.reas.tracker2.ui.theme.LightColorScheme
 import com.skydoves.landscapist.components.rememberImageComponent
 import com.skydoves.landscapist.crossfade.CrossfadePlugin
@@ -41,7 +42,7 @@ fun ListEntryWithImage(
     content: @Composable RowScope.() -> Unit,
 ) {
     val logger = remember { KotlinLogging.logger {} }
-    var model by remember { mutableStateOf<Any?>(null) }
+    var model by state<Any?>(null)
     LaunchedEffect(Unit) {
         launch(Dispatchers.IO) {
             model = try {
