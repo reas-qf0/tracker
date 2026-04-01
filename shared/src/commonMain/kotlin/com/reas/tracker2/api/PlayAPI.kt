@@ -1,5 +1,6 @@
 package com.reas.tracker2.api
 
+import com.reas.tracker2.shared.EventInfo
 import com.reas.tracker2.shared.Play
 import com.reas.tracker2.shared.Source
 import kotlinx.serialization.Serializable
@@ -12,14 +13,14 @@ data class EventInfoAPI(
     val position: Long,
     val isPlaying: Boolean,
 ) {
-    fun toEventInfo() = Play.EventInfo(
+    fun toEventInfo() = EventInfo(
         timestamp = Instant.fromEpochMilliseconds(timestamp),
         position = position.milliseconds,
         isPlaying = isPlaying
     )
 
     companion object {
-        fun fromEventInfo(event: Play.EventInfo) = EventInfoAPI(
+        fun fromEventInfo(event: EventInfo) = EventInfoAPI(
             timestamp = event.timestamp.toEpochMilliseconds(),
             position = event.position.inWholeMilliseconds,
             isPlaying = event.isPlaying

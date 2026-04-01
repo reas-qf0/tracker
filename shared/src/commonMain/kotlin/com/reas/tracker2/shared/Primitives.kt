@@ -94,12 +94,17 @@ data class TrackWithAlbum(
 }
 
 @Serializable
-data class Event(
-    val metadata: TrackWithAlbum,
-    val duration: Duration,
+data class EventInfo(
     val timestamp: Instant,
     val position: Duration,
     val isPlaying: Boolean,
+)
+
+@Serializable
+data class Event(
+    val metadata: TrackWithAlbum,
+    val duration: Duration,
+    val info: EventInfo,
     val source: Source
 ) {
     val track: String
@@ -120,6 +125,12 @@ data class Event(
         get() = source.client
     val app: String
         get() = source.app
+    val timestamp: Instant
+        get() = info.timestamp
+    val position: Duration
+        get() = info.position
+    val isPlaying: Boolean
+        get() = info.isPlaying
 
     companion object {
         fun create(
@@ -140,9 +151,11 @@ data class Event(
                 (albumArtists ?: artists).map { Artist(it) }
             ),
             duration = duration.milliseconds,
-            timestamp = Instant.fromEpochMilliseconds(timestamp),
-            position = position.milliseconds,
-            isPlaying = isPlaying,
+            info = EventInfo(
+                timestamp = Instant.fromEpochMilliseconds(timestamp),
+                position = position.milliseconds,
+                isPlaying = isPlaying
+            ),
             source = source
         )
     }
@@ -203,7 +216,9 @@ data class Play(
     val currentPosition
         get() = lastPosition + (timestamp - lastTimestamp)
     val endTimestamp
-        get() = associatedEvents.filterNotNull().last().timestamp + (duration - associatedEvents.filterNotNull().last().position)
+        get() = associatedEvents.last { it != null }!!.let { lastEvent ->
+            lastEvent.timestamp + (duration - lastEvent.position)
+        }
 
     val isNowPlaying
         get() = lastPlaying && currentPosition <= duration
@@ -224,7 +239,7 @@ data class Play(
             timestamp = event.timestamp,
             timePlayed = Duration.ZERO,
             source = event.source,
-            associatedEvents = mutableListOf(EventInfo.fromEvent(event)),
+            associatedEvents = mutableListOf(event.info),
             id = id
         )
 
@@ -253,21 +268,6 @@ data class Play(
             associatedEvents = associatedEvents,
             id = id
         )
-    }
-
-    @Serializable
-    data class EventInfo(
-        val timestamp: Instant,
-        val position: Duration,
-        val isPlaying: Boolean,
-    ) {
-        companion object {
-            fun fromEvent(event: Event) = EventInfo(
-                timestamp = event.timestamp,
-                position = event.position,
-                isPlaying = event.isPlaying,
-            )
-        }
     }
 }
 

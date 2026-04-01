@@ -1,6 +1,5 @@
 package com.reas.tracker2.shared
 
-import com.reas.tracker2.shared.Play.EventInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlin.time.Duration.Companion.seconds
@@ -67,17 +66,16 @@ class EventProcessor(
                 play.timePlayed += event.timestamp - play.lastTimestamp
             }
 
-            val eventInfo = EventInfo.fromEvent(event)
             if (event.isPlaying) {
                 if (event.position <= SKIP_MIN_DURATION) {
                     if (event.metadata == play.metadata && play.lastPosition <= SKIP_MIN_DURATION) {
-                        play.associatedEvents.add(eventInfo)
+                        play.associatedEvents.add(event.info)
                     } else {
                         play = flush(event, play)
                     }
                 } else {
                     if (event.metadata == play.metadata) {
-                        play.associatedEvents.add(eventInfo)
+                        play.associatedEvents.add(event.info)
                     } else {
                         play = flush(event, play)
                     }
@@ -86,7 +84,7 @@ class EventProcessor(
                 if (event.position <= SKIP_MIN_DURATION && play.lastPosition > SKIP_MIN_DURATION) {
                     play = flush(event, play)
                 } else {
-                    play.associatedEvents.add(eventInfo)
+                    play.associatedEvents.add(event.info)
                 }
             }
         }

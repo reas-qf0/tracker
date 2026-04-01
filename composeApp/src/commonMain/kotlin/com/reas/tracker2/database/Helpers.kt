@@ -62,7 +62,7 @@ data class PlayWithData(
     var lastPlaying: Boolean,
     val sourceDevice: String,
     val sourceApp: String,
-    val associatedEvents: MutableList<Play.EventInfo?>
+    val associatedEvents: MutableList<EventInfo?>
 )
 
 data class ArtistWithPlayCount(

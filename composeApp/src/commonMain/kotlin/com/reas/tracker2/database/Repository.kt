@@ -110,9 +110,11 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     )
     private suspend fun EventEntity.toObject() = Event(
         metadata = getTrack(trackId),
-        timestamp = timestamp,
-        position = position,
-        isPlaying = isPlaying,
+        info = EventInfo(
+            timestamp = timestamp,
+            position = position,
+            isPlaying = isPlaying
+        ),
         duration = duration,
         source = Source.local(sourceApp)
     )

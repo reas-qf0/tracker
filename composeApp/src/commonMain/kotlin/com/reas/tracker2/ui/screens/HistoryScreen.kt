@@ -34,13 +34,7 @@ fun HistoryScreen(
             val scrobble = history[index]
             scrobble?.let {
                 HistoryEntry(
-                    title = scrobble.track,
-                    artist = scrobble.artistsAsString,
-                    album = scrobble.album,
-                    timestamp = scrobble.timestamp,
-                    isNowPlaying = scrobble.isNowPlaying,
-                    associatedEvents = scrobble.associatedEvents,
-
+                    play = scrobble,
                     imageUrl = { viewModel.getImageUrl(scrobble) },
                     onClick = {
                         applicationState.navigate(BottomSheetInfo(track = scrobble.metadata))

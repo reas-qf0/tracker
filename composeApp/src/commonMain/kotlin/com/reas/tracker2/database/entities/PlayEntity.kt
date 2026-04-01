@@ -2,7 +2,7 @@ package com.reas.tracker2.database.entities
 
 import androidx.room.Entity
 import androidx.room.Index
-import com.reas.tracker2.shared.Play
+import com.reas.tracker2.shared.EventInfo
 import kotlin.time.Duration
 import kotlin.time.Instant
 
@@ -23,5 +23,5 @@ data class PlayEntity(
     var lastPlaying: Boolean,
     val sourceDevice: String,
     val sourceApp: String,
-    val associatedEvents: MutableList<Play.EventInfo?>
+    val associatedEvents: MutableList<EventInfo?>
 )
