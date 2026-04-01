@@ -26,7 +26,9 @@ fun TrackerApp(
     val backStack = rememberBackStack(startRoute = History)
     val applicationState = rememberApplicationState(backStack)
 
-    TrackerBackgroundProcesses(applicationState)
+    TrackerBackgroundProcesses(
+        onError = { message -> applicationState.navigate(Error(message)) }
+    )
     TrackerTheme {
         TrackerNavScaffold(
             applicationState,

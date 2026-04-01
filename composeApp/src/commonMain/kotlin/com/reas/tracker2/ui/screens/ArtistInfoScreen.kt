@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.collectAsLazyPagingItems
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.*
 import com.reas.tracker2.ui.navigation.ApplicationState
@@ -47,10 +46,10 @@ fun ArtistInfoScreen(
     val timeRank by remember { viewModel.rank(artist, period) }.collectAsStateWithLifecycle()
     val playRank by remember { viewModel.playRank(artist, period) }.collectAsStateWithLifecycle()
 
-    val timeAlbums = remember { viewModel.topAlbums(artist, period) }.collectAsLazyPagingItems()
-    val playAlbums = remember { viewModel.topAlbumsByPlayCount(artist, period) }.collectAsLazyPagingItems()
-    val timeTracks = remember { viewModel.topTracks(artist, period) }.collectAsLazyPagingItems()
-    val playTracks = remember { viewModel.topTracksByPlayCount(artist, period) }.collectAsLazyPagingItems()
+    val timeAlbums by remember { viewModel.topAlbums(artist, period) }.collectAsStateWithLifecycle()
+    val playAlbums by remember { viewModel.topAlbumsByPlayCount(artist, period) }.collectAsStateWithLifecycle()
+    val timeTracks by remember { viewModel.topTracks(artist, period) }.collectAsStateWithLifecycle()
+    val playTracks by remember { viewModel.topTracksByPlayCount(artist, period) }.collectAsStateWithLifecycle()
 
     applicationState.setTitle(artist.name)
     Column(
@@ -114,7 +113,6 @@ fun ArtistInfoScreen(
             )
             DoubleChartColumn(
                 sort.byTime, timeAlbums, playAlbums,
-                limit = 5,
                 onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
             )
 
@@ -128,7 +126,6 @@ fun ArtistInfoScreen(
             )
             DoubleChartColumn(
                 sort.byTime, timeTracks, playTracks,
-                limit = 5,
                 onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
             )
 

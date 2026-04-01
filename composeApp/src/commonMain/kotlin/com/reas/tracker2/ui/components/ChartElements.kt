@@ -21,7 +21,6 @@ import androidx.paging.compose.itemKey
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import kotlinx.coroutines.flow.collectLatest
-import kotlin.math.min
 
 // TODO kill it with fire
 data class ChartEntryUiState(
@@ -37,9 +36,8 @@ data class ChartEntryUiState(
 @Composable
 fun DoubleChartColumn(
     sortedByTime: Boolean,
-    itemsByTime: LazyPagingItems<ChartEntryUiState>,
-    itemsByPlays: LazyPagingItems<ChartEntryUiState>,
-    limit: Int,
+    itemsByTime: List<ChartEntryUiState>,
+    itemsByPlays: List<ChartEntryUiState>,
     onClick: (ChartEntryUiState) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -49,14 +47,14 @@ fun DoubleChartColumn(
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            ChartColumn(itemsByTime, limit, onClick, modifier)
+            ChartColumn(itemsByTime, onClick, modifier)
         }
         AnimatedVisibility(
             !sortedByTime,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
-            ChartColumn(itemsByPlays, limit, onClick, modifier)
+            ChartColumn(itemsByPlays, onClick, modifier)
         }
     }
 }
@@ -109,8 +107,7 @@ fun LazyDoubleChartColumn(
 
 @Composable
 fun ChartColumn(
-    items: LazyPagingItems<ChartEntryUiState>,
-    limit: Int,
+    items: List<ChartEntryUiState>,
     onClick: (ChartEntryUiState) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -118,18 +115,16 @@ fun ChartColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        repeat(min(limit, items.itemCount)) { i ->
+        repeat(items.size) { i ->
             val entry = items[i]
-            entry?.let {
-                ChartEntry(
-                    number = i + 1,
-                    label = entry.label,
-                    label2 = entry.label2,
-                    metricAsString = entry.metricAsString,
-                    metric = entry.metric / items[0]!!.metric,
-                    onClick = { onClick(entry) }
-                )
-            }
+            ChartEntry(
+                number = i + 1,
+                label = entry.label,
+                label2 = entry.label2,
+                metricAsString = entry.metricAsString,
+                metric = entry.metric / items[0].metric,
+                onClick = { onClick(entry) }
+            )
         }
     }
 }

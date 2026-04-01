@@ -2,7 +2,6 @@ package com.reas.tracker2.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.*
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.NetworkRepository
 import com.reas.tracker2.settings.*
@@ -23,16 +22,6 @@ class AlbumInfoScreenViewModel(
     private val networkRepository: NetworkRepository,
     private val settings: Settings,
 ): ViewModel() {
-    private fun<T : Any> get(factory: () -> PagingSource<Int, T>, transform: (T) -> ChartEntryUiState) = Pager(
-        initialKey = 0,
-        pagingSourceFactory = factory,
-        config = PagingConfig(pageSize = 50, initialLoadSize = 50)
-    ).flow
-        .cachedIn(viewModelScope)
-        .map {
-            it.map { info -> transform(info) }
-        }
-
     fun plays(album: Album, period: TimePeriod) = repository.getAlbumPlays(album, period)
         .stateIn(
             scope = viewModelScope,
@@ -63,32 +52,39 @@ class AlbumInfoScreenViewModel(
             initialValue = "..."
         )
 
-    fun topTracks(album: Album, period: TimePeriod) = get(
-        { repository.getMostPlayedTracksFromAlbum(album, period) }
-    ) { info ->
-        ChartEntryUiState(
-            label = info.track.name,
-            label2 = if (info.track.artists.toSet() != album.artists.toSet()) info.track.artistsAsString else null,
-            key = info.toString(),
-            metric = info.timePlayed.inMs,
-            metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
-            bottomSheetInfo = BottomSheetInfo(track = info.track)
-        )
-    }
+    fun topTracks(album: Album, period: TimePeriod) =
+        repository.getMostPlayedTracksFromAlbum(album, period, limit = 5)
+            .map { it.map { info ->
+                ChartEntryUiState(
+                    label = info.track.name,
+                    label2 = if (info.track.artists.toSet() != album.artists.toSet()) info.track.artistsAsString else null,
+                    key = info.toString(),
+                    metric = info.timePlayed.inMs,
+                    metricAsString = info.timePlayed.inWholeMinutes.minutes.toString(),
+                    bottomSheetInfo = BottomSheetInfo(track = info.track)
+                )
+            } }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = listOf()
+            )
 
-    fun topTracksByPlayCount(album: Album, period: TimePeriod) = get(
-        { repository.getMostPlayedTracksFromAlbumByPlayCount(album, period) }
-    ) { info ->
-        ChartEntryUiState(
-            label = info.track.name,
-            label2 = if (info.track.artists.toSet() != album.artists.toSet()) info.track.artistsAsString else null,
-            key = info.toString(),
-            metric = info.playCount.toDouble(),
-            metricAsString = "${info.playCount} plays",
-            bottomSheetInfo = BottomSheetInfo(track = info.track)
-        )
-    }
-
+    fun topTracksByPlayCount(album: Album, period: TimePeriod) =
+        repository.getMostPlayedTracksFromAlbumByPlayCount(album, period, limit = 5)
+            .map { it.map { info ->
+                ChartEntryUiState(
+                    label = info.track.name,
+                    label2 = if (info.track.artists.toSet() != album.artists.toSet()) info.track.artistsAsString else null,
+                    key = info.toString(),
+                    metric = info.playCount.toDouble(),
+                    metricAsString = "${info.playCount} plays",
+                    bottomSheetInfo = BottomSheetInfo(track = info.track)
+                )
+            } }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = listOf()
+            )
     fun sort() = settings.flow(chartSort).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),

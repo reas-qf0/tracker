@@ -9,14 +9,14 @@ import com.reas.tracker2.network.TrackerInstanceClient
 import com.reas.tracker2.settings.*
 import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.HolePlugger
-import com.reas.tracker2.ui.navigation.ApplicationState
-import com.reas.tracker2.ui.navigation.Error
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
+fun TrackerBackgroundProcesses(
+    onError: suspend (String) -> Unit,
+) {
     val instanceClient: TrackerInstanceClient = koinInject()
     val settings: Settings = koinInject()
     val repository: Repository = koinInject()
@@ -62,7 +62,7 @@ fun TrackerBackgroundProcesses(applicationState: ApplicationState) {
 
         val response = instanceClient.tryLogin()
         if (response != null) {
-            applicationState.navigate(Error("Failed to login: \n$response"))
+            onError("Failed to login: \n$response")
             return@LaunchedEffect
         }
 

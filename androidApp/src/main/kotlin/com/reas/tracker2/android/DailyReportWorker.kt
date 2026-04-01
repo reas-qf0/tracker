@@ -3,15 +3,15 @@ package com.reas.tracker2.android
 import android.app.Notification
 import android.content.Context
 import android.text.Html
-import androidx.paging.PagingSource
 import androidx.work.*
 import com.reas.tracker2.R
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.shared.TimePeriod
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.first
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.*
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.days
@@ -28,15 +28,9 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
             clock.now() - 1.days,
             clock.now()
         )
-        val artists = (repository.getMostPlayedArtists(period).load(
-            PagingSource.LoadParams.Refresh(0, COUNT, false)
-        ) as PagingSource.LoadResult.Page).data
-        val albums = (repository.getMostPlayedAlbums(period).load(
-            PagingSource.LoadParams.Refresh(0, COUNT, false)
-        ) as PagingSource.LoadResult.Page).data
-        val tracks = (repository.getMostPlayedTracks(period).load(
-            PagingSource.LoadParams.Refresh(0, COUNT, false)
-        ) as PagingSource.LoadResult.Page).data
+        val artists = repository.getMostPlayedArtists(period, limit = COUNT).first()
+        val albums = repository.getMostPlayedAlbums(period, limit = COUNT).first()
+        val tracks = repository.getMostPlayedTracks(period, limit = COUNT).first()
 
         if (artists.isNotEmpty()) {
             notif.show("Daily Report") {
@@ -53,12 +47,12 @@ class DailyReportWorker(context: Context, params: WorkerParameters):
                             <b>${
                                 applicationContext.getString(R.string.daily_report_albums)
                             }</b><br>${
-                                albums.joinToString("<br>") { "${it.album.artistsAsString} - ${it._album}" }
+                                albums.joinToString("<br>") { "${it.album.artistsAsString} - ${it.album.name}" }
                             }<br>
                             <b>${
                                 applicationContext.getString(R.string.daily_report_tracks)
                             }</b><br>${
-                                tracks.joinToString("<br>") { "${it.track.artistsAsString} - ${it._track}" }
+                                tracks.joinToString("<br>") { "${it.track.artistsAsString} - ${it.track.name}" }
                             }
                         """.trimIndent())
                     )

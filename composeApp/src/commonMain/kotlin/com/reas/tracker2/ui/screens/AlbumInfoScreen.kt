@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.paging.compose.collectAsLazyPagingItems
 import com.reas.tracker2.shared.TimePeriod
 import com.reas.tracker2.ui.components.*
 import com.reas.tracker2.ui.navigation.AlbumInfo
@@ -47,8 +46,8 @@ fun AlbumInfoScreen(
     val timeRank by remember { viewModel.rank(album, period) }.collectAsStateWithLifecycle()
     val playRank by remember { viewModel.playRank(album, period) }.collectAsStateWithLifecycle()
 
-    val timeTracks = remember { viewModel.topTracks(album, period) }.collectAsLazyPagingItems()
-    val playTracks = remember { viewModel.topTracksByPlayCount(album, period) }.collectAsLazyPagingItems()
+    val timeTracks by remember { viewModel.topTracks(album, period) }.collectAsStateWithLifecycle()
+    val playTracks by remember { viewModel.topTracksByPlayCount(album, period) }.collectAsStateWithLifecycle()
 
     applicationState.setTitle("${album.artistsAsString} - ${album.name}")
     Column(
@@ -121,7 +120,6 @@ fun AlbumInfoScreen(
             )
             DoubleChartColumn(
                 sort.byTime, timeTracks, playTracks,
-                limit = 5,
                 onClick = { entry -> applicationState.navigate(entry.bottomSheetInfo) },
             )
 
