@@ -11,6 +11,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import kotlinx.coroutines.flow.collectLatest
 
 // TODO kill it with fire
+@Immutable
 data class ChartEntryUiState(
     val label: String,
     val label2: String?,
