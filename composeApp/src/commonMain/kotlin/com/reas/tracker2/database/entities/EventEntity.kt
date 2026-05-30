@@ -1,6 +1,7 @@
 package com.reas.tracker2.database.entities
 
 import androidx.room.Entity
+import com.reas.tracker2.shared.EventState
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 import kotlin.time.Instant
@@ -12,6 +13,6 @@ data class EventEntity(
     val timestamp: Instant,
     val position: Duration,
     val duration: Duration,
-    val isPlaying: Boolean,
+    val state: EventState,
     val sourceApp: String
 )

@@ -94,10 +94,17 @@ data class TrackWithAlbum(
 }
 
 @Serializable
+enum class EventState {
+    PLAYING,
+    STOPPED,
+    PLUGGED
+}
+
+@Serializable
 data class EventInfo(
     val timestamp: Instant,
     val position: Duration,
-    val isPlaying: Boolean,
+    val state: EventState,
 )
 
 @Serializable
@@ -130,7 +137,9 @@ data class Event(
     val position: Duration
         get() = info.position
     val isPlaying: Boolean
-        get() = info.isPlaying
+        get() = info.state == EventState.PLAYING
+    val state: EventState
+        get() = info.state
 
     companion object {
         fun create(
@@ -141,7 +150,7 @@ data class Event(
             duration: Long,
             timestamp: Long,
             position: Long,
-            isPlaying: Boolean,
+            state: EventState,
             source: Source
         ) = Event(
             metadata = TrackWithAlbum(
@@ -154,7 +163,7 @@ data class Event(
             info = EventInfo(
                 timestamp = Instant.fromEpochMilliseconds(timestamp),
                 position = position.milliseconds,
-                isPlaying = isPlaying
+                state = state,
             ),
             source = source
         )
@@ -180,7 +189,7 @@ data class Play(
     val timestamp: Instant,
     var timePlayed: Duration,
     val source: Source,
-    val associatedEvents: MutableList<EventInfo?>,
+    val associatedEvents: MutableList<EventInfo>,
     val id: Long? = null
 ) {
     val track: String
@@ -207,16 +216,16 @@ data class Play(
 
 
     val lastTimestamp
-        get() = associatedEvents.lastOrNull()?.timestamp ?: endTimestamp
+        get() = associatedEvents.last().timestamp
     val lastPosition
-        get() = associatedEvents.lastOrNull()?.position ?: duration
+        get() = associatedEvents.last().position
     val lastPlaying
-        get() = associatedEvents.lastOrNull()?.isPlaying ?: false
+        get() = associatedEvents.last().state == EventState.PLAYING
 
     val currentPosition
         get() = lastPosition + (timestamp - lastTimestamp)
     val endTimestamp
-        get() = associatedEvents.last { it != null }!!.let { lastEvent ->
+        get() = associatedEvents.last().let { lastEvent ->
             lastEvent.timestamp + (duration - lastEvent.position)
         }
 
@@ -252,7 +261,7 @@ data class Play(
             timestamp: Long,
             timePlayed: Long,
             source: Source,
-            associatedEvents: MutableList<EventInfo?>,
+            associatedEvents: MutableList<EventInfo>,
             id: Long? = null
         ) = Play(
             metadata = TrackWithAlbum(

@@ -23,5 +23,5 @@ data class PlayEntity(
     var lastPlaying: Boolean,
     val sourceDevice: String,
     val sourceApp: String,
-    val associatedEvents: MutableList<EventInfo?>
+    val associatedEvents: MutableList<EventInfo>
 )

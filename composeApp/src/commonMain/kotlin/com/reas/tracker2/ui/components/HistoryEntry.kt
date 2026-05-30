@@ -69,16 +69,22 @@ fun HistoryEntry(
                         onDismissRequest = { debugInfoExpanded = false }
                     ) {
                         DropdownMenuItem(
+                            text = { Text("Time played: ${play.timePlayed}") },
+                            onClick = {}
+                        )
+                        DropdownMenuItem(
                             text = { Text("Associated events: ") },
                             onClick = {}
                         )
                         play.associatedEvents.forEach { event ->
                             DropdownMenuItem(
-                                text = { Text(if (event != null) """
-                                    ${event.timestamp}
-                                        ${event.position}
-                                        ${if (event.isPlaying) "playing" else "stopped" }
-                                """.trimIndent() else "plug event") },
+                                text = { Text(
+                                    """
+                                        ${event.timestamp}
+                                            ${event.position}
+                                            ${event.state}
+                                    """.trimIndent()
+                                ) },
                                 onClick = {}
                             )
                         }

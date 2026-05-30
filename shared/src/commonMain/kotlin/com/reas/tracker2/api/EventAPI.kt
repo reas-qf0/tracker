@@ -1,6 +1,7 @@
 package com.reas.tracker2.api
 
 import com.reas.tracker2.shared.Event
+import com.reas.tracker2.shared.EventState
 import com.reas.tracker2.shared.Source
 import kotlinx.serialization.Serializable
 
@@ -13,7 +14,7 @@ data class EventAPI(
     val duration: Long,
     val timestamp: Long,
     val position: Long,
-    val isPlaying: Boolean,
+    val state: String,
     val client: String,
     val app: String
 ) {
@@ -24,7 +25,7 @@ data class EventAPI(
         albumArtists = albumArtists,
         timestamp = timestamp,
         duration = duration,
-        isPlaying = isPlaying,
+        state = EventState.valueOf(state),
         position = position,
         source = Source.user(client = client, app = app)
     )
@@ -38,7 +39,7 @@ data class EventAPI(
             duration = event.duration.inWholeMilliseconds,
             timestamp = event.timestamp.toEpochMilliseconds(),
             position = event.position.inWholeMilliseconds,
-            isPlaying = event.isPlaying,
+            state = event.state.name,
             client = event.client,
             app = event.app
         )

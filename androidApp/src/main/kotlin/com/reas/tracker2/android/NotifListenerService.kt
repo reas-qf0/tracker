@@ -20,6 +20,8 @@ import com.reas.tracker2.settings.collect
 import com.reas.tracker2.settings.get
 import com.reas.tracker2.settings.isScrobblingEnabled
 import com.reas.tracker2.shared.Event
+import com.reas.tracker2.shared.EventProcessor
+import com.reas.tracker2.shared.EventState
 import com.reas.tracker2.shared.Source
 import com.reas.tracker2.util.InMemoryLog
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -103,6 +105,8 @@ private class MediaCallback(private val appId: String): MediaController.Callback
         if (sentEvent) return
         sentEvent = true
 
+        val isPlaying = state.state == PlaybackState.STATE_PLAYING
+
         val event = Event.create(
             track = metadata.title,
             artists = metadata.artist.split(" & "),
@@ -110,8 +114,8 @@ private class MediaCallback(private val appId: String): MediaController.Callback
             albumArtists = (metadata.albumArtist ?: metadata.artist).split(" & "),
             duration = metadata.duration,
             timestamp = state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis(),
-            position = state.position,
-            isPlaying = state.state == PlaybackState.STATE_PLAYING,
+            position = if (isPlaying && state.position < EventProcessor.SKIP_MIN_DURATION.inWholeMilliseconds) 0L else state.position,
+            state = if (isPlaying) EventState.PLAYING else EventState.STOPPED,
             source = Source.local(appId)
         )
 

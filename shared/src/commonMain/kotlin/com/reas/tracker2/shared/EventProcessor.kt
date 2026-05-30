@@ -39,8 +39,13 @@ class EventProcessor(
         val resultPlays = mutableListOf<Play>()
         suspend fun flush(event: Event, play: Play?): Play {
             if (play != null) {
-                if (play.lastPlaying)
-                    play.associatedEvents.add(null)
+                if (play.lastPlaying) {
+                    play.associatedEvents.add(EventInfo(
+                        timestamp = event.timestamp,
+                        position = play.lastPosition + (event.timestamp - play.lastTimestamp),
+                        state = EventState.PLUGGED
+                    ))
+                }
                 resultPlays.add(play)
             }
             return Play.fromEvent(event, id = adapter.getNextId(source.user))
@@ -56,9 +61,13 @@ class EventProcessor(
             val shouldPlugHole = event.timestamp > play.endTimestamp
             if (play.lastPlaying && shouldPlugHole) {
                 play.timePlayed += play.duration - play.lastPosition
-                play.associatedEvents.add(null)
+                play.associatedEvents.add(EventInfo(
+                    position = play.duration,
+                    timestamp = play.endTimestamp,
+                    state = EventState.PLUGGED
+                ))
             }
-            if (play.associatedEvents.last() == null && !shouldPlugHole) {
+            if (play.associatedEvents.last().state == EventState.PLUGGED && !shouldPlugHole) {
                 play.associatedEvents.removeAt(play.associatedEvents.size - 1)
                 play.timePlayed -= play.duration - play.lastPosition
             }

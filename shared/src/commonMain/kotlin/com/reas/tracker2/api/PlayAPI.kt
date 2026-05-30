@@ -1,6 +1,7 @@
 package com.reas.tracker2.api
 
 import com.reas.tracker2.shared.EventInfo
+import com.reas.tracker2.shared.EventState
 import com.reas.tracker2.shared.Play
 import com.reas.tracker2.shared.Source
 import kotlinx.serialization.Serializable
@@ -11,19 +12,19 @@ import kotlin.time.Instant
 data class EventInfoAPI(
     val timestamp: Long,
     val position: Long,
-    val isPlaying: Boolean,
+    val state: String,
 ) {
     fun toEventInfo() = EventInfo(
         timestamp = Instant.fromEpochMilliseconds(timestamp),
         position = position.milliseconds,
-        isPlaying = isPlaying
+        state = EventState.valueOf(state),
     )
 
     companion object {
         fun fromEventInfo(event: EventInfo) = EventInfoAPI(
             timestamp = event.timestamp.toEpochMilliseconds(),
             position = event.position.inWholeMilliseconds,
-            isPlaying = event.isPlaying
+            state = event.state.name
         )
     }
 }
@@ -39,7 +40,7 @@ data class PlayAPI(
     val timePlayed: Long,
     val client: String,
     val app: String,
-    val associatedEvents: List<EventInfoAPI?>
+    val associatedEvents: List<EventInfoAPI>
 ) {
     fun toPlay() = Play.create(
         track = track,
@@ -50,7 +51,7 @@ data class PlayAPI(
         timestamp = timestamp,
         timePlayed = timePlayed,
         source = Source.user(client = client, app = app),
-        associatedEvents = associatedEvents.map { it?.toEventInfo() }.toMutableList()
+        associatedEvents = associatedEvents.map { it.toEventInfo() }.toMutableList()
     )
 
     companion object {
@@ -64,7 +65,7 @@ data class PlayAPI(
             timePlayed = play.timePlayed.inWholeMilliseconds,
             client = play.client,
             app = play.app,
-            associatedEvents = play.associatedEvents.map { it?.let { EventInfoAPI.fromEventInfo(it) } }
+            associatedEvents = play.associatedEvents.map { it.let { EventInfoAPI.fromEventInfo(it) } }
         )
     }
 }

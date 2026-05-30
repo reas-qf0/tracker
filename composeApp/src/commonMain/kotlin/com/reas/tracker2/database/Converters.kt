@@ -2,6 +2,7 @@ package com.reas.tracker2.database
 
 import androidx.room.TypeConverter
 import com.reas.tracker2.shared.EventInfo
+import com.reas.tracker2.shared.EventState
 import kotlinx.serialization.json.Json
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -10,10 +11,10 @@ import kotlin.time.Instant
 
 class Converters {
     @TypeConverter
-    fun eventInfoListToString(list: MutableList<EventInfo?>): String = Json.encodeToString(list)
+    fun eventInfoListToString(list: MutableList<EventInfo>): String = Json.encodeToString(list)
 
     @TypeConverter
-    fun stringToEventInfoList(value: String): MutableList<EventInfo?> = Json.decodeFromString(value)
+    fun stringToEventInfoList(value: String): MutableList<EventInfo> = Json.decodeFromString(value)
 
     @TypeConverter
     fun instantToLong(instant: Instant): Long = instant.toEpochMilliseconds()
@@ -32,4 +33,10 @@ class Converters {
 
     @TypeConverter
     fun stringToIdList(string: String): List<Long> = string.split(",").map { it.toLong() }
+
+    @TypeConverter
+    fun eventStateToString(state: EventState): String = state.name
+
+    @TypeConverter
+    fun stringToEventState(value: String): EventState = EventState.entries.first { it.name == value }
 }
