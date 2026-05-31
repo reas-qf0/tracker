@@ -1,13 +1,19 @@
 package com.reas.tracker2.ui.dialogs
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.reas.tracker2.ui.components.ConfirmRow
 import com.reas.tracker2.ui.derivedState
 import com.reas.tracker2.ui.navigation.ApplicationState
 import com.reas.tracker2.ui.state
@@ -59,30 +65,15 @@ fun LoginDialog(
             label = { Text("Username") },
             modifier = Modifier.fillMaxWidth()
         )
-        Row(modifier = Modifier.padding(12.dp)) {
-            Button(
-                enabled = canSave,
-                onClick = {
-                    viewModel.setValues(hostName, port.toInt(), userName)
-                    applicationState.goBack()
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("Save")
+        ConfirmRow(
+            enabled = canSave,
+            modifier = Modifier.padding(12.dp),
+            onConfirm = {
+                viewModel.setValues(hostName, port.toInt(), userName)
+            },
+            onDismiss = {
+                applicationState.goBack()
             }
-            Spacer(Modifier.width(70.dp))
-            Button(
-                onClick = {
-                    applicationState.goBack()
-                },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-            ) {
-                Text("Cancel")
-            }
-        }
+        )
     }
 }

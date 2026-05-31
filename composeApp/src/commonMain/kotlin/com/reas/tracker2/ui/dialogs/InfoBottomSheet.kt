@@ -107,7 +107,7 @@ fun InfoBottomSheet(
                     },
                     icon2 = if (differentArtists) Icons.Filled.Person else null,
                     iconDescription2 = if (differentArtists) "Album artist" else null,
-                    subtitle = if (differentArtists) albumArtists.joinToString(", ") { it.name } else null
+                    subtitle = if (differentArtists) albumArtists.raw else null
                 )
             }
         }

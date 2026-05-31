@@ -15,6 +15,18 @@ class EventProcessor(
     private val eventFlow = MutableSharedFlow<List<Event>>(replay = 1)
     private val playFlow = MutableSharedFlow<List<Play>>(replay = 1)
 
+    // TODO: these should probably be a preference in order to persist between restarts
+    private val temporaryEdits = hashMapOf<Source, Pair<Play, TrackWithAlbum?>>()
+
+    suspend fun addTemporaryEdit(play: Play, newMetadata: TrackWithAlbum?) {
+        val lastPlay = adapter.getLastPlayFromSource(play.source)
+        if (lastPlay != null && lastPlay.timestamp == play.timestamp) {
+            logger.debug { "addTemporaryEdit $play $newMetadata" }
+            val originalPlay = temporaryEdits[play.source]?.first ?: play
+            temporaryEdits[play.source] = originalPlay to newMetadata
+        }
+    }
+
     suspend fun addEvents(events: List<Event>) {
         eventFlow.emit(events)
     }
@@ -22,94 +34,93 @@ class EventProcessor(
         playFlow.collect { block(it) }
     }
 
-    private suspend fun process(events: List<Event>) {
-        if (events.isEmpty()) return
+    suspend fun process(snapshot: List<Event>): List<Play> {
+        if (snapshot.isEmpty()) return listOf()
 
-        val source = events[0].source
-        var play = adapter.getLastPlayFromSource(source)
-        val eventsSorted = events.sortedBy { it.timestamp }
-        if (play != null && eventsSorted[0].timestamp < play.timestamp) {
-            logger.error {
-                "ERROR: out-of-sync events source=$source " +
-                "eventTimestamp=${eventsSorted[0].timestamp} playTimestamp=${play!!.timestamp}"
-            }
-            return
-        }
-
+        logger.debug { "processing ${snapshot.size} events" }
         val resultPlays = mutableListOf<Play>()
-        suspend fun flush(event: Event, play: Play?): Play {
-            if (play != null) {
-                if (play.lastPlaying) {
-                    play.associatedEvents.add(EventInfo(
-                        timestamp = event.timestamp,
-                        position = play.lastPosition + (event.timestamp - play.lastTimestamp),
-                        state = EventState.PLUGGED
-                    ))
-                }
-                resultPlays.add(play)
-            }
-            return Play.fromEvent(event, id = adapter.getNextId(source.user))
-        }
 
-        eventsSorted.forEach { event ->
-            if (play == null) {
-                if (event.isPlaying) play = flush(event, play)
+        snapshot.groupBy { it.source }.forEach { (source, events) ->
+            var temporaryEdit = temporaryEdits[source]
+            var processingDeleted = temporaryEdit != null && temporaryEdit.second == null
+
+            var play = if (processingDeleted) temporaryEdit!!.first else adapter.getLastPlayFromSource(source)
+            val eventsSorted = events.sortedBy { it.timestamp }
+            if (play != null && eventsSorted[0].timestamp < play.timestamp) {
+                logger.error {
+                    "ERROR: out-of-sync events source=$source " +
+                            "eventTimestamp=${eventsSorted[0].timestamp} playTimestamp=${play!!.timestamp}"
+                }
                 return@forEach
             }
 
-            // check if need to plug hole
-            val shouldPlugHole = event.timestamp > play.endTimestamp
-            if (play.lastPlaying && shouldPlugHole) {
-                play.timePlayed += play.duration - play.lastPosition
-                play.associatedEvents.add(EventInfo(
-                    position = play.duration,
-                    timestamp = play.endTimestamp,
-                    state = EventState.PLUGGED
-                ))
-            }
-            if (play.associatedEvents.last().state == EventState.PLUGGED && !shouldPlugHole) {
-                play.associatedEvents.removeAt(play.associatedEvents.size - 1)
-                play.timePlayed -= play.duration - play.lastPosition
-            }
-            if (play.lastPlaying && !shouldPlugHole) {
-                play.timePlayed += event.timestamp - play.lastTimestamp
-            }
+            eventsSorted.forEach { event ->
+                if (play == null) {
+                    if (event.isPlaying) {
+                        play = Play.fromEvent(event, id = adapter.getNextId(event.source.user))
+                    }
+                    return@forEach
+                }
 
-            if (event.isPlaying) {
-                if (event.position <= SKIP_MIN_DURATION) {
-                    if (event.metadata == play.metadata && play.lastPosition <= SKIP_MIN_DURATION) {
-                        play.associatedEvents.add(event.info)
+                // check if need to plug hole
+                val shouldPlugHole = event.timestamp > play.endTimestamp
+                if (play.lastPlaying && shouldPlugHole) {
+                    play.timePlayed += play.duration - play.lastPosition
+                    play.associatedEvents.add(EventInfo(
+                        position = play.duration,
+                        timestamp = play.endTimestamp,
+                        state = EventState.PLUGGED
+                    ))
+                }
+                if (play.associatedEvents.last().state == EventState.PLUGGED && !shouldPlugHole) {
+                    play.associatedEvents.removeAt(play.associatedEvents.size - 1)
+                    play.timePlayed -= play.duration - play.lastPosition
+                }
+                if (play.lastPlaying && !shouldPlugHole) {
+                    play.timePlayed += event.timestamp - play.lastTimestamp
+                }
+
+                val eventMetadata = temporaryEdit?.second ?: event.metadata
+                val isNewPlay = if (event.isPlaying) {
+                    if (event.position <= SKIP_MIN_DURATION) {
+                        eventMetadata != play.metadata || play.lastPosition > SKIP_MIN_DURATION
                     } else {
-                        play = flush(event, play)
+                        eventMetadata != play.metadata
                     }
                 } else {
-                    if (event.metadata == play.metadata) {
-                        play.associatedEvents.add(event.info)
-                    } else {
-                        play = flush(event, play)
-                    }
+                    event.position <= SKIP_MIN_DURATION && play.lastPosition > SKIP_MIN_DURATION
                 }
-            } else {
-                if (event.position <= SKIP_MIN_DURATION && play.lastPosition > SKIP_MIN_DURATION) {
-                    play = flush(event, play)
+
+                if (isNewPlay) {
+                    if (play.lastPlaying) {
+                        play.associatedEvents.add(EventInfo(
+                            timestamp = event.timestamp,
+                            position = play.lastPosition + (event.timestamp - play.lastTimestamp),
+                            state = EventState.PLUGGED
+                        ))
+                    }
+                    if (!processingDeleted)
+                        resultPlays.add(play)
+                    temporaryEdit?.let {
+                        temporaryEdits.remove(source)
+                        temporaryEdit = null
+                        processingDeleted = false
+                    }
+                    play = Play.fromEvent(event, id = adapter.getNextId(source.user))
                 } else {
                     play.associatedEvents.add(event.info)
                 }
             }
-        }
 
-        if (play != null)
-            resultPlays.add(play)
-        adapter.clearQueue(source, eventsSorted.last().timestamp)
-        playFlow.emit(resultPlays)
+            if (play != null && !processingDeleted)
+                resultPlays.add(play)
+        }
+        return resultPlays
     }
 
     suspend fun processQueue() {
         eventFlow.collect { snapshot ->
-            logger.debug { "processing ${snapshot.size} events" }
-            snapshot.groupBy { it.source }.forEach {
-                process(it.value)
-            }
+            playFlow.emit(process(snapshot))
         }
     }
 }

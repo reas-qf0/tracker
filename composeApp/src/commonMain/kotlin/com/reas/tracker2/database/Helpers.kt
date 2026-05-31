@@ -20,7 +20,7 @@ data class AlbumWithData(
     fun toAlbum() = Album(
         id = album.albumId,
         name = album.name,
-        artists = artists.map { Artist(it.name, it.artistId) }
+        artists = ArtistList(artists.map { Artist(it.name, it.artistId) }, album.artists),
     )
 }
 
@@ -43,13 +43,9 @@ data class TrackWithData(
         trackObject = Track(
             id = track.trackId,
             name = track.name,
-            artists = artists.map { Artist(it.name, it.artistId) }
+            artists = ArtistList(artists.map { Artist(it.name, it.artistId) }, track.artists)
         ),
-        albumObject = if (album == null) null else Album(
-            id = album.album.albumId,
-            name = album.album.name,
-            artists = album.artists.map { Artist(it.name, it.artistId) }
-        )
+        albumObject = album?.toAlbum()
     )
 }
 

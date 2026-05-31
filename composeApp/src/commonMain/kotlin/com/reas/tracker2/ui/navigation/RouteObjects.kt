@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.NavKey
 import com.reas.tracker2.shared.Album
 import com.reas.tracker2.shared.Artist
+import com.reas.tracker2.shared.Play
 import com.reas.tracker2.shared.TrackWithAlbum
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -113,3 +114,8 @@ object Login : DialogRoute()
 data class Error(
     val message: String
 ) : DialogRoute()
+
+@Serializable
+data class Delete(
+    val scrobble: Play
+)

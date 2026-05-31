@@ -32,9 +32,9 @@ data class EventInfoAPI(
 @Serializable
 data class PlayAPI(
     val track: String,
-    val artists: List<String>,
+    val artists: String,
     val album: String? = null,
-    val albumArtists: List<String>? = null,
+    val albumArtists: String? = null,
     val duration: Long,
     val timestamp: Long,
     val timePlayed: Long,
@@ -57,9 +57,9 @@ data class PlayAPI(
     companion object {
         fun fromPlay(play: Play) = PlayAPI(
             track = play.track,
-            artists = play.artists.map { it.name },
+            artists = play.artistsAsString,
             album = play.album,
-            albumArtists = play.albumArtists?.map { it.name },
+            albumArtists = play.albumArtistsAsString,
             duration = play.duration.inWholeMilliseconds,
             timestamp = play.timestamp.toEpochMilliseconds(),
             timePlayed = play.timePlayed.inWholeMilliseconds,

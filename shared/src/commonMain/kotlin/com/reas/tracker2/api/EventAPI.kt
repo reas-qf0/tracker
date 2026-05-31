@@ -8,9 +8,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class EventAPI(
     val track: String,
-    val artists: List<String>,
+    val artists: String,
     val album: String? = null,
-    val albumArtists: List<String>? = null,
+    val albumArtists: String? = null,
     val duration: Long,
     val timestamp: Long,
     val position: Long,
@@ -33,9 +33,9 @@ data class EventAPI(
     companion object {
         fun fromEvent(event: Event) = EventAPI(
             track = event.track,
-            artists = event.artists.map { it.name },
+            artists = event.artistsAsString,
             album = event.album,
-            albumArtists = event.albumArtists?.map { it.name },
+            albumArtists = event.albumArtistsAsString,
             duration = event.duration.inWholeMilliseconds,
             timestamp = event.timestamp.toEpochMilliseconds(),
             position = event.position.inWholeMilliseconds,

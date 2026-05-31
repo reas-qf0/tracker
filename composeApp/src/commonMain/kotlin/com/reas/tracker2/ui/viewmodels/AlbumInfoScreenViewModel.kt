@@ -7,6 +7,7 @@ import com.reas.tracker2.settings.chartSort
 import com.reas.tracker2.settings.set
 import com.reas.tracker2.shared.Album
 import com.reas.tracker2.shared.TimePeriod
+import com.reas.tracker2.shared.TrackWithAlbum
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
@@ -44,7 +45,8 @@ class AlbumInfoScreenViewModel(
                     key = info.toString(),
                     metric = info.timePlayed.inMs,
                     metricAsString = info.timePlayed.toDisplayString(),
-                    bottomSheetInfo = BottomSheetInfo(track = info.track)
+                    bottomSheetInfo = BottomSheetInfo(track = info.track),
+                    url = { getTrackImageUrl(info.track) }
                 )
             }.asListStateFlow()
 
@@ -57,7 +59,8 @@ class AlbumInfoScreenViewModel(
                     key = info.toString(),
                     metric = info.playCount.toDouble(),
                     metricAsString = "${info.playCount} plays",
-                    bottomSheetInfo = BottomSheetInfo(track = info.track)
+                    bottomSheetInfo = BottomSheetInfo(track = info.track),
+                    url = { getTrackImageUrl(info.track) }
                 )
             }.asListStateFlow()
 
@@ -67,6 +70,11 @@ class AlbumInfoScreenViewModel(
         settings[chartSort] = sort
     }
 
-    suspend fun getAlbumImageUrl(album: Album) =
-        networkRepository.getAlbumImageUrl(album, "large")
+    suspend fun getAlbumImageUrl(album: Album): String? {
+        return networkRepository.getAlbumImageUrl(album, "large")
+    }
+
+    suspend fun getTrackImageUrl(track: TrackWithAlbum): String? {
+        return track.asAlbumOrNull?.let { getAlbumImageUrl(it) }
+    }
 }

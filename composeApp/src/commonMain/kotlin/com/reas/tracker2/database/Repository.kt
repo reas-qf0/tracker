@@ -13,12 +13,8 @@ interface Repository {
     suspend fun insertEvent(event: Event): Long
     suspend fun updateEvent(event: Event)
     suspend fun deleteEvent(event: Event)
+    suspend fun deleteEvent(sourceApp: String, timestamp: Instant)
     fun getEvents(): Flow<List<Event>>
-    suspend fun insertEventInQueue(event: Event): Long
-    suspend fun updateEventInQueue(event: Event)
-    suspend fun deleteEventInQueue(event: Event)
-    fun getEventsInQueue(): Flow<List<Event>>
-    suspend fun clearQueue(app: String, timestamp: Instant)
     suspend fun insertEventInSync(event: Event): Long
     suspend fun updateEventInSync(event: Event)
     suspend fun deleteEventInSync(event: Event)
@@ -84,7 +80,6 @@ interface Repository {
 
     // functions for debug info
     fun getEventCount(): Flow<Int>
-    fun getUnprocessedEventCount(): Flow<Int>
     fun getUnsyncedEventCount(): Flow<Int>
     fun getPlayCount(): Flow<Int>
 
@@ -103,9 +98,17 @@ interface Repository {
 
 class RoomRepository(private val db: AppDatabase) : Repository {
     private fun ArtistEntity.toObject() = Artist(name, artistId)
-    private suspend fun AlbumEntity.toObject() = Album(name, getArtists(artistIds), albumId)
+    private suspend fun AlbumEntity.toObject() = Album(
+        name,
+        ArtistList(getArtists(artistIds), artists),
+        albumId
+    )
     private suspend fun TrackEntity.toObject() = TrackWithAlbum(
-        trackObject = Track(name, getArtists(artistIds), trackId),
+        trackObject = Track(
+            name,
+            ArtistList(getArtists(artistIds), artists),
+            trackId
+        ),
         albumObject = albumId?.let { getAlbum(it) }
     )
 
@@ -150,14 +153,9 @@ class RoomRepository(private val db: AppDatabase) : Repository {
 
     override suspend fun insertEvent(event: Event) = db.eventDao().insert(event.toEntity())
     override suspend fun deleteEvent(event: Event) = db.eventDao().delete(event.toEntity())
+    override suspend fun deleteEvent(sourceApp: String, timestamp: Instant) = db.eventDao().delete(sourceApp, timestamp)
     override suspend fun updateEvent(event: Event) = db.eventDao().update(event.toEntity())
     override fun getEvents() = db.eventDao().getEvents().map { it.map { it.toObject() } }
-
-    override suspend fun insertEventInQueue(event: Event) = db.processingQueueDao().insert(ProcessingQueueEntity(event.toEntity()))
-    override suspend fun deleteEventInQueue(event: Event) = db.processingQueueDao().delete(ProcessingQueueEntity(event.toEntity()))
-    override suspend fun updateEventInQueue(event: Event) = db.processingQueueDao().update(ProcessingQueueEntity(event.toEntity()))
-    override fun getEventsInQueue() = db.processingQueueDao().getEvents().map { it.map { it.event.toObject() } }
-    override suspend fun clearQueue(app: String, timestamp: Instant) = db.processingQueueDao().clearQueue(app, timestamp)
 
     override suspend fun insertEventInSync(event: Event) = db.syncQueueDao().insert(SyncQueueEntity(event.toEntity()))
     override suspend fun deleteEventInSync(event: Event) = db.syncQueueDao().delete(SyncQueueEntity(event.toEntity()))
@@ -172,12 +170,12 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override suspend fun getTrack(id: Long) = db.trackDao().getTrack(id).toObject()
 
     override suspend fun getOrInsertArtists(artists: List<Artist>) = db.trackDao().getOrInsertArtists(artists.map { it.name })
-    override suspend fun getOrInsertAlbum(album: Album) = db.trackDao().getOrInsertAlbum(album.name, album.artists.map { it.name })
+    override suspend fun getOrInsertAlbum(album: Album) = db.trackDao().getOrInsertAlbum(album.name, album.artists)
     override suspend fun getOrInsertTrack(track: TrackWithAlbum) = db.trackDao().getOrInsertTrack(
         track.name,
-        track.artists.map { it.name },
+        track.artists,
         track.asAlbumOrNull?.name,
-        track.asAlbumOrNull?.artists?.map { it.name }
+        track.asAlbumOrNull?.artists
     )
 
     override suspend fun insertPlay(play: Play) = db.playDao().insert(play.toEntity())
@@ -230,7 +228,6 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override suspend fun getKey(hostname: String, port: Int, username: String) = db.apiKeyDao().getKey(hostname, port, username)
 
     override fun getEventCount() = db.eventDao().getEventsCount()
-    override fun getUnprocessedEventCount() = db.processingQueueDao().getEventCount()
     override fun getUnsyncedEventCount() = db.syncQueueDao().getEventCount()
     override fun getPlayCount() = db.playDao().getPlayCount()
 }

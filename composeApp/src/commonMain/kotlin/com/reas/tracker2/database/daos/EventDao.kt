@@ -4,6 +4,7 @@ import androidx.room.*
 import androidx.room.OnConflictStrategy.Companion.REPLACE
 import com.reas.tracker2.database.entities.EventEntity
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Instant
 
 @Dao
 interface EventDao {
@@ -21,4 +22,7 @@ interface EventDao {
 
     @Query("SELECT COUNT(*) FROM events")
     fun getEventsCount(): Flow<Int>
+
+    @Query("DELETE FROM events WHERE sourceApp = :sourceApp AND timestamp = :timestamp")
+    suspend fun delete(sourceApp: String, timestamp: Instant)
 }

@@ -31,7 +31,6 @@ fun DebugScreen(
 ) {
     val scope = rememberCoroutineScope()
     val eventCount by rememberAsState { viewModel.eventCount }
-    val unprocessedEventCount by rememberAsState { viewModel.unprocessedEventCount }
     val unsyncedEventCount by rememberAsState { viewModel.unsyncedEventCount }
     val playCount by rememberAsState { viewModel.playCount }
     val mediaEventLog by rememberAsState { viewModel.mediaEventLog }
@@ -44,7 +43,6 @@ fun DebugScreen(
     applicationState.setTitle("Debug")
     Column(modifier = modifier) {
         Text("Local events: $eventCount")
-        Text("Unprocessed events: $unprocessedEventCount")
         Text("Unsynced events: $unsyncedEventCount")
         Text("Total plays: $playCount")
         Button(onClick = { scope.launch { viewModel.refreshApiKey() } }) {

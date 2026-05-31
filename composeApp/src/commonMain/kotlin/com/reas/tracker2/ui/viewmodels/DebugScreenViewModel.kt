@@ -15,8 +15,6 @@ class DebugScreenViewModel(
 ) : TrackerViewModel() {
     val eventCount
         get() = repository.getEventCount().asIntStateFlow()
-    val unprocessedEventCount
-        get() = repository.getUnprocessedEventCount().asIntStateFlow()
     val unsyncedEventCount
         get() = repository.getUnsyncedEventCount().asIntStateFlow()
     val playCount

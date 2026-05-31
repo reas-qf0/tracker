@@ -51,6 +51,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     private val repository: Repository by inject()
     private val notificationManager: NotificationWrapper by inject()
     private val syncManager: TrackerInstanceClient by inject()
+    private val eventProcessor: EventProcessor by inject()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var notificationId = notificationManager.reserveId()
@@ -109,9 +110,9 @@ private class MediaCallback(private val appId: String): MediaController.Callback
 
         val event = Event.create(
             track = metadata.title,
-            artists = metadata.artist.split(" & "),
+            artists = metadata.artist,
             album = metadata.album,
-            albumArtists = (metadata.albumArtist ?: metadata.artist).split(" & "),
+            albumArtists = metadata.albumArtist ?: metadata.artist,
             duration = metadata.duration,
             timestamp = state.lastPositionUpdateTime - SystemClock.elapsedRealtime() + System.currentTimeMillis(),
             position = if (isPlaying && state.position < EventProcessor.SKIP_MIN_DURATION.inWholeMilliseconds) 0L else state.position,
@@ -137,11 +138,15 @@ private class MediaCallback(private val appId: String): MediaController.Callback
         lastPlaybackRate = state.playbackSpeed
 
         scope.launch {
-            repository.insertEvent(event)
-            repository.insertEventInQueue(event)
-            syncManager.submitEvent(event)
+            val plays = eventProcessor.process(listOf(event))
+            plays.lastOrNull()?.let { lastPlay ->
+                val processedEvent = event.copy(metadata = lastPlay.metadata)
+                repository.insertEvent(processedEvent)
+                syncManager.submitEvent(processedEvent)
+                repository.insertPlays(plays)
+                updateNotification(processedEvent)
+            }
         }
-        updateNotification(event)
     }
 
     private fun showNotification() {

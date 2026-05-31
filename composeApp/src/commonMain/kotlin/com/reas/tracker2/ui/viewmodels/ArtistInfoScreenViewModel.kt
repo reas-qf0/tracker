@@ -1,11 +1,14 @@
 package com.reas.tracker2.ui.viewmodels
 
 import com.reas.tracker2.database.Repository
+import com.reas.tracker2.network.NetworkRepository
 import com.reas.tracker2.settings.Settings
 import com.reas.tracker2.settings.chartSort
 import com.reas.tracker2.settings.set
+import com.reas.tracker2.shared.Album
 import com.reas.tracker2.shared.Artist
 import com.reas.tracker2.shared.TimePeriod
+import com.reas.tracker2.shared.TrackWithAlbum
 import com.reas.tracker2.ui.components.ChartEntryUiState
 import com.reas.tracker2.ui.navigation.BottomSheetInfo
 import com.reas.tracker2.ui.navigation.ChartSort
@@ -16,6 +19,7 @@ import org.koin.core.time.inMs
 class ArtistInfoScreenViewModel(
     private val repository: Repository,
     private val settings: Settings,
+    private val networkRepository: NetworkRepository,
 ): TrackerViewModel() {
     fun plays(artist: Artist, period: TimePeriod) =
         repository.getArtistPlays(artist, period).asIntStateFlow()
@@ -42,7 +46,8 @@ class ArtistInfoScreenViewModel(
                     key = info.toString(),
                     metric = info.timePlayed.inMs,
                     metricAsString = info.timePlayed.toDisplayString(),
-                    bottomSheetInfo = BottomSheetInfo(album = info.album)
+                    bottomSheetInfo = BottomSheetInfo(album = info.album),
+                    url = { getAlbumImageUrl(info.album) }
                 )
             }.asListStateFlow()
 
@@ -55,7 +60,8 @@ class ArtistInfoScreenViewModel(
                     key = info.toString(),
                     metric = info.playCount.toDouble(),
                     metricAsString = "${info.playCount} plays",
-                    bottomSheetInfo = BottomSheetInfo(album = info.album)
+                    bottomSheetInfo = BottomSheetInfo(album = info.album),
+                    url = { getAlbumImageUrl(info.album) }
                 )
             }.asListStateFlow()
 
@@ -68,7 +74,8 @@ class ArtistInfoScreenViewModel(
                     key = info.toString(),
                     metric = info.timePlayed.inMs,
                     metricAsString = info.timePlayed.toDisplayString(),
-                    bottomSheetInfo = BottomSheetInfo(track = info.track)
+                    bottomSheetInfo = BottomSheetInfo(track = info.track),
+                    url = { getTrackImageUrl(info.track) }
                 )
             }.asListStateFlow()
 
@@ -81,7 +88,8 @@ class ArtistInfoScreenViewModel(
                     key = info.toString(),
                     metric = info.playCount.toDouble(),
                     metricAsString = "${info.playCount} plays",
-                    bottomSheetInfo = BottomSheetInfo(track = info.track)
+                    bottomSheetInfo = BottomSheetInfo(track = info.track),
+                    url = { getTrackImageUrl(info.track) }
                 )
             }.asListStateFlow()
 
@@ -89,5 +97,13 @@ class ArtistInfoScreenViewModel(
 
     suspend fun setSort(sort: ChartSort) {
         settings[chartSort] = sort
+    }
+
+    suspend fun getAlbumImageUrl(album: Album): String? {
+        return networkRepository.getAlbumImageUrl(album, "large")
+    }
+
+    suspend fun getTrackImageUrl(track: TrackWithAlbum): String? {
+        return track.asAlbumOrNull?.let { getAlbumImageUrl(it) }
     }
 }

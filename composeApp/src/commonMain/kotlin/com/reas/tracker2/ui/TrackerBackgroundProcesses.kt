@@ -28,11 +28,6 @@ fun TrackerBackgroundProcesses(
         eventProcessor.processQueue()
     }
     LaunchedEffect(Unit) {
-        repository.getEventsInQueue().collect { events ->
-            eventProcessor.addEvents(events)
-        }
-    }
-    LaunchedEffect(Unit) {
         eventProcessor.collectPlays { plays ->
             repository.insertPlays(plays)
         }

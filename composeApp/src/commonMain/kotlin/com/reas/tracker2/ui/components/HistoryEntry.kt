@@ -3,6 +3,8 @@ package com.reas.tracker2.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
@@ -29,12 +31,15 @@ fun HistoryEntry(
     modifier: Modifier = Modifier,
     imageUrl: suspend () -> Any? = { null },
     onClick: () -> Unit = {},
-    onMore: () -> Unit = {},
+    onEdit: () -> Unit = {},
+    onDelete: () -> Unit = {},
 ) {
     val bgColor = if (play.isNowPlaying)
         MaterialTheme.colorScheme.surfaceContainerHighest
     else
         MaterialTheme.colorScheme.surfaceContainer
+
+    var menuExpanded by state(false)
 
     ListEntryWithImage(
         backgroundColor = bgColor,
@@ -56,47 +61,78 @@ fun HistoryEntry(
 
                 if (IS_DEBUG && play.associatedEvents.isNotEmpty()) {
                     var debugInfoExpanded by state(false)
-                    Icon(
-                        vectorResource(Res.drawable.wrench),
-                        "Debug",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable(
-                            onClick = { debugInfoExpanded = !debugInfoExpanded }
+                    Box {
+                        Icon(
+                            vectorResource(Res.drawable.wrench),
+                            "Debug",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable(
+                                onClick = { debugInfoExpanded = !debugInfoExpanded }
+                            )
                         )
-                    )
-                    DropdownMenu(
-                        debugInfoExpanded,
-                        onDismissRequest = { debugInfoExpanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Time played: ${play.timePlayed}") },
-                            onClick = {}
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Associated events: ") },
-                            onClick = {}
-                        )
-                        play.associatedEvents.forEach { event ->
+                        DropdownMenu(
+                            expanded = debugInfoExpanded,
+                            onDismissRequest = { debugInfoExpanded = false }
+                        ) {
                             DropdownMenuItem(
-                                text = { Text(
-                                    """
+                                text = { Text("Time played: ${play.timePlayed}") },
+                                onClick = {}
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Associated events: ") },
+                                onClick = {}
+                            )
+                            play.associatedEvents.forEach { event ->
+                                DropdownMenuItem(
+                                    text = { Text(
+                                        """
                                         ${event.timestamp}
                                             ${event.position}
                                             ${event.state}
                                     """.trimIndent()
-                                ) },
-                                onClick = {}
-                            )
+                                    ) },
+                                    onClick = {}
+                                )
+                            }
                         }
                     }
                 }
 
-                Icon(
-                    Icons.Filled.MoreVert,
-                    "More",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable(onClick = onMore)
-                )
+                Box {
+                    Icon(
+                        Icons.Filled.MoreVert,
+                        "More",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(
+                            onClick = { menuExpanded = !menuExpanded }
+                        )
+                    )
+                    DropdownMenu(
+                        expanded = menuExpanded,
+                        onDismissRequest = { menuExpanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            leadingIcon = {
+                                Icon(Icons.Filled.Edit, "Edit")
+                            },
+                            text = { Text("Edit") },
+                            onClick = {
+                                menuExpanded = false
+                                onEdit()
+                            }
+                        )
+                        DropdownMenuItem(
+                            leadingIcon = {
+                                Icon(Icons.Filled.Delete, "Delete")
+                            },
+                            text = { Text("Delete") },
+                            onClick = {
+                                menuExpanded = false
+                                onDelete()
+                            }
+                        )
+                    }
+                }
             }
             Spacer(Modifier.height(1.dp))
             Row {

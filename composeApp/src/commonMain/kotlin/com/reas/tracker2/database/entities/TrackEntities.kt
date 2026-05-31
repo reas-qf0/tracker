@@ -13,6 +13,7 @@ data class TrackEntity(
     val trackId: Long = 0,
     val name: String,
     val albumId: Long? = null,
+    val artists: String,
     val artistIds: List<Long>,
 )
 
@@ -24,6 +25,7 @@ data class AlbumEntity(
     @PrimaryKey(autoGenerate = true)
     val albumId: Long = 0,
     val name: String,
+    val artists: String,
     val artistIds: List<Long>,
 )
 

@@ -13,7 +13,6 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
 @Database(entities = [
     EventEntity::class,
     PlayEntity::class,
-    ProcessingQueueEntity::class,
     SyncQueueEntity::class,
     ApiKeyEntity::class,
     TrackEntity::class,
@@ -28,7 +27,6 @@ abstract class AppDatabase : RoomDatabase() {
 
     abstract fun eventDao(): EventDao
     abstract fun playDao(): PlayDao
-    abstract fun processingQueueDao(): ProcessingQueueDao
     abstract fun syncQueueDao(): SyncQueueDao
     abstract fun apiKeyDao(): ApiKeyDao
     abstract fun trackDao(): TrackDao

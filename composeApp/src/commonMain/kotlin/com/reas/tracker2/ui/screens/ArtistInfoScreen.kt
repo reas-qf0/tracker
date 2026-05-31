@@ -53,7 +53,7 @@ fun ArtistInfoScreen(
 
     applicationState.setTitle(artist.name)
     Column(
-        modifier = modifier.padding(5.dp),
+        modifier = modifier.padding(top = 5.dp, start = 5.dp, end = 5.dp),
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         SortOrderSelectionChip(sort, { scope.launch { viewModel.setSort(it) } })

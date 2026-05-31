@@ -8,6 +8,35 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Instant
 
 @Serializable
+data class ArtistList(
+    val artists: List<Artist>,
+    val raw: String
+): List<Artist> {
+    constructor(raw: String) : this(
+        raw.split(" & ").map { Artist(it) }, raw
+    )
+
+    override fun toString(): String = raw
+    override fun equals(other: Any?): Boolean {
+        return other is ArtistList && other.artists == artists
+    }
+    override fun hashCode(): Int = artists.hashCode()
+
+    override val size: Int
+        get() = artists.size
+    override fun isEmpty(): Boolean = artists.isEmpty()
+    override fun contains(element: Artist): Boolean = artists.contains(element)
+    override fun iterator(): Iterator<Artist> = artists.iterator()
+    override fun containsAll(elements: Collection<Artist>): Boolean = artists.containsAll(elements)
+    override fun get(index: Int): Artist = artists[index]
+    override fun indexOf(element: Artist): Int = artists.indexOf(element)
+    override fun lastIndexOf(element: Artist): Int = artists.lastIndexOf(element)
+    override fun listIterator(): ListIterator<Artist> = artists.listIterator()
+    override fun listIterator(index: Int): ListIterator<Artist> = artists.listIterator(index)
+    override fun subList(fromIndex: Int, toIndex: Int): List<Artist> = artists.subList(fromIndex, toIndex)
+}
+
+@Serializable
 data class Artist(
     val name: String,
     @Transient val id: Long = -1,
@@ -20,12 +49,11 @@ data class Artist(
 @Serializable
 data class Album(
     val name: String,
-    val artists: List<Artist>,
+    val artists: ArtistList,
     @Transient val id: Long = -1,
 ) {
     val artistsAsString: String
-        get() = artists.joinToString(", ") { it.name }
-
+        get() = artists.raw
     override fun equals(other: Any?): Boolean {
         return other is Album && name == other.name && artists == other.artists
     }
@@ -34,11 +62,11 @@ data class Album(
 @Serializable
 data class Track(
     val name: String,
-    val artists: List<Artist>,
+    val artists: ArtistList,
     @Transient val id: Long = -1,
 ) {
     val artistsAsString: String
-        get() = artists.joinToString(", ") { it.name }
+        get() = artists.raw
     fun withAlbum() = TrackWithAlbum(this, null)
 
     override fun equals(other: Any?): Boolean {
@@ -51,24 +79,24 @@ data class TrackWithAlbum(
     private val trackObject: Track,
     private val albumObject: Album?
 ) {
-    constructor(track: String, artists: List<Artist>, album: String?, albumArtists: List<Artist>?) :
+    constructor(track: String, artists: ArtistList, album: String?, albumArtists: ArtistList?) :
             this(
                 Track(track, artists),
-                album?.let { Album(album, albumArtists!!) }
+                album?.let { Album(album, albumArtists ?: artists) }
             )
 
     val id: Long
         get() = trackObject.id
     val name: String
         get() = trackObject.name
-    val artists: List<Artist>
+    val artists: ArtistList
         get() = trackObject.artists
-    val albumArtists: List<Artist>?
+    val albumArtists: ArtistList?
         get() = albumObject?.artists
     val artistsAsString: String
-        get() = trackObject.artistsAsString
+        get() = trackObject.artists.raw
     val albumArtistsAsString: String?
-        get() = albumObject?.artistsAsString
+        get() = albumObject?.artists?.raw
     val album: String?
         get() = albumObject?.name
     val asTrack: Track
@@ -116,14 +144,14 @@ data class Event(
 ) {
     val track: String
         get() = metadata.name
-    val artists: List<Artist>
+    val artists: ArtistList
         get() = metadata.artists
-    val albumArtists: List<Artist>?
+    val albumArtists: ArtistList?
         get() = metadata.albumArtists
     val artistsAsString: String
-        get() = metadata.artistsAsString
+        get() = metadata.artists.raw
     val albumArtistsAsString: String?
-        get() = metadata.albumArtistsAsString
+        get() = metadata.albumArtists?.raw
     val album: String?
         get() = metadata.album
     val user: String
@@ -144,9 +172,9 @@ data class Event(
     companion object {
         fun create(
             track: String,
-            artists: List<String>,
+            artists: String,
             album: String?,
-            albumArtists: List<String>?,
+            albumArtists: String?,
             duration: Long,
             timestamp: Long,
             position: Long,
@@ -155,9 +183,9 @@ data class Event(
         ) = Event(
             metadata = TrackWithAlbum(
                 track,
-                artists.map { Artist(it) },
+                ArtistList(artists),
                 album,
-                (albumArtists ?: artists).map { Artist(it) }
+                ArtistList(albumArtists ?: artists)
             ),
             duration = duration.milliseconds,
             info = EventInfo(
@@ -194,14 +222,14 @@ data class Play(
 ) {
     val track: String
         get() = metadata.name
-    val artists: List<Artist>
+    val artists: ArtistList
         get() = metadata.artists
-    val albumArtists: List<Artist>?
+    val albumArtists: ArtistList?
         get() = metadata.albumArtists
     val artistsAsString: String
-        get() = metadata.artistsAsString
+        get() = metadata.artists.raw
     val albumArtistsAsString: String?
-        get() = metadata.albumArtistsAsString
+        get() = metadata.albumArtists?.raw
     val album: String?
         get() = metadata.album
     val user: String
@@ -238,6 +266,9 @@ data class Play(
     val isFull
         get() = !isNowPlaying && !isTiny && !isSkip
 
+    val isLocal
+        get() = source.client == "" && source.user == ""
+
     val key
         get() = "$client/$app/$timestamp"
 
@@ -254,9 +285,9 @@ data class Play(
 
         fun create(
             track: String,
-            artists: List<String>,
+            artists: String,
             album: String?,
-            albumArtists: List<String>?,
+            albumArtists: String?,
             duration: Long,
             timestamp: Long,
             timePlayed: Long,
@@ -266,9 +297,9 @@ data class Play(
         ) = Play(
             metadata = TrackWithAlbum(
                 track,
-                artists.map { Artist(it) },
+                ArtistList(artists),
                 album,
-                (albumArtists ?: artists).map { Artist(it) }
+                ArtistList(albumArtists ?: artists)
             ),
             duration = duration.milliseconds,
             timePlayed = timePlayed.milliseconds,

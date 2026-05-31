@@ -38,5 +38,5 @@ class Converters {
     fun eventStateToString(state: EventState): String = state.name
 
     @TypeConverter
-    fun stringToEventState(value: String): EventState = EventState.entries.first { it.name == value }
+    fun stringToEventState(value: String): EventState = EventState.valueOf(value)
 }

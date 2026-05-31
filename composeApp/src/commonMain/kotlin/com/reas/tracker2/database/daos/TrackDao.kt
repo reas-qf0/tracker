@@ -2,6 +2,7 @@ package com.reas.tracker2.database.daos
 
 import androidx.room.*
 import com.reas.tracker2.database.entities.*
+import com.reas.tracker2.shared.ArtistList
 
 @Dao
 interface TrackDao {
@@ -58,10 +59,10 @@ interface TrackDao {
     }
 
     @Transaction
-    suspend fun getOrInsertAlbum(name: String, artists: List<String>): Long {
-        val artistIds = getOrInsertArtists(artists)
+    suspend fun getOrInsertAlbum(name: String, artists: ArtistList): Long {
+        val artistIds = getOrInsertArtists(artists.map { it.name })
         return getAlbumId(name, artistIds) ?: run {
-            val albumId = insertAlbum(AlbumEntity(name = name, artistIds = artistIds))
+            val albumId = insertAlbum(AlbumEntity(name = name, artistIds = artistIds, artists = artists.raw))
             insertAlbumArtistCrossRefs(artistIds.map { artistId ->
                 AlbumArtistCrossRef(albumId, artistId)
             })
@@ -70,11 +71,11 @@ interface TrackDao {
     }
 
     @Transaction
-    suspend fun getOrInsertTrack(name: String, artists: List<String>, album: String?, albumArtists: List<String>?): Long {
-        val artistIds = getOrInsertArtists(artists)
+    suspend fun getOrInsertTrack(name: String, artists: ArtistList, album: String?, albumArtists: ArtistList?): Long {
+        val artistIds = getOrInsertArtists(artists.map { it.name })
         val albumId = album?.let { getOrInsertAlbum(album, albumArtists!!) }
         return getTrackId(name, artistIds, albumId) ?: run {
-            val trackId = insertTrack(TrackEntity(name = name, albumId = albumId, artistIds = artistIds))
+            val trackId = insertTrack(TrackEntity(name = name, albumId = albumId, artistIds = artistIds, artists = artists.raw))
             insertTrackArtistCrossRefs(artistIds.map { artistId ->
                 TrackArtistCrossRef(trackId, artistId)
             })

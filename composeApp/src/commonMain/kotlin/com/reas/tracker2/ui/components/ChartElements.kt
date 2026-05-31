@@ -125,7 +125,8 @@ fun ChartColumn(
                 label2 = entry.label2,
                 metricAsString = entry.metricAsString,
                 metric = entry.metric / items[0].metric,
-                onClick = { onClick(entry) }
+                onClick = { onClick(entry) },
+                url = entry.url
             )
         }
     }
@@ -158,7 +159,8 @@ fun LazyChartColumn(
                     metricAsString = entry.metricAsString,
                     metric = entry.metric / items[0]!!.metric,
                     onClick = { onClick(entry) },
-                    url = entry.url
+                    url = entry.url,
+                    modifier = Modifier.animateItem()
                 )
             }
         }

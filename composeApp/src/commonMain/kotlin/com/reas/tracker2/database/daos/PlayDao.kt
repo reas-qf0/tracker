@@ -42,7 +42,7 @@ interface PlayDao {
                 (SELECT *, 1 as sort1, 0 as sort2 FROM plays WHERE lastPlaying = 1)
             UNION ALL SELECT * FROM
                 (SELECT *, 2 as sort1, timestamp as sort2 FROM plays WHERE $isFullPlay AND lastPlaying = 0)
-        ) SELECT t0.*, tracks.name, tracks.albumId, tracks.artistIds FROM t0
+        ) SELECT t0.*, tracks.* FROM t0
         JOIN tracks ON t0.trackId = tracks.trackId
         ORDER BY sort1, sort2 DESC
     """)
@@ -115,7 +115,7 @@ interface PlayDao {
 
     @Transaction
     @Query("""
-        SELECT plays.*, tracks.name, tracks.albumId, tracks.artistIds FROM plays
+        SELECT plays.*, tracks.* FROM plays
         JOIN tracks ON plays.trackId = tracks.trackId
         WHERE plays.trackId = :trackId AND $isFullPlay ORDER BY timestamp DESC
     """)

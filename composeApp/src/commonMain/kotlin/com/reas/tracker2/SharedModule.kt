@@ -1,7 +1,6 @@
 package com.reas.tracker2
 
 import com.reas.tracker2.database.AppDatabase
-import com.reas.tracker2.database.EventProcessorAdapterImpl
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.database.RoomRepository
 import com.reas.tracker2.network.*
@@ -10,6 +9,7 @@ import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.EventProcessorAdapter
 import com.reas.tracker2.shared.HolePlugger
 import com.reas.tracker2.ui.viewmodels.*
+import com.reas.tracker2.util.EventProcessorAdapterImpl
 import com.reas.tracker2.util.InMemoryLog
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
