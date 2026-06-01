@@ -16,6 +16,8 @@ import kotlin.time.Instant
 )
 data class PlayEntity(
     val trackId: Long,
+    val artists: String,
+    val albumArtists: String?,
     val timestamp: Instant,
     val duration: Duration,
     var timePlayed: Duration,

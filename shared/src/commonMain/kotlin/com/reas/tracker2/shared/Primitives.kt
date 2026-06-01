@@ -103,9 +103,7 @@ data class TrackWithAlbum(
         get() = trackObject
     val hasAlbum: Boolean
         get() = albumObject != null
-    val asAlbum: Album
-        get() = albumObject!!
-    val asAlbumOrNull: Album?
+    val asAlbum: Album?
         get() = albumObject
 
     override fun equals(other: Any?): Boolean {
@@ -232,17 +230,16 @@ data class Play(
         get() = metadata.albumArtists?.raw
     val album: String?
         get() = metadata.album
+    val asAlbum: Album?
+        get() = metadata.asAlbum
+
     val user: String
         get() = source.user
     val client: String
         get() = source.client
     val app: String
         get() = source.app
-
-    val asAlbumOrNull: Album?
-        get() = metadata.asAlbumOrNull
-
-
+    
     val lastTimestamp
         get() = associatedEvents.last().timestamp
     val lastPosition

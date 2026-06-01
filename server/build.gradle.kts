@@ -33,19 +33,3 @@ dependencies {
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.kotlin.test.junit)
 }
-
-tasks.register<Exec>("buildWebApp") {
-    inputs.dir(rootProject.relativePath("webApp"))
-    outputs.dir(rootProject.relativePath("webApp/dist"))
-    workingDir(rootProject.file("server/webApp"))
-    commandLine("npx", "vite", "build")
-}
-tasks.register<Delete>("cleanWebApp") {
-    delete(rootProject.file("server/webApp/dist"))
-}
-tasks.named("processResources") {
-    dependsOn("buildWebApp")
-}
-tasks.named("clean") {
-    dependsOn("cleanWebApp")
-}

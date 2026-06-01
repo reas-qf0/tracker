@@ -68,9 +68,8 @@ fun TrackHistoryScreen(
                     onClick = {
                         applicationState.navigate(BottomSheetInfo(track = scrobble.metadata))
                     },
-                    onDelete = {
-                        deletingScrobble = scrobble
-                    }
+                    onDelete = { deletingScrobble = scrobble },
+                    onEdit = { editingScrobble = scrobble }
                 )
             }
         }

@@ -7,7 +7,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.reas.tracker2.database.Repository
 import com.reas.tracker2.network.TrackerInstanceClient
 import com.reas.tracker2.settings.*
-import com.reas.tracker2.shared.EventProcessor
 import com.reas.tracker2.shared.HolePlugger
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
@@ -20,18 +19,7 @@ fun TrackerBackgroundProcesses(
     val instanceClient: TrackerInstanceClient = koinInject()
     val settings: Settings = koinInject()
     val repository: Repository = koinInject()
-    val eventProcessor: EventProcessor = koinInject()
     val holePlugger: HolePlugger = koinInject()
-
-    // event processing
-    LaunchedEffect(Unit) {
-        eventProcessor.processQueue()
-    }
-    LaunchedEffect(Unit) {
-        eventProcessor.collectPlays { plays ->
-            repository.insertPlays(plays)
-        }
-    }
 
     // plugging holes
     LaunchedEffect(Unit) {

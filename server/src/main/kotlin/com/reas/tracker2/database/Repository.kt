@@ -15,7 +15,7 @@ interface Repository {
     fun getOrInsertArtists(artists: List<String>): List<Long>
     fun getOrInsertAlbum(name: String, artists: List<String>): Long
     fun getOrInsertTrack(name: String, artists: List<String>, album: String?, albumArtists: List<String>?): Long
-    fun getArtists(ids: List<Long>): List<Artist>
+    fun getArtists(ids: List<Long>): ArtistList
     fun getAlbum(id: Long): Album
     fun getTrack(id: Long): TrackWithAlbum
 
@@ -109,14 +109,15 @@ class DatabaseRepository(private val database: Database) : Repository {
     private fun getOrInsertTrack(track: TrackWithAlbum) = getOrInsertTrackNoTransaction(
         track.name,
         track.artists.map { it.name },
-        track.asAlbumOrNull?.name,
-        track.asAlbumOrNull?.artists?.map { it.name },
+        track.asAlbum?.name,
+        track.asAlbum?.artists?.map { it.name },
     )
 
     override fun getArtists(ids: List<Long>) = transaction(database) {
-        ArtistTable.selectAll()
+        val artists = ArtistTable.selectAll()
             .where(ArtistTable.id inList ids)
             .map { Artist(it[ArtistTable.name], it[ArtistTable.id].value) }
+        ArtistList(artists, artists.joinToString(", ") { it.name })
     }
 
     override fun getAlbum(id: Long) = transaction(database) {
@@ -153,7 +154,7 @@ class DatabaseRepository(private val database: Database) : Repository {
                 this[EventTable.timestamp] = event.timestamp.toEpochMilliseconds()
                 this[EventTable.position] = event.position.inWholeMilliseconds
                 this[EventTable.duration] = event.duration.inWholeMilliseconds
-                this[EventTable.isPlaying] = event.isPlaying
+                this[EventTable.state] = event.state.name
                 this[EventTable.sourceUser] = event.user
                 this[EventTable.sourceDevice] = event.client
                 this[EventTable.sourceApp] = event.app
@@ -251,10 +252,12 @@ class DatabaseRepository(private val database: Database) : Repository {
     private fun ResultRow.toEvent(): Event =
         Event(
             metadata = getTrack(this[EventTable.trackId].value),
-            timestamp = Instant.fromEpochMilliseconds(this[EventTable.timestamp]),
-            position = this[EventTable.position].milliseconds,
             duration = this[EventTable.duration].milliseconds,
-            isPlaying = this[EventTable.isPlaying],
+            info = EventInfo(
+                position = this[EventTable.position].milliseconds,
+                timestamp = Instant.fromEpochMilliseconds(this[EventTable.timestamp]),
+                state = EventState.valueOf(this[EventTable.state])
+            ),
             source = Source(
                 user = this[EventTable.sourceUser],
                 client = this[EventTable.sourceDevice],

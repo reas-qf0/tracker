@@ -17,7 +17,7 @@ class HistoryScreenViewModel(
             .mapElements { entity -> repository.playEntityToObject(entity) }
 
     suspend fun getImageUrl(scrobble: Play): String? {
-        scrobble.asAlbumOrNull?.let { album ->
+        scrobble.asAlbum?.let { album ->
             return networkRepository.getAlbumImageUrl(album, "large")
         }
         return null

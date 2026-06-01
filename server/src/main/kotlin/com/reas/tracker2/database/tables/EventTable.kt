@@ -7,7 +7,7 @@ object EventTable : Table("events") {
     val timestamp = long("timestamp")
     val position = long("position")
     val duration = long("duration")
-    val isPlaying = bool("is_playing")
+    val state = text("state")
     val sourceUser = varchar("source_user", 64)
     val sourceDevice = varchar("source_device", 64)
     val sourceApp = text("source_app")

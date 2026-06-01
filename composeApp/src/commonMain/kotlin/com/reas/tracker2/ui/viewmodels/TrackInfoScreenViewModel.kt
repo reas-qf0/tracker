@@ -43,6 +43,6 @@ class TrackInfoScreenViewModel(
     }
 
     suspend fun getTrackImageUrl(track: TrackWithAlbum): String? {
-        return track.asAlbumOrNull?.let { getAlbumImageUrl(it) }
+        return track.asAlbum?.let { getAlbumImageUrl(it) }
     }
 }

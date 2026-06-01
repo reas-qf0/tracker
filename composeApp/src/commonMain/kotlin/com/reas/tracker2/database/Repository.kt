@@ -133,6 +133,8 @@ class RoomRepository(private val db: AppDatabase) : Repository {
 
     private suspend fun Play.toEntity() = PlayEntity(
         trackId = getOrInsertTrack(metadata),
+        artists = artistsAsString,
+        albumArtists = albumArtistsAsString,
         timestamp = timestamp,
         duration = duration,
         timePlayed = timePlayed,
@@ -143,7 +145,12 @@ class RoomRepository(private val db: AppDatabase) : Repository {
         associatedEvents = associatedEvents,
     )
     private suspend fun PlayEntity.toObject() = Play(
-        metadata = getTrack(trackId),
+        metadata = getTrack(trackId).let { t ->
+            TrackWithAlbum(
+                trackObject = t.asTrack.copy(artists = t.artists.copy(raw = artists)),
+                albumObject = t.asAlbum?.copy(artists = t.albumArtists!!.copy(raw = albumArtists!!))
+            )
+        },
         timestamp = timestamp,
         duration = duration,
         timePlayed = timePlayed,
@@ -174,8 +181,8 @@ class RoomRepository(private val db: AppDatabase) : Repository {
     override suspend fun getOrInsertTrack(track: TrackWithAlbum) = db.trackDao().getOrInsertTrack(
         track.name,
         track.artists,
-        track.asAlbumOrNull?.name,
-        track.asAlbumOrNull?.artists
+        track.asAlbum?.name,
+        track.asAlbum?.artists
     )
 
     override suspend fun insertPlay(play: Play) = db.playDao().insert(play.toEntity())

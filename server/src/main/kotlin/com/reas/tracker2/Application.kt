@@ -28,7 +28,6 @@ import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
-import java.io.File
 import kotlin.time.Duration.Companion.seconds
 
 fun main() {
@@ -72,7 +71,9 @@ fun Application.module() {
     }
 
     routing {
-        staticFiles("", File("server/webApp/dist"))
+        singlePageApplication {
+            react("webApp/dist")
+        }
         get("/events") {
             call.respond(repository.getEvents().map { event ->
                 EventAPI.fromEvent(event)

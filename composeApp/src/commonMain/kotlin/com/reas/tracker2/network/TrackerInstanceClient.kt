@@ -125,6 +125,9 @@ class TrackerInstanceClient(
     }
 
     suspend fun submitEvents() {
+        if (host_ == "" || port_ == 0 || username_ == "")
+            return
+
         // apiKey here can be empty if app hasn't been opened since device reboot
         if (apiKey == "") {
             tryLogin()

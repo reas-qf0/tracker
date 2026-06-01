@@ -144,7 +144,7 @@ fun HistoryEntry(
                         style = Typography.bodyLarge,
                         color = MaterialTheme.colorScheme.secondary,
                     )
-                    play.asAlbumOrNull?.let {
+                    play.asAlbum?.let {
                         Spacer(Modifier.height(1.dp))
                         ConstrainedText(
                             it.name,

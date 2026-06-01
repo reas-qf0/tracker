@@ -43,7 +43,7 @@ fun InfoBottomSheet(
     val albumArtists = arguments.track?.albumArtists ?: arguments.album?.artists
 
     val trackO = arguments.track
-    val albumO = arguments.track?.asAlbumOrNull ?: arguments.album
+    val albumO = arguments.track?.asAlbum ?: arguments.album
 
     ModalBottomSheet(
         onDismissRequest = { applicationState.goBack() },
@@ -119,7 +119,7 @@ fun InfoBottomSheet(
 private fun BottomSheetSpacer() {
     Spacer(Modifier.height(10.dp))
     HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
-    Spacer(Modifier.height(15.dp))
+    Spacer(Modifier.height(10.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,9 +140,10 @@ private fun HistoryBottomSheetComponent(
     Column {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable(onClick = { expanded = !expanded })
+            modifier = Modifier
+                .clickable(onClick = { expanded = !expanded })
+                .padding(5.dp),
         ) {
-            Spacer(Modifier.width(5.dp))
             Icon(icon, iconDescription, tint = MaterialTheme.colorScheme.secondary)
             Spacer(Modifier.width(5.dp))
             Text(header,
@@ -152,7 +153,6 @@ private fun HistoryBottomSheetComponent(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        Spacer(Modifier.width(5.dp))
         icon2?.let {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
