@@ -4,12 +4,15 @@ import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
+import android.os.Build
 import android.os.SystemClock
 import android.service.notification.NotificationListenerService
+import androidx.core.app.ServiceCompat
 import androidx.core.content.getSystemService
 import com.reas.tracker2.MainActivity
 import com.reas.tracker2.R
@@ -53,9 +56,6 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     private val syncManager: TrackerInstanceClient by inject()
     private val eventProcessor: EventProcessor by inject()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    private var notificationId = notificationManager.reserveId()
-    private var notificationBuilder: NotificationBuilder? = null
     private var currentMetadata: MediaMetadata? = null
     private var currentState: PlaybackState? = null
     private var lastEvent: Event? = null
@@ -65,8 +65,8 @@ private class MediaCallback(private val appId: String): MediaController.Callback
     private var sentEvent: Boolean = false
 
     private fun updateNotification(event: Event) {
-        if (event.isPlaying) {
-            notificationBuilder = { context ->
+        val notificationBuilder: NotificationBuilder = if (event.isPlaying) {
+            { context ->
                 setContentTitle(event.track)
                 setContentText(event.artistsAsString)
                 setSmallIcon(R.drawable.ic_stat_name)
@@ -90,9 +90,17 @@ private class MediaCallback(private val appId: String): MediaController.Callback
 //                setDeleteIntent(deletePendingIntent)
             }
         } else {
-            notificationBuilder = null
+            {
+                setContentTitle("Nothing is playing")
+                setSmallIcon(R.drawable.ic_stat_name)
+                setShowWhen(false)
+            }
         }
-        showNotification()
+        notificationManager.show(
+            "Now Playing",
+            NotificationWrapper.PLAYING_ID,
+            notificationBuilder
+        )
     }
 
     private fun addEvent() {
@@ -100,7 +108,7 @@ private class MediaCallback(private val appId: String): MediaController.Callback
             return
         val metadata = currentMetadata!!
         val state = currentState!!
-        if (metadata.artist == "" || metadata.title == "" || state.state == PlaybackState.STATE_NONE)
+        if (metadata.artist.isNullOrBlank() || metadata.title.isNullOrBlank() || state.state == PlaybackState.STATE_NONE)
             return
 
         if (sentEvent) return
@@ -146,18 +154,6 @@ private class MediaCallback(private val appId: String): MediaController.Callback
                 repository.insertPlays(plays)
                 updateNotification(processedEvent)
             }
-        }
-    }
-
-    private fun showNotification() {
-        if (notificationBuilder != null) {
-            notificationManager.show(
-                "Now Playing",
-                notificationId,
-                notificationBuilder!!
-            )
-        } else {
-            notificationManager.hide(notificationId)
         }
     }
 
@@ -342,11 +338,25 @@ class NotifListenerService: NotificationListenerService(), KoinComponent {
     private var initialized = false
     private var listener: SessionListener? = null
     private val inMemoryLogger: InMemoryLog by inject()
+    private val notificationWrapper: NotificationWrapper by inject()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 //        if (startId == 42)
 //            listener!!.onNotificationDismissed(intent!!.getStringExtra("org.reas.tracker2.appId")!!)
+        ServiceCompat.startForeground(
+            this,
+            NotificationWrapper.PLAYING_ID,
+            notificationWrapper.notification("Now Playing") {
+                setContentTitle("Nothing is playing")
+                setSmallIcon(R.drawable.ic_stat_name)
+                setShowWhen(false)
+            },
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            else
+                0
+        )
         return START_STICKY
     }
 

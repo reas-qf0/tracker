@@ -1,7 +1,6 @@
 package com.reas.tracker2.shared
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlin.time.Duration.Companion.seconds
 
 class EventProcessor(
@@ -11,9 +10,6 @@ class EventProcessor(
         val SKIP_MIN_DURATION = 2.seconds
         private val logger = KotlinLogging.logger {}
     }
-
-    private val eventFlow = MutableSharedFlow<List<Event>>(replay = 1)
-    private val playFlow = MutableSharedFlow<List<Play>>(replay = 1)
 
     // TODO: these should probably be a preference in order to persist between restarts
     private val temporaryEdits = hashMapOf<Source, Pair<Play, TrackWithAlbum?>>()
@@ -25,13 +21,6 @@ class EventProcessor(
             val originalPlay = temporaryEdits[play.source]?.first ?: play
             temporaryEdits[play.source] = originalPlay to newMetadata
         }
-    }
-
-    suspend fun addEvents(events: List<Event>) {
-        eventFlow.emit(events)
-    }
-    suspend fun collectPlays(block: suspend (List<Play>) -> Unit) {
-        playFlow.collect { block(it) }
     }
 
     suspend fun process(snapshot: List<Event>): List<Play> {
@@ -116,11 +105,5 @@ class EventProcessor(
                 resultPlays.add(play)
         }
         return resultPlays
-    }
-
-    suspend fun processQueue() {
-        eventFlow.collect { snapshot ->
-            playFlow.emit(process(snapshot))
-        }
     }
 }

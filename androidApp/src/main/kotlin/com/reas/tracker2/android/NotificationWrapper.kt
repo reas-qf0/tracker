@@ -21,6 +21,10 @@ class NotificationWrapper(
     private val context: Context,
     private val notificationManager: NotificationManager
 ) {
+    companion object {
+        const val PLAYING_ID = 0
+    }
+    private var nextId = 1
     private val channelDescriptions = listOf(
         ChannelDescription("0", "Now Playing", 2),
         ChannelDescription("1", "Daily Report", 1),
@@ -28,7 +32,6 @@ class NotificationWrapper(
     )
 
     private val channels = hashMapOf<String, String>()
-    private var nextId = 0
     private val logger = KotlinLogging.logger {}
 
     init {
@@ -52,6 +55,17 @@ class NotificationWrapper(
 
     fun reserveId() = nextId++
 
+    fun notification(channel: String, params: NotificationBuilder): Notification {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            Notification.Builder(context, channels[channel]).apply {
+                params(context)
+            }.build()
+        else
+            Notification.Builder(context).apply {
+                params(context)
+            }.build()
+    }
+
     fun show(channel: String, id: Int? = null, params: NotificationBuilder): Int {
         if (ActivityCompat.checkSelfPermission(
                 context,
@@ -61,14 +75,7 @@ class NotificationWrapper(
             logger.error { "Notifications permission not granted" }
         }
         val notificationId = id ?: nextId++
-        val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            Notification.Builder(context, channels[channel]).apply {
-                params(context)
-            }.build()
-        else
-            Notification.Builder(context).apply {
-                params(context)
-            }.build()
+        val notification = notification(channel, params)
         notificationManager.notify(notificationId, notification)
         return notificationId
     }
