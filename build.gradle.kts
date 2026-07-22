@@ -14,5 +14,4 @@ plugins {
     alias(libs.plugins.androidx.room) apply false
     alias(libs.plugins.koin.compiler) apply false
     alias(libs.plugins.build.config) apply false
-    alias(libs.plugins.stability.analyzer) apply false
 }

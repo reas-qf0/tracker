@@ -12,7 +12,6 @@ plugins {
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.koin.compiler)
     alias(libs.plugins.build.config)
-    alias(libs.plugins.stability.analyzer)
 }
 
 kotlin {

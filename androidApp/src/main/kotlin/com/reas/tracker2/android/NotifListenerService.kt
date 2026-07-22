@@ -117,8 +117,8 @@ private class MediaCallback(private val appId: String): MediaController.Callback
         val isPlaying = state.state == PlaybackState.STATE_PLAYING
 
         val event = Event.create(
-            track = metadata.title,
-            artists = metadata.artist,
+            track = metadata.title!!,
+            artists = metadata.artist!!,
             album = metadata.album,
             albumArtists = metadata.albumArtist ?: metadata.artist,
             duration = metadata.duration,

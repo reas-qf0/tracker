@@ -56,7 +56,8 @@ fun HistoryScreen(
         state = refreshState,
         onRefresh = { history.refresh() },
         indicator = { PullToRefreshDefaults.LoadingIndicator(refreshState, isRefreshing, modifier = Modifier.align(
-            Alignment.TopCenter)) }
+            Alignment.TopCenter)) },
+        modifier = modifier
     ) {
         LazyColumnWithScrollButton(applicationState) {
             items(
@@ -80,7 +81,7 @@ fun HistoryScreen(
                             )
                         }
                         is HistoryEntry.Separator -> {
-                            DividerWithText(entry.text, modifier = Modifier.padding(5.dp))
+                            DividerWithText(entry.text, modifier = Modifier.padding(5.dp).animateItem())
                         }
                     }
                 }

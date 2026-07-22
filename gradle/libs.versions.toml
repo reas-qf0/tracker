@@ -1,14 +1,14 @@
 [versions]
-android-compileSdk = "36"
+android-compileSdk = "37"
 android-minSdk = "24"
-android-targetSdk = "36"
+android-targetSdk = "37"
 kotlin = "2.3.21"
-agp = "9.0.1"
+agp = "9.1.1"
 compose-multiplatform = "1.11.1"
 
 activity-compose = "1.13.0"
 adaptive = "1.2.0"
-androidx-core = "1.18.0"
+androidx-core = "1.19.0"
 bcrypt = "0.10.2"
 build-config = "6.0.10"
 colormath = "3.6.1"
@@ -18,12 +18,12 @@ datastore = "1.2.1"
 datetime = "0.8.0"
 exposed = "1.3.1"
 h2 = "2.4.240"
-koin = "4.2.1"
+koin = "4.2.2"
 koin-plugin = "1.0.0"
 ksp = "2.3.6"
 ktor = "3.5.1"
-landscapist = "2.9.8"
-lifecycle = "2.10.0"
+landscapist = "2.11.0"
+lifecycle = "2.11.0"
 logback = "1.5.38"
 logging = "8.0.4"
 material3 = "1.11.0-alpha07"
@@ -33,8 +33,7 @@ paging = "3.5.0"
 room = "2.8.4"
 serialization-json = "1.11.0"
 sqlite = "2.7.0"
-sqlite-jdbc = "3.53.2.0"
-stability-analyzer = "0.7.4"
+sqlite-jdbc = "3.53.2.1"
 work-runtime = "2.11.2"
 
 [libraries]
@@ -110,7 +109,6 @@ android-multiplatform-library = { id = "com.android.kotlin.multiplatform.library
 compose-hotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-stability-analyzer = { id = "com.github.skydoves.compose.stability.analyzer", version.ref = "stability-analyzer" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
