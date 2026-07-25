@@ -1,41 +1,34 @@
 package com.reas.tracker2
 
-import com.reas.tracker2.api.EventAPI
-import com.reas.tracker2.api.PlayAPI
-import com.reas.tracker2.database.Repository
-import com.reas.tracker2.shared.EventProcessor
-import com.reas.tracker2.shared.HolePlugger
+import com.auth0.jwt.algorithms.Algorithm
+import com.reas.tracker2.database.AuthRepository
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.engine.*
-import io.ktor.server.http.content.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 import kotlin.time.Duration.Companion.seconds
 
-fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module)
-        .start(wait = true)
+fun main(args: Array<String>) {
+    EngineMain.main(args)
 }
 
-fun Application.module() {
+@Serializable
+class UserPrincipal(val username: String, val clientName: String)
+
+fun Application.installPlugins() {
+    val authRepository: AuthRepository by inject()
+
     install(Koin) {
         slf4jLogger()
         modules(module)
@@ -47,84 +40,36 @@ fun Application.module() {
         pingPeriod = 15.seconds
         contentConverter = KotlinxWebsocketSerializationConverter(Json)
     }
+    install(Authentication) {
+        jwt("auth-jwt") {
+            val secret = this@installPlugins.environment.config.property("jwt.secret").getString()
+            val issuer = this@installPlugins.environment.config.property("jwt.issuer").getString()
+            val audience = this@installPlugins.environment.config.property("jwt.audience").getString()
+            val realm_ = this@installPlugins.environment.config.property("jwt.realm").getString()
 
-    val repository: Repository by inject()
-    val eventProcessor: EventProcessor by inject()
-    val holePlugger: HolePlugger by inject()
+            realm = realm_
+            verifier(issuer, audience, Algorithm.HMAC256(secret))
 
-    val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    val onUpdate = MutableSharedFlow<Unit>()
-    scope.launch {
-        eventProcessor.processQueue()
-    }
-    scope.launch {
-        eventProcessor.collectPlays { plays ->
-            repository.insertPlays(plays)
-            holePlugger.register(plays)
-            onUpdate.emit(Unit)
-        }
-    }
-    scope.launch {
-        holePlugger.collectPlays { play ->
-            repository.insertPlays(listOf(play))
-        }
-    }
-
-    routing {
-        singlePageApplication {
-            react("webApp/dist")
-        }
-        get("/events") {
-            call.respond(repository.getEvents().map { event ->
-                EventAPI.fromEvent(event)
-            })
-        }
-        get("/plays") {
-            call.respond(repository.getPlays().map { play ->
-                PlayAPI.fromPlay(play)
-            })
-        }
-        post("/login") {
-            val user = call.request.queryParameters["user"] ?: return@post call.respond(HttpStatusCode.BadRequest)
-            call.respondText(repository.registerUser(user))
-        }
-        post("/scrobble") {
-            authorization { user ->
-                val body = call.receiveText()
-                val events = try {
-                    listOf(Json.decodeFromString<EventAPI>(body))
-                } catch (e: SerializationException) {
-                    Json.decodeFromString<List<EventAPI>>(body)
-                } catch (e: SerializationException) {
-                    return@authorization call.respond(HttpStatusCode.BadRequest)
+            validate { credential ->
+                if (authRepository.userExists(credential.payload.getClaim("username").asString())) {
+                    JWTPrincipal(credential.payload)
+                } else {
+                    null
                 }
-                val eventsWithUserData = events.map { event ->
-                    event.toEvent().let {
-                        it.copy(source = it.source.copy(user = user.name, client = user.client))
-                    }
-                }
-                eventProcessor.addEvents(eventsWithUserData)
-                repository.insertEvents(eventsWithUserData)
-                call.respond(HttpStatusCode.OK)
+            }
+
+            challenge { defaultScheme, realm ->
+                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
             }
         }
-        webSocket("/sync") {
-            authorization { user ->
-                suspend fun sendMissedPlays() {
-                    val plays = repository.getMissedPlays(user.client)
-                    val playsToSend = plays.filter { it.client != user.client }
-                    if (playsToSend.isNotEmpty())
-                        sendSerialized(playsToSend.map {
-                            PlayAPI.fromPlay(it)
-                        })
-                    // TODO: acknowledgement system
-                    if (plays.isNotEmpty())
-                        repository.setLastSeenId(user.client, plays.last().id!!)
-                }
 
-                sendMissedPlays()
-                onUpdate.collectLatest {
-                    sendMissedPlays()
+        bearer("api-token") {
+            authenticate { token ->
+                try {
+                    val (userId, clientId) = authRepository.validateToken(token.token)
+                    UserPrincipal(userId, clientId)
+                } catch (e: AuthRepository.TokenValidationException) {
+                    null
                 }
             }
         }

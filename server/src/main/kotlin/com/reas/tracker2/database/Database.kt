@@ -1,6 +1,5 @@
 package com.reas.tracker2.database
 
-import com.reas.tracker2.database.tables.*
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -8,14 +7,9 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 fun createTables(db: Database) = transaction(db) {
     SchemaUtils.create(
-        EventTable,
-        PlayTable,
-        ApiKeyTable,
-        ArtistTable,
-        TrackTable,
-        AlbumTable,
-        AlbumArtistCrossRefTable,
-        TrackArtistCrossRefTable
+        UserTable,
+        ClientTable,
+        TokenTable
     )
 }
 

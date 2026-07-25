@@ -55,8 +55,12 @@ fun HistoryScreen(
         isRefreshing = isRefreshing,
         state = refreshState,
         onRefresh = { history.refresh() },
-        indicator = { PullToRefreshDefaults.LoadingIndicator(refreshState, isRefreshing, modifier = Modifier.align(
-            Alignment.TopCenter)) },
+        indicator = {
+            PullToRefreshDefaults.LoadingIndicator(
+                refreshState,
+                isRefreshing,
+                modifier = Modifier.align(Alignment.TopCenter))
+        },
         modifier = modifier
     ) {
         LazyColumnWithScrollButton(applicationState) {

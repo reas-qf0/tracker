@@ -1,0 +1,13 @@
+ktor:
+  deployment:
+    port: 8080
+  application:
+    modules:
+      - com.reas.tracker2.ApplicationKt.installPlugins
+      - com.reas.tracker2.RoutingKt.configureRouting
+
+jwt:
+  secret: "secret"
+  issuer: "http://0.0.0.0:8080/"
+  audience: "http://0.0.0.0:8080/hello"
+  realm: "User authentication"

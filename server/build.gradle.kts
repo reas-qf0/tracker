@@ -18,6 +18,9 @@ dependencies {
     implementation(projects.shared)
     implementation(libs.logback)
     implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.auth.jwt)
+    implementation(libs.ktor.server.config.yaml)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.contentNegotiation)
     implementation(libs.ktor.server.websockets)
@@ -30,6 +33,7 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.sqlite.jdbc)
     implementation(libs.h2)
+    implementation(libs.bcrypt)
     testImplementation(libs.ktor.server.testHost)
     testImplementation(libs.kotlin.test.junit)
 }
