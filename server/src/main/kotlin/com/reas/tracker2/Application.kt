@@ -24,7 +24,7 @@ fun main(args: Array<String>) {
 }
 
 @Serializable
-class UserPrincipal(val username: String, val clientName: String)
+data class UserPrincipal(val username: String, val clientName: String)
 
 fun Application.installPlugins() {
     val authRepository: AuthRepository by inject()
