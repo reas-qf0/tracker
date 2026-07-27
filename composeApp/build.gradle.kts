@@ -1,5 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.*
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -108,7 +109,7 @@ room {
 
 buildConfig {
     useKotlinOutput { topLevelConstants = true }
-    packageName("com.reas.tracker2.platform")
+    packageName("com.reas.tracker2.buildConfig")
 
     buildConfigField("IS_DEBUG", true)
 
@@ -127,4 +128,14 @@ buildConfig {
             buildConfigField("IS_LINUX", true)
         }
     }
+
+    val localProperties = Properties().apply {
+        load(rootProject.file("local.properties").inputStream())
+    }
+    fun secret(name: String, property: String) {
+        val value = localProperties.getProperty(property)
+        buildConfigField("String?", name, if (value != null) "\"$value\"" else "null")
+    }
+
+    secret("LASTFM_API_KEY", "lastfm.key")
 }

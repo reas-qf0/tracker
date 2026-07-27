@@ -4,10 +4,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.reas.tracker2.platform.IS_DEBUG
+import com.reas.tracker2.buildConfig.IS_DEBUG
 import com.reas.tracker2.ui.dialogs.ErrorDialog
 import com.reas.tracker2.ui.dialogs.InfoBottomSheet
 import com.reas.tracker2.ui.dialogs.LoginDialog
@@ -18,7 +17,6 @@ import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.resources.vectorResource
 import tracker2.composeapp.generated.resources.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrackerApp(
     modifier: Modifier = Modifier,

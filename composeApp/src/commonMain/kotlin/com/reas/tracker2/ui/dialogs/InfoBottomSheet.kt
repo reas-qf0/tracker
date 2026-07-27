@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.reas.tracker2.platform.IS_DESKTOP
+import com.reas.tracker2.buildConfig.IS_DESKTOP
 import com.reas.tracker2.ui.components.ScrollablePages
 import com.reas.tracker2.ui.navigation.*
 import com.reas.tracker2.ui.rememberAsState

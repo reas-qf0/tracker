@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.reas.tracker2.platform.IS_DEBUG
+import com.reas.tracker2.buildConfig.IS_DEBUG
 import com.reas.tracker2.shared.Play
 import com.reas.tracker2.ui.state
 import com.reas.tracker2.ui.theme.Typography
@@ -24,7 +24,6 @@ import tracker2.composeapp.generated.resources.Res
 import tracker2.composeapp.generated.resources.now_playing
 import tracker2.composeapp.generated.resources.wrench
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryEntry(
     play: Play,

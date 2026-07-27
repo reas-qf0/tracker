@@ -1,6 +1,6 @@
 package com.reas.tracker2.util
 
-import com.reas.tracker2.platform.IS_DEBUG
+import com.reas.tracker2.buildConfig.IS_DEBUG
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 
