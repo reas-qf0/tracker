@@ -1,6 +1,6 @@
 package com.reas.tracker2.database
 
-import androidx.room.*
+import androidx.room3.*
 import com.reas.tracker2.database.daos.*
 import com.reas.tracker2.database.entities.*
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +21,7 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     TrackArtistCrossRef::class,
     AlbumArtistCrossRef::class,
 ], version = 1, exportSchema = false)
-@TypeConverters(Converters::class)
+@ColumnTypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
 

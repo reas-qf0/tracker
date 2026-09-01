@@ -1,8 +1,8 @@
 package com.reas.tracker2.database
 
-import androidx.room.Embedded
-import androidx.room.Junction
-import androidx.room.Relation
+import androidx.room3.Embedded
+import androidx.room3.Junction
+import androidx.room3.Relation
 import com.reas.tracker2.database.entities.*
 import com.reas.tracker2.shared.*
 import kotlin.time.Duration
@@ -11,8 +11,8 @@ import kotlin.time.Instant
 data class AlbumWithData(
     @Embedded val album: AlbumEntity,
     @Relation(
-        parentColumn = "albumId",
-        entityColumn = "artistId",
+        parentColumns = ["albumId"],
+        entityColumns = ["artistId"],
         associateBy = Junction(AlbumArtistCrossRef::class)
     )
     val artists: List<ArtistEntity>
@@ -27,15 +27,15 @@ data class AlbumWithData(
 data class TrackWithData(
     @Embedded val track: TrackEntity,
     @Relation(
-        parentColumn = "trackId",
-        entityColumn = "artistId",
+        parentColumns = ["trackId"],
+        entityColumns = ["artistId"],
         associateBy = Junction(TrackArtistCrossRef::class)
     )
     val artists: List<ArtistEntity>,
     @Relation(
         entity = AlbumEntity::class,
-        parentColumn = "albumId",
-        entityColumn = "albumId"
+        parentColumns = ["albumId"],
+        entityColumns = ["albumId"]
     )
     val album: AlbumWithData?
 ) {

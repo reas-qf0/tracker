@@ -1,6 +1,6 @@
 package com.reas.tracker2.database.entities
 
-import androidx.room.Entity
+import androidx.room3.Entity
 import com.reas.tracker2.shared.EventState
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration

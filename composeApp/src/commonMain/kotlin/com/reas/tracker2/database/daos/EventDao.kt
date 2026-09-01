@@ -1,7 +1,7 @@
 package com.reas.tracker2.database.daos
 
-import androidx.room.*
-import androidx.room.OnConflictStrategy.Companion.REPLACE
+import androidx.room3.*
+import androidx.room3.OnConflictStrategy.Companion.REPLACE
 import com.reas.tracker2.database.entities.EventEntity
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Instant

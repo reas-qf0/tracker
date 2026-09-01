@@ -1,8 +1,8 @@
 package com.reas.tracker2.database
 
 import android.content.Context
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.room3.Room
+import androidx.room3.RoomDatabase
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import com.reas.tracker2.util.PlatformDependentPaths
 

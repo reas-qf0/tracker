@@ -50,8 +50,8 @@ kotlin {
             implementation(libs.androidx.paging.common)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
             implementation(libs.androidx.lifecycle.runtime.compose)
-            implementation(libs.androidx.room.runtime)
-            implementation(libs.androidx.room.paging)
+            implementation(libs.androidx.room3.runtime)
+            implementation(libs.androidx.room3.paging)
             implementation(libs.androidx.navigation3.ui)
             implementation(libs.landscapist.image)
             implementation(libs.landscapist.palette)
@@ -87,8 +87,8 @@ kotlin {
 
 dependencies {
     androidRuntimeClasspath(libs.compose.ui.tooling)
-    add("kspAndroid", libs.androidx.room.compiler)
-    add("kspJvm", libs.androidx.room.compiler)
+    add("kspAndroid", libs.androidx.room3.compiler)
+    add("kspJvm", libs.androidx.room3.compiler)
 }
 
 compose.desktop {
@@ -103,7 +103,7 @@ compose.desktop {
     }
 }
 
-room {
+room3 {
     schemaDirectory("$projectDir/schemas")
 }
 

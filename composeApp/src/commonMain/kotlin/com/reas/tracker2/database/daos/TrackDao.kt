@@ -1,6 +1,6 @@
 package com.reas.tracker2.database.daos
 
-import androidx.room.*
+import androidx.room3.*
 import com.reas.tracker2.database.entities.*
 import com.reas.tracker2.shared.ArtistList
 

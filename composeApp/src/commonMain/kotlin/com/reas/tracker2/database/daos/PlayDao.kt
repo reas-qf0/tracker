@@ -1,8 +1,9 @@
 package com.reas.tracker2.database.daos
 
 import androidx.paging.PagingSource
-import androidx.room.*
-import androidx.room.OnConflictStrategy.Companion.REPLACE
+import androidx.room3.*
+import androidx.room3.OnConflictStrategy.Companion.REPLACE
+import androidx.room3.paging.PagingSourceDaoReturnTypeConverter
 import com.reas.tracker2.database.*
 import com.reas.tracker2.database.entities.PlayEntity
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +16,7 @@ private const val isFullPlay = "timePlayed >= MIN(duration / 2, 240 * 1000)"
 private const val isNotSkip = "timePlayed >= 2 * 1000"
 
 @Dao
+@DaoReturnTypeConverters(PagingSourceDaoReturnTypeConverter::class)
 interface PlayDao {
     @Insert(onConflict = REPLACE)
     suspend fun insert(play: PlayEntity): Long

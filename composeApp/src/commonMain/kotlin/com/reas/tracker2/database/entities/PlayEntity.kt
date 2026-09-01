@@ -1,7 +1,7 @@
 package com.reas.tracker2.database.entities
 
-import androidx.room.Entity
-import androidx.room.Index
+import androidx.room3.Entity
+import androidx.room3.Index
 import com.reas.tracker2.shared.EventInfo
 import kotlin.time.Duration
 import kotlin.time.Instant

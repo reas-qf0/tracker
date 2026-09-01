@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -36,6 +37,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import tracker2.composeapp.generated.resources.Res
 import tracker2.composeapp.generated.resources.history
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun HistoryScreen(
     applicationState: ApplicationState,

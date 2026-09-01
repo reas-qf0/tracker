@@ -1,7 +1,7 @@
 package com.reas.tracker2.database
 
-import androidx.room.Room
-import androidx.room.RoomDatabase
+import androidx.room3.Room
+import androidx.room3.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.reas.tracker2.util.PlatformDependentPaths
 import io.github.oshai.kotlinlogging.KotlinLogging

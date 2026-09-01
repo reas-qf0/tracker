@@ -29,7 +29,7 @@ kotlin {
         implementation(libs.androidx.datastore.core)
         implementation(libs.androidx.datastore.preferences.core)
         implementation(libs.compose.foundation)
-        implementation(libs.androidx.room.runtime)
+        implementation(libs.androidx.room3.runtime)
         implementation(libs.androidx.paging.common)
         //testImplementation(libs.junit)
         //androidTestImplementation(libs.androidx.espresso.core)
